@@ -8,9 +8,9 @@ name: build
 on:
   # Nota: Reemplazar "main, master" con las branches principales que se manejen (ej.: "main, develop")
   push:
-    branches: [ main, master ]
+    branches: [ "**" ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ "**" ]
 jobs:
   gradle:
     runs-on: ubuntu-latest

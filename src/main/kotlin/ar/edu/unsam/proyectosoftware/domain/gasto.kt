@@ -21,6 +21,7 @@ class Gasto(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pagador_id")
     val pagador: Usuario
+    //,val archivo: String
 ) {
     @Id
     @GeneratedValue

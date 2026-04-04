@@ -5,8 +5,14 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.Id
 
 @Entity
-class Grupo {
+class Grupo(
+    var nombre: String,
+) {
     @Id
     @GeneratedValue
     var id: Long? = null
+
+    fun registrarGasto(gasto: Gasto) {
+        // TODO()
+    }
 }

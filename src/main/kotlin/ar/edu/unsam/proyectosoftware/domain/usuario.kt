@@ -9,4 +9,8 @@ class Usuario {
     @Id
     @GeneratedValue
     var id: Long? = null
+
+    fun perteneceA(grupo: Grupo): Boolean{
+        return true // Mock
+    }
 }

@@ -25,7 +25,7 @@ class GastoController(
         val gasto = Gasto.fromGastoDTO(gastoDTO, grupo, pagador)
         gastoService.crearGasto(gasto)
 
-        return "Gasto creado exitosamente."
+        return "Gasto de $${gasto.monto} creado exitosamente en ${grupo.nombre}."
     }
 
 }

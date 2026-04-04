@@ -3,11 +3,12 @@ plugins {
     id("io.spring.dependency-management") version "1.1.5"
     kotlin("jvm") version "1.9.24"
     kotlin("plugin.spring") version "1.9.24"
+    kotlin("plugin.jpa") version "2.3.0" // Necesario para JPA
     jacoco
     war
 }
 
-group = "ar.edu.unsam.proyectosoftware"
+group = "ar.edu.unsam.proyectoSoftware"
 version = "0.0.1-SNAPSHOT"
 
 java {
@@ -30,6 +31,10 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    // JPA
+    implementation("org.postgresql:postgresql")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
     providedRuntime("org.springframework.boot:spring-boot-starter-tomcat")
 

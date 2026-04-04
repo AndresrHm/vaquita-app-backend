@@ -1,7 +1,24 @@
-server:
-  port: 9000
-  error:
-    whitelabel:
-      enabled: false
-    include-message: always
+spring:
+  jackson:
+    date-format: yyyy-MM-dd
+    serialization:
+      write-dates-as-timestamps: false
+  datasource:
+    url: jdbc:postgresql://localhost:5433/vaquita
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
 
+  jpa:
+    open-in-view: false
+    show-sql: true
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+
+# Para activar el Trace
+logging:
+  level:
+    root: INFO

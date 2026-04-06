@@ -3,8 +3,11 @@ package ar.edu.unsam.proyectosoftware
 import ar.edu.unsam.proyectosoftware.domain.Gasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.Usuario
+import ar.edu.unsam.proyectosoftware.dto.GastoDTO
 import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
+import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
+import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -13,11 +16,19 @@ import org.springframework.transaction.annotation.Transactional
 class GastoService(
     @Autowired
     val gastoRepository: GastoRepository,
+    @Autowired
+    val grupoRepository: GrupoRepository,
+    @Autowired
+    val usuarioRepository: UsuarioRepository,
 ) {
     @Transactional(readOnly = false, rollbackFor = [Exception::class])
     fun crearGasto(
-        gasto: Gasto
+        gastoDTO: GastoDTO
     ): Gasto {
+        val grupo = grupoRepository.findById(gastoDTO.grupoID).orElseThrow { BusinessException("Grupo no encontrado") }
+        val pagador = usuarioRepository.findById(gastoDTO.pagadorID).orElseThrow { BusinessException("Usuario no encontrado") }
+        val gasto = Gasto.fromGastoDTO(gastoDTO, grupo, pagador)
+
         validarDatosBasicos(gasto)
 
         if (!gasto.pagador.perteneceA(gasto.grupo)) {
@@ -28,7 +39,7 @@ class GastoService(
             throw BusinessException(ErrorStrings.USUARIO_SIN_PERMISO_GASTO)
         }
 
-        gasto.grupo.registrarGasto(gasto)
+        //gasto.grupo.registrarGasto(gasto) // Agrega saldo en la db para x grupo
 
         gastoRepository.save(gasto)
 

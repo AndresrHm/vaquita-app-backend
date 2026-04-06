@@ -1,4 +1,5 @@
 package ar.edu.unsam.proyectosoftware.domain
 
-class categoriaGasto {
+enum class CategoriaGasto {
+    COMIDA, HOGAR, TRANSPORTE, SUPERMERCADO, ENTRETENIMIENTO, OTROS
 }

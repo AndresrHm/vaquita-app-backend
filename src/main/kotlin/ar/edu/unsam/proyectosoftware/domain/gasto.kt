@@ -28,16 +28,16 @@ class Gasto(
     @Id
     @GeneratedValue
     var id: Long? = null
-/*
+
     @OneToMany(mappedBy = "gasto", cascade = [CascadeType.ALL], orphanRemoval = true)
     var items: MutableList<ItemGasto> = mutableListOf()
-*/
+
     // Quizás habría que tener entidades "splits" para llevar el control de pagos de cada usuario
-/*
+
     fun agregarItem(nombre: String, cantidad: Double, precio: Double) {
         items.add(ItemGasto(nombre, cantidad, precio, this))
     }
-*/
+
     companion object {
         fun fromGastoDTO(dto: GastoDTO, grupo: Grupo, pagador: Usuario): Gasto {
             val gasto = Gasto(
@@ -48,13 +48,13 @@ class Gasto(
                 grupo = grupo,
                 pagador = pagador
             )
-           /* if (dto.items.isEmpty()) {
+            if (dto.items.isEmpty()) {
                 gasto.agregarItem("Pago único", 1.0, dto.monto)
             } else {
                 dto.items.forEach {
                     gasto.agregarItem(it.nombre, it.cantidad, it.precioUnitario)
                 }
-            }*/
+            }
 
             return gasto
         }

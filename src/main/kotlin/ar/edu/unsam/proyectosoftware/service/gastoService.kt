@@ -25,8 +25,8 @@ class GastoService(
     fun crearGasto(
         gastoDTO: GastoDTO
     ): Gasto {
-        val grupo = grupoRepository.findById(gastoDTO.grupoID).orElseThrow { BusinessException("Grupo no encontrado") }
-        val pagador = usuarioRepository.findById(gastoDTO.pagadorID).orElseThrow { BusinessException("Usuario no encontrado") }
+        val grupo = grupoRepository.findById(gastoDTO.grupoID).orElseThrow { BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO) }
+        val pagador = usuarioRepository.findById(gastoDTO.pagadorID).orElseThrow { BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO) }
         val gasto = Gasto.fromGastoDTO(gastoDTO, grupo, pagador)
 
         validarDatosBasicos(gasto)

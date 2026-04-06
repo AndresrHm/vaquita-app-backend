@@ -38,12 +38,12 @@ class BootstrapData(
             grupo = grupo1,
             pagador = usuario1
         )
-/*
+
         // 4. Agregamos ítems discriminados
         gasto1.agregarItem("Vacío", 2.5, 4000.0)
         gasto1.agregarItem("Carbón", 1.0, 2000.0)
         gasto1.agregarItem("Fernet", 1.0, 3000.0)
-*/
+
         // 5. Persistimos el Gasto
         gastoRepository.save(gasto1)
     }

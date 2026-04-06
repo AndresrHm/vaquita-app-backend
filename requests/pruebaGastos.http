@@ -8,5 +8,12 @@ Content-Type: application/json
   "monto": 7000.0,
   "fecha": "2026-01-01",
   "grupoID": 1,
-  "pagadorID": 1
+  "pagadorID": 1,
+  "items": [
+    {
+      "nombre": "juanProducto",
+      "cantidad": 1.0,
+      "precioUnitario": 7000.0
+    }
+  ]
 }

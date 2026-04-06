@@ -20,12 +20,9 @@ class GastoController(
 
     @PostMapping
     fun crearGasto(@RequestBody gastoDTO: GastoDTO): String {
-        val grupo = grupoService.obtenerGrupo(gastoDTO.grupoID)
-        val pagador = usuarioService.obtenerUsuario(gastoDTO.pagadorID)
-        val gasto = Gasto.fromGastoDTO(gastoDTO, grupo, pagador)
-        gastoService.crearGasto(gasto)
+        val gasto = gastoService.crearGasto(gastoDTO)
 
-        return "Gasto de $${gasto.monto} creado exitosamente en ${grupo.nombre}."
+        return "Gasto de $${gasto.monto} creado exitosamente en ${gasto.grupo.nombre}."
     }
 
 }

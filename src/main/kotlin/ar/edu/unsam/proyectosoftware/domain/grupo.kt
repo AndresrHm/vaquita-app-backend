@@ -6,7 +6,7 @@ import jakarta.persistence.Id
 
 @Entity
 class Grupo(
-    var nombre: String,
+    var nombre: String = "Grupo",
 ) {
     @Id
     @GeneratedValue

@@ -13,19 +13,6 @@ data class PageResponse<T>(
     val hasNext: Boolean
 )
 
-// Sin mapeado
-fun <T> Page<T>.toPageResponse(): PageResponse<T> {
-    return PageResponse(
-        content = content,
-        page = number,
-        size = size,
-        totalElements = totalElements,
-        totalPages = totalPages,
-        hasNext = hasNext()
-    )
-}
-
-// Con mapeado
 fun <T, R> Page<T>.toPageResponse(mapper: (T) -> R): PageResponse<R> {
     return PageResponse(
         content = content.map(mapper),

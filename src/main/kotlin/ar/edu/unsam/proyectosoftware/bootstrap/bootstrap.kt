@@ -26,7 +26,12 @@ class BootstrapData(
         usuarioRepository.save(usuario1)
 
         // 3. Creamos el Grupo
-        val grupo1 = Grupo(nombre = "Asado UNSAM")
+        val grupo1 = Grupo(
+            nombre = "Asado UNSAM",
+            descripcion = "Asadito en la UNSAM!",
+            imagen = "imagenDeAsadito.jpeg",
+            fechaCreacion = LocalDate.of(1999, 1, 1),
+        )
         grupoRepository.save(grupo1)
 
         // 3. Creamos el Gasto inicial

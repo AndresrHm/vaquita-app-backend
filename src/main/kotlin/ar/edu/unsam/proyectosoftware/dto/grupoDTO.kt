@@ -6,9 +6,3 @@ data class GrupoDTO(
     val imagen: String,
     // TODO: Mandar estado actual del grupo (ej. pendiente de pago)
 )
-
-data class GroupPageResponse(
-    val content: List<GrupoDTO>,
-    val nextCursor: String?,
-    val hasMore: Boolean
-)

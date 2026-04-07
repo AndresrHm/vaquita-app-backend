@@ -1,0 +1,19 @@
+###
+POST http://localhost:8080/gasto
+Content-Type: application/json
+
+{
+  "descripcion": "Descripción",
+  "categoria": "Categoría",
+  "monto": 7000.0,
+  "fecha": "2026-01-01",
+  "grupoID": 1,
+  "pagadorID": 1,
+  "items": [
+    {
+      "nombre": "juanProducto",
+      "cantidad": 1.0,
+      "precioUnitario": 7000.0
+    }
+  ]
+}

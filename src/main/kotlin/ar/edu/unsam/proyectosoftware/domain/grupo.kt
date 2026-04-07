@@ -5,12 +5,16 @@ import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.Id
 import jakarta.persistence.ManyToMany
+import jakarta.persistence.Table
+import java.time.LocalDate
 
 @Entity
+@Table(name = "grupos")
 class Grupo(
     var nombre: String = "Grupo",
-    var descripcion: String = "Descripción del grupo",
-    var imagen: String = "Imagen del grupo"
+    var descripcion: String = "",
+    var imagen: String = "",
+    val fechaCreacion: LocalDate
 ) {
     @Id
     @GeneratedValue

@@ -31,7 +31,7 @@ class BootstrapData(
             descripcion = "Asadito en la UNSAM!",
             imagen = "imagenDeAsadito.jpeg",
             fechaCreacion = LocalDate.of(1999, 1, 1),
-        )
+        ).apply { agregarIntegrante(usuario1) }
         grupoRepository.save(grupo1)
 
         // 3. Creamos el Gasto inicial

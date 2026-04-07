@@ -25,9 +25,16 @@ class GastoService(
     fun crearGasto(
         gastoDTO: GastoDTO
     ): Gasto {
-        val grupo = grupoRepository.findById(gastoDTO.grupoID).orElseThrow { BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO) }
-        val pagador = usuarioRepository.findById(gastoDTO.pagadorID).orElseThrow { BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO) }
-        val gasto = Gasto.fromGastoDTO(gastoDTO, grupo, pagador)
+        val grupo = grupoRepository.findById(gastoDTO.grupoID)
+            .orElseThrow { BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO) }
+        val pagador = usuarioRepository.findById(gastoDTO.pagadorID)
+            .orElseThrow { BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO) }
+        val participantes = usuarioRepository.findAllById(gastoDTO.participantesIDs).toList()
+        if (participantes.size != gastoDTO.participantesIDs.size) {
+            throw BusinessException(ErrorStrings.NINGUN_USUARIO_ENCONTRADO)
+        }
+
+        val gasto = Gasto.fromGastoDTO(gastoDTO, grupo, pagador, participantes)
 
         validarDatosBasicos(gasto)
 
@@ -39,6 +46,14 @@ class GastoService(
             throw BusinessException(ErrorStrings.USUARIO_SIN_PERMISO_GASTO)
         }
 
+        if (!participantesContienePagador(participantes, pagador)) {
+            throw BusinessException(ErrorStrings.USUARIO_SIN_PERMISO_GASTO)
+        }
+/* Próximamente
+        if (!participantesPertenecenAlGrupo(participantes, grupo)) {
+            throw BusinessException(ErrorStrings.PARTICIPANTES_NO_PERTENECEN_AL_GRUPO)
+        }
+*/
         //gasto.grupo.registrarGasto(gasto) // Agrega saldo en la db para x grupo
 
         gastoRepository.save(gasto)
@@ -46,6 +61,20 @@ class GastoService(
         return gasto
     }
 
+    private fun participantesContienePagador(
+        participantes: List<Usuario>,
+        pagador: Usuario
+    ): Boolean {
+        return participantes.contains(pagador)
+    }
+/*
+    private fun participantesPertenecenAlGrupo(
+        participantes: List<Usuario>,
+        grupo: Grupo
+    ): Boolean {
+        return participantes.all{ participante -> participante.grupo == grupo}
+    }
+*/
     private fun validarDatosBasicos(gasto: Gasto) {
         if (gasto.monto <= 0) {
             throw BusinessException(ErrorStrings.MONTO_NEGATIVO)

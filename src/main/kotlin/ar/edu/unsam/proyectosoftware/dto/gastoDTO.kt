@@ -11,6 +11,7 @@ data class GastoDTO(
     val fecha: LocalDate,
     val grupoID: Long,
     val pagadorID: Long,
+    val participantesIDs: List<Long>,
     val items: List<ItemGastoDTO> = emptyList()
 )
 

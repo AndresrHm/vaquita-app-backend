@@ -7,6 +7,8 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
 import jakarta.persistence.JoinColumn
+import jakarta.persistence.JoinTable
+import jakarta.persistence.ManyToMany
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import java.time.LocalDate
@@ -23,6 +25,13 @@ class Gasto(
     @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.MERGE])
     @JoinColumn(name = "pagador_id")
     val pagador: Usuario,
+    @ManyToMany(fetch = FetchType.LAZY, cascade = [CascadeType.MERGE])
+    @JoinTable(
+        name = "gasto_participantes",
+        joinColumns = [JoinColumn(name = "gasto_id")],
+        inverseJoinColumns = [JoinColumn(name = "usuario_id")]
+    )
+    val participantes: List<Usuario>,
     //val archivo: String,
 ) {
     @Id
@@ -39,14 +48,15 @@ class Gasto(
     }
 
     companion object {
-        fun fromGastoDTO(dto: GastoDTO, grupo: Grupo, pagador: Usuario): Gasto {
+        fun fromGastoDTO(dto: GastoDTO, grupo: Grupo, pagador: Usuario, participantes: List<Usuario>): Gasto {
             val gasto = Gasto(
                 descripcion = dto.descripcion,
                 categoria = dto.categoria,
                 monto = dto.monto,
                 fecha = dto.fecha,
                 grupo = grupo,
-                pagador = pagador
+                pagador = pagador,
+                participantes = participantes
             )
             if (dto.items.isEmpty()) {
                 gasto.agregarItem("Pago único", 1.0, dto.monto)

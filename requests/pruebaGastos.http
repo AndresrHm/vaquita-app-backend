@@ -15,5 +15,6 @@ Content-Type: application/json
       "cantidad": 1.0,
       "precioUnitario": 7000.0
     }
-  ]
+  ],
+  "participantesIds": [1]
 }

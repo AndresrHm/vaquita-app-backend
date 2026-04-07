@@ -23,6 +23,10 @@ class Grupo(
     @ManyToMany(fetch = FetchType.LAZY)
     val integrantes = mutableListOf<Usuario>()
 
+    fun agregarIntegrante(nuevo: Usuario) {
+        integrantes.add(nuevo)
+    }
+
     fun registrarGasto(gasto: Gasto) {
         // TODO()
     }

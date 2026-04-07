@@ -13,8 +13,8 @@ interface GrupoRepository : CrudRepository<Grupo, Long> {
     @Query(
         """
     SELECT g FROM Grupo g
-    JOIN g.miembros m
-    WHERE m.usuario.id = :usuarioId
+    JOIN g.integrantes i
+    WHERE i.id = :usuarioId
 """
     )
     fun findByUsuario(

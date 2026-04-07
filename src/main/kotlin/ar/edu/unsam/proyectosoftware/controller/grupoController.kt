@@ -1,7 +1,5 @@
 package ar.edu.unsam.proyectosoftware.controller
 
-import ar.edu.unsam.proyectosoftware.domain.Grupo
-import ar.edu.unsam.proyectosoftware.dto.GroupPageResponse
 import ar.edu.unsam.proyectosoftware.dto.GrupoDTO
 import ar.edu.unsam.proyectosoftware.mapper.GrupoMapper
 import ar.edu.unsam.proyectosoftware.service.GrupoService

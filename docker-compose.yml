@@ -16,7 +16,7 @@ services:
   pgadmin:
     image: dpage/pgadmin4
     container_name: proyectosoftware-grupo6-pgadmin4
-    restart: always
+    restart: no
     ports:
       - "5051:80"
     environment:

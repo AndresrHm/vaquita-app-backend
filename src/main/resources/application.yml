@@ -1,4 +1,8 @@
 spring:
+  jackson:
+    date-format: yyyy-MM-dd
+    serialization:
+      write-dates-as-timestamps: false
   datasource:
     url: jdbc:postgresql://localhost:5433/vaquita
     username: postgres

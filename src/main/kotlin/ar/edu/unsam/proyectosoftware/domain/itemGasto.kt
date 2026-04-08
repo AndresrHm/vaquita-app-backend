@@ -1,0 +1,24 @@
+package ar.edu.unsam.proyectosoftware.domain
+
+import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+
+@Entity
+class ItemGasto(
+    var nombre: String,
+    var cantidad: Double,
+    var precioUnitario: Double,
+    @ManyToOne
+    @JoinColumn(name = "gasto_id")
+    val gasto: Gasto
+) {
+    @Id
+    @GeneratedValue
+    var id: Long? = null
+
+    val total: Double get() = cantidad * precioUnitario
+}

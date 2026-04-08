@@ -52,4 +52,5 @@ class UsuarioService(val usuarioRepository: UsuarioRepository
     fun obtenerTodosLosUsuarios(): Iterable<Usuario> {
         return usuarioRepository.findAll()
     }
+
 }

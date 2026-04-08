@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:18-alpine
+    container_name: proyectosoftware-grupo6-sql
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=vaquita
+    ports:
+      - '5433:5432'
+    volumes:
+      - db-vaquita:/var/lib/postgresql/data
+      - ./Docker/init_db.sh:/docker-entrypoint-initdb.d/01_init_db.sh
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: proyectosoftware-grupo6-pgadmin4
+    restart: no
+    ports:
+      - "5051:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@proyecto.edu.ar
+      PGADMIN_DEFAULT_PASSWORD: admin
+    volumes:
+      - pgadmin-data-vaquita:/var/lib/pgadmin
+
+volumes:
+  db-vaquita:
+  pgadmin-data-vaquita:

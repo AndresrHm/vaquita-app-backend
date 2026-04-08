@@ -2,11 +2,15 @@ package ar.edu.unsam.proyectosoftware.service
 
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.UsuarioRegistradoDTO
+import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
+import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
 import org.springframework.stereotype.Service
 
 @Service
-class UsuarioService(val usuarioRepository: UsuarioRepository
+class UsuarioService(
+    val usuarioRepository: UsuarioRepository,
+    val grupoRepository: GrupoRepository
 ) {
 
     fun registrarUsuario(dto: UsuarioRegistradoDTO): Usuario {
@@ -51,6 +55,13 @@ class UsuarioService(val usuarioRepository: UsuarioRepository
 
     fun obtenerTodosLosUsuarios(): Iterable<Usuario> {
         return usuarioRepository.findAll()
+    }
+
+    fun obtenerUsuariosPorGrupo(grupoId: Long): List<Usuario> {
+        grupoRepository.findById(grupoId)
+            .orElseThrow { Exception(ErrorStrings.GRUPO_NO_ENCONTRADO) }
+
+        return usuarioRepository.findByGrupos_Id(grupoId)
     }
 
 }

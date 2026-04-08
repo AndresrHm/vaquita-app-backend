@@ -18,3 +18,9 @@ Content-Type: application/json
   ],
   "participantesIds": [1]
 }
+
+###
+
+###
+GET http://localhost:8080/auth/grupo/1
+Content-Type: application/json

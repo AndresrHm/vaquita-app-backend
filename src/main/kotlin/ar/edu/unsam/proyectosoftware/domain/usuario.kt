@@ -1,5 +1,6 @@
 package ar.edu.unsam.proyectosoftware.domain
 
+import ar.edu.unsam.proyectosoftware.dto.UsuarioNombreIdDTO
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.Id
@@ -20,5 +21,14 @@ class Usuario(
 
     fun perteneceA(grupo: Grupo): Boolean{
         return true // Mock
+    }
+
+    companion object {
+        fun toUsuarioNombreIdDTO(usuario: Usuario): UsuarioNombreIdDTO {
+            return UsuarioNombreIdDTO(
+                nombre = usuario.nombre,
+                id = usuario.id!!
+            )
+        }
     }
 }

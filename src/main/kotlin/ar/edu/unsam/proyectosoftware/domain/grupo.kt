@@ -21,7 +21,7 @@ class Grupo(
     var id: Long? = null
 
     @ManyToMany(fetch = FetchType.LAZY)
-    val integrantes = mutableListOf<Usuario>()
+    var integrantes = mutableListOf<Usuario>()
 
     fun agregarIntegrante(nuevo: Usuario) {
         integrantes.add(nuevo)

@@ -11,17 +11,31 @@ class UsuarioService(val usuarioRepository: UsuarioRepository
 
     fun registrarUsuario(dto: UsuarioRegistradoDTO): Usuario {
 
-        //Validaciones
-        if (usuarioRepository.findByEmail(dto.email).isPresent){
-            throw Exception("El email ya está registrado")
-            }
+        val errores = mutableListOf<String>()
 
-        if (dto.contrasena.isBlank()) {
-            throw Exception("La contraseña no puede estar vacía")
+        // 2. Vamos revisando y anotando, PERO SIN HACER THROW TODAVÍA
+        if (dto.nombre.isBlank()) {
+            errores.add("• El nombre no puede estar vacío")
         }
 
-        if (dto.contrasena.length < 6) {
-            throw Exception("La contraseña debe tener al menos 6 caracteres")
+        if (dto.email.isBlank()) {
+            errores.add("• El email no puede estar vacío")
+        } else if (usuarioRepository.findByEmail(dto.email).isPresent) {
+            // Ponemos esto en un 'else' para no decirle que ya existe si en realidad está vacío
+            errores.add("• El email ya está registrado")
+        }
+
+        if (dto.contrasena.isBlank()) {
+            errores.add("• La contraseña no puede estar vacía")
+        } else if (dto.contrasena.length < 6) {
+            errores.add("• La contraseña debe tener al menos 6 caracteres")
+        }
+
+        // 3. El momento de la verdad: ¿Hay errores anotados?
+        if (errores.isNotEmpty()) {
+            // Unimos todos los mensajes con un salto de línea (\n) y explotamos
+            val mensajeFinal = errores.joinToString("\n")
+            throw Exception(mensajeFinal)
         }
 
         //Se instancia un nuevo usuario

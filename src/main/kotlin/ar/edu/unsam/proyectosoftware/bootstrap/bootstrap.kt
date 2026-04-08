@@ -41,7 +41,8 @@ class BootstrapData(
             monto = 15000.0,
             fecha = LocalDate.now(),
             grupo = grupo1,
-            pagador = usuario1
+            pagador = usuario1,
+            participantes = mutableListOf(usuario1)
         )
 
         // 4. Agregamos ítems discriminados

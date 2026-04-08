@@ -5,6 +5,7 @@ import ar.edu.unsam.proyectosoftware.domain.Gasto
 import ar.edu.unsam.proyectosoftware.dto.GastoDTO
 import ar.edu.unsam.proyectosoftware.service.GrupoService
 import ar.edu.unsam.proyectosoftware.service.UsuarioService
+import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("gasto")
+@CrossOrigin(origins = ["*"])
 class GastoController(
     val gastoService: GastoService,
     val usuarioService: UsuarioService,

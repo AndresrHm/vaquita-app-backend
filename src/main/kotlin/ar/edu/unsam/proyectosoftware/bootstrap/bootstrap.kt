@@ -23,12 +23,13 @@ class BootstrapData(
     fun initData() = CommandLineRunner {
         // 1. Usuarios
         val juanA = Usuario().apply { nombre = "Juan Alvarez" }
-        val agusH = Usuario().apply { nombre = "Agustín Hoj" }
-        val juanM = Usuario().apply { nombre = "Juan Maidana" }
         val andresH = Usuario().apply { nombre = "Andrés Hernández" }
-        val giuliana = Usuario().apply { nombre = "Giuliana Massanet" }
+        val agustinH = Usuario().apply { nombre = "Agustín Hoj" }
+        val juanM = Usuario().apply { nombre = "Juan Maidana" }
+        val giulianaM = Usuario().apply { nombre = "Giuliana Massanet" }
+        val andresS = Usuario().apply { nombre = "Andrés Simonini" }
 
-        usuarioRepository.saveAll(listOf(juanA, agusH, juanM, andresH, giuliana))
+        usuarioRepository.saveAll(listOf(juanA, agustinH, juanM, andresH, giulianaM, andresS))
 
         // 2. Grupos con .addAll()
         val grupoAsado = Grupo(
@@ -36,14 +37,14 @@ class BootstrapData(
             descripcion = "Asadito en el campus",
             imagen = "asado.jpg",
             fechaCreacion = LocalDate.now()
-        ).apply { integrantes.addAll(listOf(juanA, agusH, andresH)) }
+        ).apply { integrantes.addAll(listOf(juanA, agustinH, andresH, andresS)) }
 
         val grupoDepto = Grupo(
             nombre = "Depto Palermo",
             descripcion = "Gastos de convivencia",
             imagen = "depto.jpg",
             fechaCreacion = LocalDate.now()
-        ).apply { integrantes.addAll(listOf(agusH, juanM, giuliana)) }
+        ).apply { integrantes.addAll(listOf(agustinH, juanM, giulianaM)) }
 
         val grupoFutbol = Grupo(
             nombre = "Los Pibes FC",
@@ -57,7 +58,7 @@ class BootstrapData(
             descripcion = "Café y apuntes",
             imagen = "estudio.jpg",
             fechaCreacion = LocalDate.now()
-        ).apply { integrantes.addAll(listOf(giuliana, juanA, agusH)) }
+        ).apply { integrantes.addAll(listOf(giulianaM, juanA, agustinH, andresS)) }
 
         grupoRepository.saveAll(listOf(grupoAsado, grupoDepto, grupoFutbol, grupoEstudio))
 

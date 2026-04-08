@@ -13,3 +13,8 @@ data class GrupoCreacionDTO(
     val imagen: String = "",
     val descripcion: String = "",
 )
+
+data class GrupoNombreIdDTO(
+    val id: Long,
+    val nombre: String
+)

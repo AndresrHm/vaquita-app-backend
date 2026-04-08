@@ -21,4 +21,6 @@ interface GrupoRepository : CrudRepository<Grupo, Long> {
         usuarioId: Long,
         pageable: Pageable
     ): Page<Grupo>
+
+    fun findByIntegrantes_Id(usuarioId: Long): List<Grupo>
 }

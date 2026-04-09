@@ -1,14 +1,14 @@
 package ar.edu.unsam.proyectosoftware.controller
 
 import ar.edu.unsam.proyectosoftware.domain.Grupo
-import ar.edu.unsam.proyectosoftware.domain.Usuario
+import ar.edu.unsam.proyectosoftware.dto.GastosPorAnioDTO
+import ar.edu.unsam.proyectosoftware.dto.GastosPorMesDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoCreacionDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoDTO
-import ar.edu.unsam.proyectosoftware.dto.GrupoDetalleDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoNombreIdDTO
 import ar.edu.unsam.proyectosoftware.dto.PageResponse
-import ar.edu.unsam.proyectosoftware.dto.UsuarioNombreIdDTO
 import ar.edu.unsam.proyectosoftware.dto.toPageResponse
+import ar.edu.unsam.proyectosoftware.mapper.GastoMapper
 import ar.edu.unsam.proyectosoftware.mapper.GrupoMapper
 import ar.edu.unsam.proyectosoftware.service.GrupoService
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,6 +22,8 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.net.URI
+import java.time.format.TextStyle
+import java.util.Locale
 
 // todo meter autenticación
 
@@ -66,14 +68,50 @@ class GrupoController {
             .body(GrupoMapper.grupoToGrupoDTO(grupo))
     }
 
-    @GetMapping("/{id}/detalle")
-    fun obtenerDetalleGrupo(
-        @PathVariable id: Long,
-        @RequestParam usuarioId: Long
-    ): ResponseEntity<GrupoDetalleDTO> {
+//    @GetMapping("/{id}/detalle")
+//    fun obtenerDetalle(
+//        @PathVariable id: Long,
+//    ): ResponseEntity<GrupoDetalleDTO> {}
 
-        val resultado = grupoService.obtenerDetalleGrupo(id, usuarioId)
-        return ResponseEntity.ok(resultado)
+    @GetMapping("/{id}/gastos")
+    fun obtenerGastosPaginados(
+        @PathVariable id: Long,
+        @RequestParam page: Int = 0,
+        @RequestParam size: Int = 10,
+    ): ResponseEntity<PageResponse<GastosPorAnioDTO>> {
+
+        val gastosPage = grupoService.obtenerGastosGrupo(id, page, size)
+
+        val locale = Locale.forLanguageTag("es-AR")
+
+        val agrupado = gastosPage.content
+            .groupBy { it.fecha.year }
+            .map { (anio, gastosDelAnio) ->
+                GastosPorAnioDTO(
+                    year = anio,
+                    months = gastosDelAnio
+                        .groupBy { it.fecha.month }
+                        .map { (mes, gastosDelMes) ->
+                            GastosPorMesDTO(
+                                month = mes.getDisplayName(TextStyle.FULL, locale),
+                                expenses = gastosDelMes.map {
+                                    GastoMapper.toGastoItemDTO(it, 1) // userId hardcodeado por ahora
+                                }
+                            )
+                        }
+                )
+            }
+
+        val response = PageResponse(
+            content = agrupado,
+            page = gastosPage.number,
+            size = gastosPage.size,
+            totalElements = gastosPage.totalElements,
+            totalPages = gastosPage.totalPages,
+            hasNext = gastosPage.hasNext()
+        )
+
+        return ResponseEntity.ok(response)
     }
 
     enum class TipoFiltrado {

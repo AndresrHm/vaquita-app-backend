@@ -35,28 +35,28 @@ class BootstrapData(
         val grupoAsado = Grupo(
             nombre = "Asado UNSAM",
             descripcion = "Asadito en el campus",
-            imagenUrl = "asado.jpg",
+            imagenUrl = "https://i.ytimg.com/vi/OWt0hpRwqSs/hqdefault.jpg",
             fechaCreacion = LocalDate.now()
         ).apply { integrantes.addAll(listOf(juanA, agustinH, andresH, andresS)) }
 
         val grupoDepto = Grupo(
             nombre = "Depto Palermo",
             descripcion = "Gastos de convivencia",
-            imagenUrl = "depto.jpg",
+            imagenUrl = "https://definicion.de/wp-content/uploads/2009/02/departamento-1.jpg",
             fechaCreacion = LocalDate.now()
         ).apply { integrantes.addAll(listOf(agustinH, juanM, giulianaM)) }
 
         val grupoFutbol = Grupo(
             nombre = "Los Pibes FC",
             descripcion = "Canchita los martes",
-            imagenUrl = "pelota.jpg",
+            imagenUrl = "https://www.historiadeboca.com.ar/Fotos/Equipos/2000301.jpg",
             fechaCreacion = LocalDate.now()
         ).apply { integrantes.addAll(listOf(juanM, andresH, juanA)) }
 
         val grupoEstudio = Grupo(
             nombre = "Final de Objetos",
             descripcion = "Café y apuntes",
-            imagenUrl = "estudio.jpg",
+            imagenUrl = "https://www.pcgamesn.com/wp-content/sites/pcgamesn/2019/06/minecraft-enchantments-enchanting-table.jpg",
             fechaCreacion = LocalDate.now()
         ).apply { integrantes.addAll(listOf(giulianaM, juanA, agustinH, andresS)) }
 

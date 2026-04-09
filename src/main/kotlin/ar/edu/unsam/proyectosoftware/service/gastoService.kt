@@ -1,5 +1,6 @@
-package ar.edu.unsam.proyectosoftware
+package ar.edu.unsam.proyectosoftware.service
 
+import ar.edu.unsam.proyectosoftware.BusinessException
 import ar.edu.unsam.proyectosoftware.domain.Gasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.Usuario
@@ -13,23 +14,28 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
-class GastoService(
+class GastoService {
     @Autowired
-    val gastoRepository: GastoRepository,
+    lateinit var gastoRepository: GastoRepository
+
     @Autowired
-    val grupoRepository: GrupoRepository,
+    lateinit var grupoRepository: GrupoRepository
+
     @Autowired
-    val usuarioRepository: UsuarioRepository,
-) {
+    lateinit var usuarioRepository: UsuarioRepository
+
     @Transactional(readOnly = false, rollbackFor = [Exception::class])
     fun crearGasto(
         gastoDTO: GastoDTO
     ): Gasto {
         val grupo = grupoRepository.findById(gastoDTO.grupoID)
             .orElseThrow { BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO) }
+
         val pagador = usuarioRepository.findById(gastoDTO.pagadorID)
             .orElseThrow { BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO) }
+
         val participantes = usuarioRepository.findAllById(gastoDTO.participantesIDs).toList()
+
         if (participantes.size != gastoDTO.participantesIDs.size) {
             throw BusinessException(ErrorStrings.NINGUN_USUARIO_ENCONTRADO)
         }
@@ -49,11 +55,12 @@ class GastoService(
         if (!participantesContienePagador(participantes, pagador)) {
             throw BusinessException(ErrorStrings.USUARIO_SIN_PERMISO_GASTO)
         }
-/* Próximamente
-        if (!participantesPertenecenAlGrupo(participantes, grupo)) {
-            throw BusinessException(ErrorStrings.PARTICIPANTES_NO_PERTENECEN_AL_GRUPO)
-        }
-*/
+
+        /* Próximamente
+                if (!participantesPertenecenAlGrupo(participantes, grupo)) {
+                    throw BusinessException(ErrorStrings.PARTICIPANTES_NO_PERTENECEN_AL_GRUPO)
+                }
+        */
         //gasto.grupo.registrarGasto(gasto) // Agrega saldo en la db para x grupo
 
         gastoRepository.save(gasto)
@@ -67,14 +74,7 @@ class GastoService(
     ): Boolean {
         return participantes.contains(pagador)
     }
-/*
-    private fun participantesPertenecenAlGrupo(
-        participantes: List<Usuario>,
-        grupo: Grupo
-    ): Boolean {
-        return participantes.all{ participante -> participante.grupo == grupo}
-    }
-*/
+
     private fun validarDatosBasicos(gasto: Gasto) {
         if (gasto.monto <= 0) {
             throw BusinessException(ErrorStrings.MONTO_NEGATIVO)
@@ -88,5 +88,14 @@ class GastoService(
         // Por ahora devolvemos true, pero acá iría la lógica de roles (administrador)
         return true
     }
+
+    /*
+        private fun participantesPertenecenAlGrupo(
+            participantes: List<Usuario>,
+            grupo: Grupo
+        ): Boolean {
+            return participantes.all{ participante -> participante.grupo == grupo}
+        }
+    */
 }
 

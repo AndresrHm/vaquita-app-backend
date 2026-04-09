@@ -4,6 +4,7 @@ import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.GrupoCreacionDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoDTO
+import ar.edu.unsam.proyectosoftware.dto.GrupoDetalleDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoNombreIdDTO
 import ar.edu.unsam.proyectosoftware.dto.PageResponse
 import ar.edu.unsam.proyectosoftware.dto.UsuarioNombreIdDTO
@@ -63,6 +64,16 @@ class GrupoController {
         return ResponseEntity
             .created(URI.create("/grupos/${grupo.id}"))
             .body(GrupoMapper.grupoToGrupoDTO(grupo))
+    }
+
+    @GetMapping("/{id}/detalle")
+    fun obtenerDetalleGrupo(
+        @PathVariable id: Long,
+        @RequestParam usuarioId: Long
+    ): ResponseEntity<GrupoDetalleDTO> {
+
+        val resultado = grupoService.obtenerDetalleGrupo(id, usuarioId)
+        return ResponseEntity.ok(resultado)
     }
 
     enum class TipoFiltrado {

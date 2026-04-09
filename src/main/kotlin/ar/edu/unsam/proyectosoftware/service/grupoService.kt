@@ -48,6 +48,25 @@ class GrupoService {
     }
 
     @Transactional(readOnly = true)
+    fun obtenerDetalleGrupo(
+        grupoId: Long
+    ): Grupo {
+        val grupo = grupoRepository.findByIdOrNull(grupoId)
+            ?: throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
+
+        return grupo
+    }
+
+    @Transactional(readOnly = true)
+    fun obtenerCantIntegrantes(
+        grupoId: Long
+    ): Long {
+        if (grupoRepository.findByIdOrNull(grupoId) == null) throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
+
+        return grupoRepository.countIntegrantes(grupoId)
+    }
+
+    @Transactional(readOnly = true)
     fun obtenerGastosGrupo(
         grupoId: Long,
         page: Int,
@@ -57,24 +76,6 @@ class GrupoService {
         return gastoRepository.findByGrupoId(grupoId, pageable)
     }
 
-    @Transactional
-    fun crearGrupo(
-        usuarioId: Long,
-        dto: GrupoCreacionDTO
-    ): Grupo {
-        val usuario = buscarUsuario(usuarioId)
-
-        val grupo = Grupo(
-            nombre = dto.nombre,
-            descripcion = dto.descripcion,
-            imagen = dto.imagen,
-            fechaCreacion = LocalDate.now()
-        )
-
-        grupo.agregarIntegrante(usuario)
-
-        return grupoRepository.save(grupo)
-    }
 
     @Transactional(readOnly = true)
     fun obtenerGruposDeUsuario(usuarioId: Long): List<Grupo> {
@@ -87,5 +88,24 @@ class GrupoService {
     private fun buscarUsuario(usuarioId: Long): Usuario {
         return usuarioRepository.findByIdOrNull(usuarioId)
             ?: throw BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO)
+    }
+
+    @Transactional
+    fun crearGrupo(
+        usuarioId: Long,
+        dto: GrupoCreacionDTO
+    ): Grupo {
+        val usuario = buscarUsuario(usuarioId)
+
+        val grupo = Grupo(
+            nombre = dto.nombre,
+            descripcion = dto.descripcion,
+            imagenUrl = dto.imagen,
+            fechaCreacion = LocalDate.now()
+        )
+
+        grupo.agregarIntegrante(usuario)
+
+        return grupoRepository.save(grupo)
     }
 }

@@ -35,28 +35,28 @@ class BootstrapData(
         val grupoAsado = Grupo(
             nombre = "Asado UNSAM",
             descripcion = "Asadito en el campus",
-            imagen = "asado.jpg",
+            imagenUrl = "asado.jpg",
             fechaCreacion = LocalDate.now()
         ).apply { integrantes.addAll(listOf(juanA, agustinH, andresH, andresS)) }
 
         val grupoDepto = Grupo(
             nombre = "Depto Palermo",
             descripcion = "Gastos de convivencia",
-            imagen = "depto.jpg",
+            imagenUrl = "depto.jpg",
             fechaCreacion = LocalDate.now()
         ).apply { integrantes.addAll(listOf(agustinH, juanM, giulianaM)) }
 
         val grupoFutbol = Grupo(
             nombre = "Los Pibes FC",
             descripcion = "Canchita los martes",
-            imagen = "pelota.jpg",
+            imagenUrl = "pelota.jpg",
             fechaCreacion = LocalDate.now()
         ).apply { integrantes.addAll(listOf(juanM, andresH, juanA)) }
 
         val grupoEstudio = Grupo(
             nombre = "Final de Objetos",
             descripcion = "Café y apuntes",
-            imagen = "estudio.jpg",
+            imagenUrl = "estudio.jpg",
             fechaCreacion = LocalDate.now()
         ).apply { integrantes.addAll(listOf(giulianaM, juanA, agustinH, andresS)) }
 

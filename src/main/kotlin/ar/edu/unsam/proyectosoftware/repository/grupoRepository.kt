@@ -22,5 +22,12 @@ interface GrupoRepository : CrudRepository<Grupo, Long> {
         pageable: Pageable
     ): Page<Grupo>
 
+    @Query("""
+    SELECT COUNT(u) FROM Grupo g
+    JOIN g.integrantes u
+    WHERE g.id = :grupoId
+""")
+    fun countIntegrantes(grupoId: Long): Long
+
     fun findByIntegrantes_Id(usuarioId: Long): List<Grupo>
 }

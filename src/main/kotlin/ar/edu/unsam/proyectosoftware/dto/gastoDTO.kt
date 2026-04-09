@@ -21,16 +21,6 @@ data class ItemGastoDTO(
     val precioUnitario: Double
 )
 
-data class GrupoDetalleDTO(
-    val id: Long,
-    val name: String,
-    val status: String,
-    val outstanding: Double,
-    val currency: String,
-    val imageUrl: String,
-    val expensesByYear: List<GastosPorAnioDTO>
-)
-
 data class GastosPorAnioDTO(
     val year: Int,
     val months: List<GastosPorMesDTO>

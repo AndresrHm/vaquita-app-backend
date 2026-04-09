@@ -5,6 +5,7 @@ import ar.edu.unsam.proyectosoftware.dto.GastosPorAnioDTO
 import ar.edu.unsam.proyectosoftware.dto.GastosPorMesDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoCreacionDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoDTO
+import ar.edu.unsam.proyectosoftware.dto.GrupoDetalleDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoNombreIdDTO
 import ar.edu.unsam.proyectosoftware.dto.PageResponse
 import ar.edu.unsam.proyectosoftware.dto.toPageResponse
@@ -43,7 +44,7 @@ class GrupoController {
     ): PageResponse<GrupoDTO> {
         val resultPage = grupoService.obtenerGrupos(usuarioId, page, size)
 
-        return resultPage.toPageResponse { GrupoMapper.grupoToGrupoDTO(it) }
+        return resultPage.toPageResponse { GrupoMapper.toGrupoDTO(it) }
     }
 
     @GetMapping("/usuario/{usuarioId}")
@@ -65,13 +66,19 @@ class GrupoController {
 
         return ResponseEntity
             .created(URI.create("/grupos/${grupo.id}"))
-            .body(GrupoMapper.grupoToGrupoDTO(grupo))
+            .body(GrupoMapper.toGrupoDTO(grupo))
     }
 
-//    @GetMapping("/{id}/detalle")
-//    fun obtenerDetalle(
-//        @PathVariable id: Long,
-//    ): ResponseEntity<GrupoDetalleDTO> {}
+    // Podríamos pasar un type para obtener el detalle en groupDetail y en groupSettings
+    @GetMapping("/{grupoId}/detalle")
+    fun obtenerDetalleGrupo(
+        @PathVariable grupoId: Long,
+//        @RequestParam usuarioId: Long TODO: Meter autenticación
+    ): ResponseEntity<GrupoDetalleDTO> {
+        val grupo = grupoService.obtenerDetalleGrupo(grupoId)
+        val cantIntegrantes = grupoService.obtenerCantIntegrantes(grupoId)
+        return ResponseEntity.ok(GrupoMapper.toGrupoDetalleDTO(grupo, cantIntegrantes))
+    }
 
     @GetMapping("/{id}/gastos")
     fun obtenerGastosPaginados(
@@ -85,17 +92,20 @@ class GrupoController {
         val locale = Locale.forLanguageTag("es-AR")
 
         val agrupado = gastosPage.content
+            .sortedByDescending { it.fecha }
             .groupBy { it.fecha.year }
+            .toSortedMap(compareByDescending { it })
             .map { (anio, gastosDelAnio) ->
                 GastosPorAnioDTO(
                     year = anio,
                     months = gastosDelAnio
                         .groupBy { it.fecha.month }
+                        .toSortedMap(compareByDescending { it.value })
                         .map { (mes, gastosDelMes) ->
                             GastosPorMesDTO(
                                 month = mes.getDisplayName(TextStyle.FULL, locale),
                                 expenses = gastosDelMes.map {
-                                    GastoMapper.toGastoItemDTO(it, 1) // userId hardcodeado por ahora
+                                    GastoMapper.toGastoItemDTO(it, 1L) // userId hardcodeado por ahora
                                 }
                             )
                         }

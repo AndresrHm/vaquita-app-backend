@@ -1,6 +1,7 @@
 package ar.edu.unsam.proyectosoftware.controller
 
 import ar.edu.unsam.proyectosoftware.domain.Usuario
+import ar.edu.unsam.proyectosoftware.dto.UsuarioNombreIdDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioRegistradoDTO
 import ar.edu.unsam.proyectosoftware.service.UsuarioService
 import org.springframework.http.ResponseEntity
@@ -24,9 +25,16 @@ class UsuarioController(private val usuarioService: UsuarioService) {
     }
 
     @GetMapping
-    fun obtenerTodosLosUsuarios(): ResponseEntity<Iterable<Usuario>>{
+    fun obtenerTodosLosUsuarios(): ResponseEntity<Iterable<Usuario>> {
         val usuarios = usuarioService.obtenerTodosLosUsuarios()
         return ResponseEntity.ok(usuarios)
+    }
+
+    @GetMapping("/grupo/{grupoId}")
+    fun obtenerUsuariosPorGrupo(@PathVariable grupoId: Long): ResponseEntity<Iterable<UsuarioNombreIdDTO>> {
+        val usuarios = usuarioService.obtenerUsuariosPorGrupo(grupoId)
+        val response = usuarios.map { Usuario.toUsuarioNombreIdDTO(it) }
+        return ResponseEntity.ok(response)
     }
 
     @PostMapping("/register")

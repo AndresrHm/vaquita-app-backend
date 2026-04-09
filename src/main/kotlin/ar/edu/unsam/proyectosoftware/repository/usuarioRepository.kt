@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository
 @Repository
 interface UsuarioRepository : CrudRepository<Usuario, Long> {
     fun findByEmail(email: String): java.util.Optional<Usuario>
+    fun findByGrupos_Id(grupoId: Long): List<Usuario>
 }

@@ -1,5 +1,6 @@
 package ar.edu.unsam.proyectosoftware.domain
 
+import ar.edu.unsam.proyectosoftware.dto.GrupoNombreIdDTO
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
@@ -21,7 +22,7 @@ class Grupo(
     var id: Long? = null
 
     @ManyToMany(fetch = FetchType.LAZY)
-    val integrantes = mutableListOf<Usuario>()
+    var integrantes = mutableListOf<Usuario>()
 
     fun agregarIntegrante(nuevo: Usuario) {
         integrantes.add(nuevo)
@@ -29,5 +30,14 @@ class Grupo(
 
     fun registrarGasto(gasto: Gasto) {
         // TODO()
+    }
+
+    companion object {
+        fun toGrupoNombreIdDTO(grupo: Grupo): GrupoNombreIdDTO {
+            return GrupoNombreIdDTO(
+                id = grupo.id!!,
+                nombre = grupo.nombre
+            )
+        }
     }
 }

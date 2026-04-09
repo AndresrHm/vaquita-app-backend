@@ -1,14 +1,20 @@
 package ar.edu.unsam.proyectosoftware.controller
 
+import ar.edu.unsam.proyectosoftware.domain.Grupo
+import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.GrupoCreacionDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoDTO
+import ar.edu.unsam.proyectosoftware.dto.GrupoNombreIdDTO
 import ar.edu.unsam.proyectosoftware.dto.PageResponse
+import ar.edu.unsam.proyectosoftware.dto.UsuarioNombreIdDTO
 import ar.edu.unsam.proyectosoftware.dto.toPageResponse
 import ar.edu.unsam.proyectosoftware.mapper.GrupoMapper
 import ar.edu.unsam.proyectosoftware.service.GrupoService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -20,6 +26,7 @@ import java.net.URI
 
 @RestController
 @RequestMapping("grupo")
+@CrossOrigin(origins = ["http://localhost:5173"])
 class GrupoController {
     @Autowired
     lateinit var grupoService: GrupoService
@@ -34,6 +41,15 @@ class GrupoController {
         val resultPage = grupoService.obtenerGrupos(usuarioId, page, size)
 
         return resultPage.toPageResponse { GrupoMapper.grupoToGrupoDTO(it) }
+    }
+
+    @GetMapping("/usuario/{usuarioId}")
+    fun obtenerGruposDeUsuario(
+        @PathVariable usuarioId: Long,
+    ): ResponseEntity<Iterable<GrupoNombreIdDTO>> {
+        val grupos = grupoService.obtenerGruposDeUsuario(usuarioId)
+        val response = grupos.map { Grupo.toGrupoNombreIdDTO(it) }
+        return ResponseEntity.ok(response)
     }
 
     @PostMapping

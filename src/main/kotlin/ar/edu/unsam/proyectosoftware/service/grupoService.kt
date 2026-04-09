@@ -2,6 +2,7 @@ package ar.edu.unsam.proyectosoftware.service
 
 import ar.edu.unsam.proyectosoftware.BusinessException
 import ar.edu.unsam.proyectosoftware.domain.Grupo
+import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.GrupoCreacionDTO
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
@@ -46,8 +47,7 @@ class GrupoService {
         usuarioId: Long,
         dto: GrupoCreacionDTO
     ): Grupo {
-        val usuario = usuarioRepository.findByIdOrNull(usuarioId)
-            ?: throw BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO)
+        val usuario = buscarUsuario(usuarioId)
 
         val grupo = Grupo(
             nombre = dto.nombre,
@@ -59,5 +59,16 @@ class GrupoService {
         grupo.agregarIntegrante(usuario)
 
         return grupoRepository.save(grupo)
+    }
+
+    fun obtenerGruposDeUsuario(usuarioId: Long): List<Grupo> {
+        buscarUsuario(usuarioId)
+
+        return grupoRepository.findByIntegrantes_Id(usuarioId)
+    }
+
+    private fun buscarUsuario(usuarioId: Long): Usuario {
+        return usuarioRepository.findByIdOrNull(usuarioId)
+            ?: throw BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO)
     }
 }

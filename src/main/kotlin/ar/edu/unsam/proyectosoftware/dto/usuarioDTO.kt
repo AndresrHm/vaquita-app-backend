@@ -6,6 +6,17 @@ data class UsuarioRegistradoDTO(
     val contrasena: String
 )
 
+data class UsuarioLoginDTO(
+    val email: String,
+    val contrasena: String
+)
+
+data class UsuarioLogueadoDTO (
+    val token: String,
+    val nombre: String,
+    val email: String,
+)
+
 data class UsuarioNombreIdDTO(
     val nombre: String,
     val id: Long

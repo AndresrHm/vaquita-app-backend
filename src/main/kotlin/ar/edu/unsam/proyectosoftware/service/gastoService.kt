@@ -9,22 +9,19 @@ import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
+val MAX_CARACTERES_DESCRIPCION = 50
+val MAX_CARACTERES_NOMBRE_PRODUCTO = 20
+
 @Service
-class GastoService {
-    @Autowired
-    lateinit var gastoRepository: GastoRepository
-
-    @Autowired
-    lateinit var grupoRepository: GrupoRepository
-
-    @Autowired
-    lateinit var usuarioRepository: UsuarioRepository
-
-    @Transactional(readOnly = false, rollbackFor = [Exception::class])
+class GastoService(
+    var gastoRepository: GastoRepository,
+    var grupoRepository: GrupoRepository,
+    var usuarioRepository: UsuarioRepository,
+) {
+    @Transactional
     fun crearGasto(
         gastoDTO: GastoDTO
     ): Gasto {
@@ -81,6 +78,12 @@ class GastoService {
         }
         if (gasto.descripcion.isBlank()) {
             throw BusinessException(ErrorStrings.DESCRIPCION_VACIA)
+        }
+        if (gasto.descripcion.length > MAX_CARACTERES_DESCRIPCION) {
+            throw BusinessException(ErrorStrings.DESCRIPCION_LARGA(MAX_CARACTERES_DESCRIPCION))
+        }
+        if (gasto.items.any { it.nombre.length > MAX_CARACTERES_NOMBRE_PRODUCTO }) {
+            throw BusinessException(ErrorStrings.DESCRIPCION_LARGA(MAX_CARACTERES_NOMBRE_PRODUCTO))
         }
     }
 

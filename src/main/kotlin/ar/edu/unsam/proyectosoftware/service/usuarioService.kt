@@ -6,13 +6,14 @@ import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class UsuarioService(
     val usuarioRepository: UsuarioRepository,
     val grupoRepository: GrupoRepository
 ) {
-
+    @Transactional
     fun registrarUsuario(dto: UsuarioRegistradoDTO): Usuario {
 
         val errores = mutableListOf<String>()

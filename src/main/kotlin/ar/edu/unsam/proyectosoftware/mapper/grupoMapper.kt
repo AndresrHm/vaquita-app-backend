@@ -9,7 +9,7 @@ object GrupoMapper {
         return GrupoDTO(
             id = grupo.id!!,
             nombre = grupo.nombre,
-            imagen = grupo.imagenUrl,
+            imagenUrl = grupo.imagenUrl,
         )
     }
 

@@ -100,7 +100,7 @@ class GrupoService {
         val grupo = Grupo(
             nombre = dto.nombre,
             descripcion = dto.descripcion,
-            imagenUrl = dto.imagen,
+            imagenUrl = dto.imagenUrl,
             fechaCreacion = LocalDate.now()
         )
 

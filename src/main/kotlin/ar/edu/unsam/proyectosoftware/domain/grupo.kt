@@ -14,8 +14,9 @@ import java.time.LocalDate
 class Grupo(
     var nombre: String = "Grupo",
     var descripcion: String = "",
-    var imagen: String = "",
-    val fechaCreacion: LocalDate
+    var imagenUrl: String = "",
+    val fechaCreacion: LocalDate,
+    var modoRata: Boolean = false, // TODO: Implementar feature
 ) {
     @Id
     @GeneratedValue

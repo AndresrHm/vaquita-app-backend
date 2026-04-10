@@ -20,3 +20,23 @@ data class ItemGastoDTO(
     val cantidad: Double,
     val precioUnitario: Double
 )
+
+data class GastosPorAnioDTO(
+    val year: Int,
+    val months: List<GastosPorMesDTO>
+)
+
+data class GastosPorMesDTO(
+    val month: String,
+    val expenses: List<GastoItemDTO>
+)
+
+data class GastoItemDTO(
+    val id: Long,
+    val day: Int,
+    val title: String,
+    val amount: Double,
+    val currency: String,
+    val paymentType: String,
+    val imageUrl: String
+)

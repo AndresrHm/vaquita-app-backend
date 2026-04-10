@@ -18,3 +18,11 @@ data class GrupoNombreIdDTO(
     val id: Long,
     val nombre: String
 )
+
+data class GrupoDetalleDTO(
+    val id: Long,
+    val nombre: String,
+    val descripcion: String,
+    val imagenUrl: String,
+    val cantidadIntegrantes: Long,
+)

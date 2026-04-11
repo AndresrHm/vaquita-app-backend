@@ -10,6 +10,7 @@ import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.lang.invoke.MethodHandles.throwException
 
 @Service
@@ -19,7 +20,7 @@ class UsuarioService(
     private val passwordEncoder: PasswordEncoder,
     private val jwtUtils: JwtUtils
 ) {
-
+    @Transactional
     fun registrarUsuario(dto: UsuarioRegistradoDTO): Usuario {
 
         val errores = mutableListOf<String>()

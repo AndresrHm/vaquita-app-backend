@@ -19,17 +19,11 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
 
 @Service
-class GrupoService {
-    @Autowired
-    lateinit var grupoRepository: GrupoRepository
-
-    @Autowired
-    lateinit var usuarioRepository: UsuarioRepository
-
-    @Autowired
-    lateinit var gastoRepository: GastoRepository
-
-    @Transactional(readOnly = true)
+class GrupoService(
+    var grupoRepository: GrupoRepository,
+    var usuarioRepository: UsuarioRepository,
+    var gastoRepository: GastoRepository
+) {
     fun obtenerGrupos(
         usuarioId: Long,
         page: Int,
@@ -47,7 +41,6 @@ class GrupoService {
         return grupoRepository.findByUsuario(usuarioId, pageable)
     }
 
-    @Transactional(readOnly = true)
     fun obtenerDetalleGrupo(
         grupoId: Long
     ): Grupo {
@@ -57,7 +50,6 @@ class GrupoService {
         return grupo
     }
 
-    @Transactional(readOnly = true)
     fun obtenerCantIntegrantes(
         grupoId: Long
     ): Long {
@@ -66,7 +58,6 @@ class GrupoService {
         return grupoRepository.countIntegrantes(grupoId)
     }
 
-    @Transactional(readOnly = true)
     fun obtenerGastosGrupo(
         grupoId: Long,
         page: Int,
@@ -76,15 +67,12 @@ class GrupoService {
         return gastoRepository.findByGrupoId(grupoId, pageable)
     }
 
-
-    @Transactional(readOnly = true)
     fun obtenerGruposDeUsuario(usuarioId: Long): List<Grupo> {
         buscarUsuario(usuarioId)
 
         return grupoRepository.findByIntegrantes_Id(usuarioId)
     }
 
-    @Transactional(readOnly = true)
     private fun buscarUsuario(usuarioId: Long): Usuario {
         return usuarioRepository.findByIdOrNull(usuarioId)
             ?: throw BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO)

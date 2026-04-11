@@ -1,6 +1,7 @@
 package ar.edu.unsam.proyectosoftware.domain
 
 import ar.edu.unsam.proyectosoftware.dto.UsuarioNombreIdDTO
+import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.Id
@@ -16,6 +17,7 @@ class Usuario(
     @GeneratedValue
     var id: Long? = null
 
+    @JsonIgnore
     @ManyToMany(mappedBy = "integrantes")
     var grupos: MutableList<Grupo> = mutableListOf()
 

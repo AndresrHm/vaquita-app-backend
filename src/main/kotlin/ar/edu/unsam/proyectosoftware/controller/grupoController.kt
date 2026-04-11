@@ -22,6 +22,7 @@ class GrupoController {
     @Autowired
     lateinit var grupoService: GrupoService
 
+    // Endpoints para creación de gastos
     @GetMapping
     fun obtenerGrupos(
         @RequestParam usuarioId: Long,
@@ -43,6 +44,7 @@ class GrupoController {
         return ResponseEntity.ok(response)
     }
 
+    // --- Endpoints para creación de grupo
     @PostMapping
     fun crearGrupo(
         @RequestParam usuarioId: Long,
@@ -56,7 +58,7 @@ class GrupoController {
             .body(GrupoMapper.toGrupoDTO(grupo))
     }
 
-    // Podríamos pasar un type para obtener el detalle en groupDetail y en groupSettings
+    // --- Endpoints para GroupDetail ---
     @GetMapping("/{grupoId}/detalle")
     fun obtenerDetalleGrupo(
         @PathVariable grupoId: Long,
@@ -111,6 +113,25 @@ class GrupoController {
         return ResponseEntity.ok(response)
     }
 
+    // --- Endpoints para GroupSettings ---
+    @GetMapping("/{id}")
+    fun obtenerGrupoPorId(
+        @PathVariable id: Long
+    ): ResponseEntity<GrupoNombreIdDTO?> {
+        val grupo: GrupoNombreIdDTO = grupoService.obtenerGrupoNombrePorId(id)
+        return ResponseEntity.ok<GrupoNombreIdDTO?>(grupo)
+    }
+
+    @GetMapping("/{id}/settings")
+    fun obtenerSettings(@PathVariable id: Long): ResponseEntity<GrupoSettingsDTO> {
+        return ResponseEntity.ok<GrupoSettingsDTO>(grupoService.obtenerSettings(id))
+    }
+
+    @GetMapping("/{id}/contexto")
+    fun obtenerContexto(@PathVariable id: Long): ResponseEntity<GrupoContextoUsuarioDTO> {
+        return ResponseEntity.ok<GrupoContextoUsuarioDTO>(grupoService.obtenerContextoUsuario(id))
+    }
+
     enum class TipoFiltrado {
         TODOS_LOS_GRUPOS,
         SALDOS_PENDIENTES,
@@ -118,11 +139,4 @@ class GrupoController {
         GRUPOS_QUE_TE_DEBEN
     }
 
-    @GetMapping("/{id}")
-    fun obtenerGrupoPorId(
-        @PathVariable id: Long
-    ): ResponseEntity<GrupoNombreIdDTO?> {
-        val grupo: GrupoNombreIdDTO? = grupoService.obtenerGrupoNombrePorId(id)
-        return ResponseEntity.ok<GrupoNombreIdDTO?>(grupo)
-    }
 }

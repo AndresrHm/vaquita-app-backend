@@ -125,20 +125,21 @@ class GrupoController {
     // --- Endpoints para GroupSettings ---
     @GetMapping("/{id}/settings")
     fun obtenerSettings(@PathVariable id: Long): ResponseEntity<GrupoSettingsDTO> {
-        return ResponseEntity.ok<GrupoSettingsDTO>(grupoService.obtenerSettings(id))
+        val grupo = grupoService.obtenerSettings(id)
+        return ResponseEntity.ok<GrupoSettingsDTO>(GrupoMapper.toGrupoSettingsDTO(grupo))
     }
 
     @GetMapping("/{id}/contexto")
-    fun obtenerContexto(@PathVariable id: Long): ResponseEntity<GrupoContextoUsuarioDTO> {
-        return ResponseEntity.ok<GrupoContextoUsuarioDTO>(grupoService.obtenerContextoUsuario(id))
+    fun obtenerContexto(@PathVariable id: Long, @RequestParam usuarioId: Long): ResponseEntity<GrupoContextoUsuarioDTO> {
+        return ResponseEntity.ok<GrupoContextoUsuarioDTO>(grupoService.obtenerContextoUsuario(id, usuarioId))
     }
 
-    @GetMapping("/{id}/miembros")
-    fun obtenerMiembros(
-        @PathVariable id: Long
-    ): ResponseEntity<List<MiembroDTO>> {
-        return ResponseEntity.ok(grupoService.obtenerMiembros(id))
-    }
+//    @GetMapping("/{id}/miembros")
+//    fun obtenerMiembros(
+//        @PathVariable id: Long
+//    ): ResponseEntity<List<MiembroDTO>> {
+//        return ResponseEntity.ok(grupoService.obtenerMiembros(id))
+//    }
 
     enum class TipoFiltrado {
         TODOS_LOS_GRUPOS,

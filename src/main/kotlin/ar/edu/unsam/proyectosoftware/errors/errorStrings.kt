@@ -8,6 +8,7 @@ object ErrorStrings {
     const val USUARIO_NO_ENCONTRADO = "El usuario no ha sido encontrado."
     const val GRUPO_NO_ENCONTRADO = "El grupo no ha sido encontrado."
     const val NINGUN_USUARIO_ENCONTRADO = "Uno o más elementos no fueron encontrados"
+    const val USUARIO_NO_ES_ADMIN = "El usuario no es administrador del grupo"
     const val PARTICIPANTES_NO_PERTENECEN_AL_GRUPO = "todos los usuarios participantes deben pertenecer al grupo correspondiente"
     fun DESCRIPCION_LARGA(maxCaracteres: Int): String {
       return "La descripción no puede tener más de ${maxCaracteres} caracteres."

@@ -4,8 +4,11 @@ import ar.edu.unsam.proyectosoftware.BusinessException
 import ar.edu.unsam.proyectosoftware.domain.Gasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.Usuario
+import ar.edu.unsam.proyectosoftware.dto.GrupoContextoUsuarioDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoCreacionDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoNombreIdDTO
+import ar.edu.unsam.proyectosoftware.dto.GrupoSettingsDTO
+import ar.edu.unsam.proyectosoftware.dto.MiembroDTO
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
@@ -17,8 +20,6 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
-import java.util.function.Supplier
-
 
 @Service
 class GrupoService(
@@ -75,11 +76,6 @@ class GrupoService(
         return grupoRepository.findByIntegrantes_Id(usuarioId)
     }
 
-    private fun buscarUsuario(usuarioId: Long): Usuario {
-        return usuarioRepository.findByIdOrNull(usuarioId)
-            ?: throw BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO)
-    }
-
     @Transactional
     fun crearGrupo(
         usuarioId: Long,
@@ -104,5 +100,45 @@ class GrupoService(
             ?: throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
 
         return GrupoNombreIdDTO(grupo.id!!, grupo.nombre)
+    }
+
+    // --- Services para GroupSettings ---
+    fun obtenerSettings(grupoId: Long): Grupo {
+        val grupo = grupoRepository.findByIdOrNull(grupoId)
+            ?: throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
+
+        return grupo
+    }
+
+    fun obtenerContextoUsuario(grupoId: Long, usuarioId: Long): GrupoContextoUsuarioDTO {
+        val usuario = usuarioRepository.findByIdOrNull(usuarioId)
+            ?: throw BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO)
+
+        val grupo = grupoRepository.findByIdOrNull(grupoId)
+            ?: throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
+
+        return GrupoContextoUsuarioDTO(
+            esAdmin = grupo.esAdmin(usuario),
+            tieneDeudas = true // TODO: Hardcodeado
+        )
+    }
+
+//    fun obtenerMiembros(grupoId: Long): List<MiembroDTO> {
+//        val usuarios = grupoRepository.findBy
+//
+//        return usuarios.map { usuario ->
+//            MiembroDTO(
+//                id = usuario.id!!,
+//                nombre = usuario.nombre,
+//                rol = if (esAdminDelGrupo(usuario.id!!, grupoId)) "admin" else "member",
+//                imagenUrl = usuario.imagenUrl
+//            )
+//        }
+//    }
+
+    // --- Private functions
+    private fun buscarUsuario(usuarioId: Long): Usuario {
+        return usuarioRepository.findByIdOrNull(usuarioId)
+            ?: throw BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO)
     }
 }

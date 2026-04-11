@@ -12,6 +12,7 @@ data class UsuarioLoginDTO(
 )
 
 data class UsuarioLogueadoDTO (
+    val id: Long,
     val token: String,
     val nombre: String,
     val email: String,

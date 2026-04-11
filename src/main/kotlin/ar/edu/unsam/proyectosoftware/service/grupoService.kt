@@ -5,11 +5,11 @@ import ar.edu.unsam.proyectosoftware.domain.Gasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.GrupoCreacionDTO
+import ar.edu.unsam.proyectosoftware.dto.GrupoNombreIdDTO
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -17,6 +17,8 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
+import java.util.function.Supplier
+
 
 @Service
 class GrupoService(
@@ -95,5 +97,12 @@ class GrupoService(
         grupo.agregarIntegrante(usuario)
 
         return grupoRepository.save(grupo)
+    }
+
+    fun obtenerGrupoNombrePorId(id: Long): GrupoNombreIdDTO {
+        val grupo = grupoRepository.findByIdOrNull(id)
+            ?: throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
+
+        return GrupoNombreIdDTO(grupo.id!!, grupo.nombre)
     }
 }

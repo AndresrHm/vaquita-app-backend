@@ -23,11 +23,3 @@ object GrupoMapper {
         )
     }
 }
-
-//data class GrupoDetalleDTO(
-//    val name: String,
-//    val status: String,
-//    val outstanding: Double,
-//    val currency: String,
-//    val imageUrl: String,
-//)

@@ -1,30 +1,17 @@
 package ar.edu.unsam.proyectosoftware.controller
 
 import ar.edu.unsam.proyectosoftware.domain.Grupo
-import ar.edu.unsam.proyectosoftware.dto.GastosPorAnioDTO
-import ar.edu.unsam.proyectosoftware.dto.GastosPorMesDTO
-import ar.edu.unsam.proyectosoftware.dto.GrupoCreacionDTO
-import ar.edu.unsam.proyectosoftware.dto.GrupoDTO
-import ar.edu.unsam.proyectosoftware.dto.GrupoDetalleDTO
-import ar.edu.unsam.proyectosoftware.dto.GrupoNombreIdDTO
-import ar.edu.unsam.proyectosoftware.dto.PageResponse
-import ar.edu.unsam.proyectosoftware.dto.toPageResponse
+import ar.edu.unsam.proyectosoftware.dto.*
 import ar.edu.unsam.proyectosoftware.mapper.GastoMapper
 import ar.edu.unsam.proyectosoftware.mapper.GrupoMapper
 import ar.edu.unsam.proyectosoftware.service.GrupoService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.CrossOrigin
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import java.net.URI
 import java.time.format.TextStyle
-import java.util.Locale
+import java.util.*
+
 
 // todo meter autenticación
 
@@ -129,5 +116,13 @@ class GrupoController {
         SALDOS_PENDIENTES,
         GRUPOS_A_LOS_QUE_DEBES,
         GRUPOS_QUE_TE_DEBEN
+    }
+
+    @GetMapping("/{id}")
+    fun obtenerGrupoPorId(
+        @PathVariable id: Long
+    ): ResponseEntity<GrupoNombreIdDTO?> {
+        val grupo: GrupoNombreIdDTO? = grupoService.obtenerGrupoNombrePorId(id)
+        return ResponseEntity.ok<GrupoNombreIdDTO?>(grupo)
     }
 }

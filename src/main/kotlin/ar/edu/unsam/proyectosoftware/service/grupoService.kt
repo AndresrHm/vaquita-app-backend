@@ -5,11 +5,11 @@ import ar.edu.unsam.proyectosoftware.domain.Gasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.GrupoCreacionDTO
+import ar.edu.unsam.proyectosoftware.dto.GrupoNombreIdDTO
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -17,19 +17,15 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
+import java.util.function.Supplier
+
 
 @Service
-class GrupoService {
-    @Autowired
-    lateinit var grupoRepository: GrupoRepository
-
-    @Autowired
-    lateinit var usuarioRepository: UsuarioRepository
-
-    @Autowired
-    lateinit var gastoRepository: GastoRepository
-
-    @Transactional(readOnly = true)
+class GrupoService(
+    var grupoRepository: GrupoRepository,
+    var usuarioRepository: UsuarioRepository,
+    var gastoRepository: GastoRepository
+) {
     fun obtenerGrupos(
         usuarioId: Long,
         page: Int,
@@ -47,7 +43,6 @@ class GrupoService {
         return grupoRepository.findByUsuario(usuarioId, pageable)
     }
 
-    @Transactional(readOnly = true)
     fun obtenerDetalleGrupo(
         grupoId: Long
     ): Grupo {
@@ -57,7 +52,6 @@ class GrupoService {
         return grupo
     }
 
-    @Transactional(readOnly = true)
     fun obtenerCantIntegrantes(
         grupoId: Long
     ): Long {
@@ -66,7 +60,6 @@ class GrupoService {
         return grupoRepository.countIntegrantes(grupoId)
     }
 
-    @Transactional(readOnly = true)
     fun obtenerGastosGrupo(
         grupoId: Long,
         page: Int,
@@ -76,15 +69,12 @@ class GrupoService {
         return gastoRepository.findByGrupoId(grupoId, pageable)
     }
 
-
-    @Transactional(readOnly = true)
     fun obtenerGruposDeUsuario(usuarioId: Long): List<Grupo> {
         buscarUsuario(usuarioId)
 
         return grupoRepository.findByIntegrantes_Id(usuarioId)
     }
 
-    @Transactional(readOnly = true)
     private fun buscarUsuario(usuarioId: Long): Usuario {
         return usuarioRepository.findByIdOrNull(usuarioId)
             ?: throw BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO)
@@ -107,5 +97,12 @@ class GrupoService {
         grupo.agregarIntegrante(usuario)
 
         return grupoRepository.save(grupo)
+    }
+
+    fun obtenerGrupoNombrePorId(id: Long): GrupoNombreIdDTO {
+        val grupo = grupoRepository.findByIdOrNull(id)
+            ?: throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
+
+        return GrupoNombreIdDTO(grupo.id!!, grupo.nombre)
     }
 }

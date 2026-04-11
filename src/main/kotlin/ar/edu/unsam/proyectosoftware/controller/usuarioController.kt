@@ -1,6 +1,8 @@
 package ar.edu.unsam.proyectosoftware.controller
 
 import ar.edu.unsam.proyectosoftware.domain.Usuario
+import ar.edu.unsam.proyectosoftware.dto.UsuarioLoginDTO
+import ar.edu.unsam.proyectosoftware.dto.UsuarioLogueadoDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioNombreIdDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioRegistradoDTO
 import ar.edu.unsam.proyectosoftware.service.UsuarioService
@@ -41,5 +43,11 @@ class UsuarioController(private val usuarioService: UsuarioService) {
     fun registrarUsuario(@RequestBody dto: UsuarioRegistradoDTO): ResponseEntity<Usuario> {
         val usuarioCreado = usuarioService.registrarUsuario(dto)
         return ResponseEntity.ok(usuarioCreado) // Devolvemos el objeto entero, no un texto
+    }
+
+    @PostMapping("/login")
+    fun loginUser(@RequestBody dataUser: UsuarioLoginDTO): ResponseEntity<UsuarioLogueadoDTO> {
+        val respuesta = usuarioService.login(dataUser)
+        return ResponseEntity.ok(respuesta)
     }
 }

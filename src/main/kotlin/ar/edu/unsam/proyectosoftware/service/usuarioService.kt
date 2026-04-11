@@ -1,16 +1,23 @@
 package ar.edu.unsam.proyectosoftware.service
 
+import ar.edu.unsam.proyectosoftware.config.JwtUtils
 import ar.edu.unsam.proyectosoftware.domain.Usuario
+import ar.edu.unsam.proyectosoftware.dto.UsuarioLoginDTO
+import ar.edu.unsam.proyectosoftware.dto.UsuarioLogueadoDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioRegistradoDTO
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import java.lang.invoke.MethodHandles.throwException
 
 @Service
 class UsuarioService(
     val usuarioRepository: UsuarioRepository,
-    val grupoRepository: GrupoRepository
+    val grupoRepository: GrupoRepository,
+    private val passwordEncoder: PasswordEncoder,
+    private val jwtUtils: JwtUtils
 ) {
 
     fun registrarUsuario(dto: UsuarioRegistradoDTO): Usuario {
@@ -42,10 +49,30 @@ class UsuarioService(
             throw Exception(mensajeFinal)
         }
 
+        //Hash de contraseña
+        val contrasenaHasheada = passwordEncoder.encode(dto.contrasena)
+
         //Se instancia un nuevo usuario
-        val nuevoUsuario = Usuario(nombre = dto.nombre, email = dto.email, contrasena = dto.contrasena)
+        val nuevoUsuario = Usuario(nombre = dto.nombre, email = dto.email, contrasena = contrasenaHasheada)
 
         return usuarioRepository.save(nuevoUsuario)
+    }
+
+    fun login(dataUser: UsuarioLoginDTO): UsuarioLogueadoDTO {
+        val usuario = usuarioRepository.findByEmail(dataUser.email)
+            .orElseThrow { Exception("Email o contraseña incorrectos") }
+
+        if (!passwordEncoder.matches(dataUser.contrasena, usuario.contrasena)) {
+            throw Exception("Email o contraseña incorrectos")
+        }
+
+        val token = jwtUtils.generarToken(usuario)
+
+        return UsuarioLogueadoDTO(
+            nombre = usuario.nombre,
+            email = usuario.email,
+            token = token
+        )
     }
 
     fun obtenerUsuario(usuarioID: Long): Usuario {

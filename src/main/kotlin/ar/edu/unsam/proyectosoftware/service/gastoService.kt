@@ -4,9 +4,10 @@ import ar.edu.unsam.proyectosoftware.BusinessException
 import ar.edu.unsam.proyectosoftware.domain.Gasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.Usuario
-import ar.edu.unsam.proyectosoftware.dto.GastoDTO
+import ar.edu.unsam.proyectosoftware.dto.CreacionGastoDTO
 import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
+import ar.edu.unsam.proyectosoftware.repository.FraccionGastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
 import org.springframework.beans.factory.annotation.Autowired
@@ -14,19 +15,16 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
-class GastoService {
-    @Autowired
-    lateinit var gastoRepository: GastoRepository
-
-    @Autowired
-    lateinit var grupoRepository: GrupoRepository
-
-    @Autowired
-    lateinit var usuarioRepository: UsuarioRepository
+class GastoService(
+    var fraccionGastoRepository: FraccionGastoRepository,
+    var gastoRepository: GastoRepository,
+    var grupoRepository: GrupoRepository,
+    var usuarioRepository: UsuarioRepository
+) {
 
     @Transactional(readOnly = false, rollbackFor = [Exception::class])
     fun crearGasto(
-        gastoDTO: GastoDTO
+        gastoDTO: CreacionGastoDTO
     ): Gasto {
         val grupo = grupoRepository.findById(gastoDTO.grupoID)
             .orElseThrow { BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO) }
@@ -56,14 +54,10 @@ class GastoService {
             throw BusinessException(ErrorStrings.USUARIO_SIN_PERMISO_GASTO)
         }
 
-        /* Próximamente
-                if (!participantesPertenecenAlGrupo(participantes, grupo)) {
-                    throw BusinessException(ErrorStrings.PARTICIPANTES_NO_PERTENECEN_AL_GRUPO)
-                }
-        */
-        //gasto.grupo.registrarGasto(gasto) // Agrega saldo en la db para x grupo
+        val fracciones = gasto.repartirGasto()
 
         gastoRepository.save(gasto)
+        fraccionGastoRepository.saveAll(fracciones)
 
         return gasto
     }

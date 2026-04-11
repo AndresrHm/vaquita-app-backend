@@ -1,9 +1,10 @@
 package ar.edu.unsam.proyectosoftware.dto
 
+import ar.edu.unsam.proyectosoftware.domain.TipoGasto
 import java.time.LocalDate
 import java.util.Collections.emptyList
 
-data class GastoDTO(
+data class CreacionGastoDTO(
     val id: Long?,
     val descripcion: String,
     val categoria: String,
@@ -12,7 +13,8 @@ data class GastoDTO(
     val grupoID: Long,
     val pagadorID: Long,
     val participantesIDs: List<Long>,
-    val items: List<ItemGastoDTO> = emptyList()
+    val items: List<ItemGastoDTO> = emptyList(),
+    val tipoGasto: TipoGasto
 )
 
 data class ItemGastoDTO(

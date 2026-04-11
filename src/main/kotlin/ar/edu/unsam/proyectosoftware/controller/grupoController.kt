@@ -113,7 +113,7 @@ class GrupoController {
         return ResponseEntity.ok(response)
     }
 
-    // --- Endpoints para GroupSettings ---
+    // --- Endpoints para GroupDetail ---
     @GetMapping("/{id}")
     fun obtenerGrupoPorId(
         @PathVariable id: Long
@@ -122,6 +122,7 @@ class GrupoController {
         return ResponseEntity.ok<GrupoNombreIdDTO?>(grupo)
     }
 
+    // --- Endpoints para GroupSettings ---
     @GetMapping("/{id}/settings")
     fun obtenerSettings(@PathVariable id: Long): ResponseEntity<GrupoSettingsDTO> {
         return ResponseEntity.ok<GrupoSettingsDTO>(grupoService.obtenerSettings(id))
@@ -130,6 +131,13 @@ class GrupoController {
     @GetMapping("/{id}/contexto")
     fun obtenerContexto(@PathVariable id: Long): ResponseEntity<GrupoContextoUsuarioDTO> {
         return ResponseEntity.ok<GrupoContextoUsuarioDTO>(grupoService.obtenerContextoUsuario(id))
+    }
+
+    @GetMapping("/{id}/miembros")
+    fun obtenerMiembros(
+        @PathVariable id: Long
+    ): ResponseEntity<List<MiembroDTO>> {
+        return ResponseEntity.ok(grupoService.obtenerMiembros(id))
     }
 
     enum class TipoFiltrado {

@@ -5,6 +5,7 @@ import ar.edu.unsam.proyectosoftware.dto.*
 import ar.edu.unsam.proyectosoftware.mapper.GastoMapper
 import ar.edu.unsam.proyectosoftware.mapper.GrupoMapper
 import ar.edu.unsam.proyectosoftware.service.GrupoService
+import org.apache.coyote.Response
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -157,6 +158,15 @@ class GrupoController {
         }
 
         return ResponseEntity.ok(response)
+    }
+
+    @PatchMapping("/{grupoId}/settings")
+    fun actualizarSettings(
+        @PathVariable grupoId: Long,
+        @RequestBody grupoSettingsDTO: GrupoSettingsDTO,
+    ): ResponseEntity<GrupoSettingsDTO> {
+        val grupoActualizado = grupoService.actualizarGrupo(grupoId, grupoSettingsDTO)
+        return ResponseEntity.ok(GrupoMapper.toGrupoSettingsDTO(grupoActualizado))
     }
 
     enum class TipoFiltrado {

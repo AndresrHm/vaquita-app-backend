@@ -7,6 +7,7 @@ import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.GrupoContextoUsuarioDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoCreacionDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoNombreIdDTO
+import ar.edu.unsam.proyectosoftware.dto.GrupoSettingsDTO
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
@@ -136,6 +137,28 @@ class GrupoService(
         }
 
         return grupoRepository.obtenerMiembrosConRol(grupoId)
+    }
+
+    fun actualizarGrupo(grupoId: Long, grupoSettingsDTO: GrupoSettingsDTO): Grupo {
+        if (grupoId != grupoSettingsDTO.id) throw BusinessException(ErrorStrings.INFORMACION_INVALIDA)
+
+        val grupo = grupoRepository.findByIdOrNull(grupoId)
+        ?: throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
+
+        if (grupoSettingsDTO.nombre.isBlank()) {
+            throw BusinessException(ErrorStrings.NOMBRE_OBLIGATORIO)
+        }
+
+        grupo.nombre = grupoSettingsDTO.nombre
+        grupo.descripcion = grupoSettingsDTO.descripcion
+        grupo.imagenUrl = grupoSettingsDTO.imagenUrl
+        grupo.moneda = grupoSettingsDTO.moneda
+        grupo.simplificarDeudas = grupoSettingsDTO.simplificarDeudas
+        grupo.notificaciones = grupoSettingsDTO.notificaciones
+
+        val guardado = grupoRepository.save(grupo)
+
+        return guardado
     }
 
     // --- Private functions

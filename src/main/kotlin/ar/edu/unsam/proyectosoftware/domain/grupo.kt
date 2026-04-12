@@ -26,6 +26,10 @@ class Grupo(
     @GeneratedValue
     var id: Long? = null
 
+    var moneda: String? = "ARS"
+    var simplificarDeudas: Boolean = true
+    var notificaciones: Boolean = false
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "grupo_integrantes",

@@ -156,6 +156,7 @@ class GrupoService(
         grupo.moneda = grupoSettingsDTO.moneda
         grupo.simplificarDeudas = grupoSettingsDTO.simplificarDeudas
         grupo.notificaciones = grupoSettingsDTO.notificaciones
+        grupo.modoRata = grupoSettingsDTO.modoRata
 
         val guardado = grupoRepository.save(grupo)
 

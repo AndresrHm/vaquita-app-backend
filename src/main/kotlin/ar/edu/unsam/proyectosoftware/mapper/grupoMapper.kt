@@ -13,6 +13,7 @@ object GrupoMapper {
             id = grupo.id!!,
             nombre = grupo.nombre,
             imagenUrl = grupo.imagenUrl,
+            estadoGrupo = "Pendiente de pago" // TODO: Implementar
         )
     }
 
@@ -32,9 +33,10 @@ object GrupoMapper {
             nombre = grupo.nombre,
             descripcion = grupo.descripcion,
             imagenUrl = grupo.imagenUrl,
-            moneda = "ARS", // TODO: hardcodeado
-            simplificarDeudas = true, // TODO: hardcodeado
-            notificaciones = false // TODO hardcodeado
+            moneda = grupo.moneda,
+            simplificarDeudas = grupo.simplificarDeudas,
+            notificaciones = grupo.notificaciones,
+            modoRata = grupo.modoRata
         )
     }
 }

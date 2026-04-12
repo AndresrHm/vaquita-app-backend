@@ -6,14 +6,13 @@ data class GrupoDTO(
     val id: Long,
     val nombre: String,
     val imagenUrl: String,
-    val estadoGrupo: String = "Pendiente de pago" // hardcodeado
-    // TODO: Mandar estado actual del grupo (ej. pendiente de pago)
+    val estadoGrupo: String, // TODO: Falta implementar
 )
 
 data class GrupoCreacionDTO(
     val nombre: String,
-    val imagenUrl: String = "",
-    val descripcion: String = "",
+    val imagenUrl: String,
+    val descripcion: String,
 )
 
 // Para /groups
@@ -37,15 +36,16 @@ data class GrupoSettingsDTO(
     val nombre: String,
     val descripcion: String,
     val imagenUrl: String,
-    val moneda: String, // TODO: Hardcodeado
-    val simplificarDeudas: Boolean = true, // TODO: Hardcodeado
-    val notificaciones: Boolean = false, // TODO: Hardcodeado
+    val moneda: String,
+    val simplificarDeudas: Boolean,
+    val notificaciones: Boolean,
+    val modoRata: Boolean,
 )
 
 data class GrupoContextoUsuarioDTO (
     val usuarioId: Long,
-    val esAdmin: Boolean = false,
-    val tieneDeudas: Boolean = true, // TODO: Hardcodeado
+    val esAdmin: Boolean,
+    val tieneDeudas: Boolean,
 )
 
 data class MiembroDTO (

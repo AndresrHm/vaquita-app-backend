@@ -127,7 +127,7 @@ class GrupoController {
     @GetMapping("/{grupoId}/settings")
     fun obtenerSettings(@PathVariable grupoId: Long): ResponseEntity<GrupoSettingsDTO> {
         val grupo = grupoService.obtenerSettings(grupoId)
-        return ResponseEntity.ok<GrupoSettingsDTO>(GrupoMapper.toGrupoSettingsDTO(grupo))
+        return ResponseEntity.ok(GrupoMapper.toGrupoSettingsDTO(grupo))
     }
 
     @GetMapping("/{grupoId}/contexto")

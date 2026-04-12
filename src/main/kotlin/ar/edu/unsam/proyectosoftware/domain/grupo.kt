@@ -19,15 +19,16 @@ class Grupo(
     var descripcion: String = "",
     var imagenUrl: String = "",
     val fechaCreacion: LocalDate,
-    var modoRata: Boolean = false // TODO: Implementar feature
 ) {
     @Id
     @GeneratedValue
     var id: Long? = null
 
-    var moneda: String? = "ARS"
-    var simplificarDeudas: Boolean = true
+    // TODO: Implementar estas features
+    var moneda: String = "ARS"
+    var simplificarDeudas: Boolean = false
     var notificaciones: Boolean = false
+    var modoRata: Boolean = false
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

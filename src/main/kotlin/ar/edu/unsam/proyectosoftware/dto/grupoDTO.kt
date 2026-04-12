@@ -44,18 +44,18 @@ data class GrupoSettingsDTO(
 
 data class GrupoContextoUsuarioDTO (
     val usuarioId: Long,
-    val esAdmin: Boolean = false, // TODO: Hardcodeado
+    val esAdmin: Boolean = false,
     val tieneDeudas: Boolean = true, // TODO: Hardcodeado
 )
 
 data class MiembroDTO (
     val id: Long,
     val nombre: String,
-    val rol: RolMiembro = RolMiembro.MIEMBRO, // TODO: Hardcodeado
+    val rol: String,
     val imagenUrl: String,
 )
 
-enum class RolMiembro {
-    ADMIN,
-    MIEMBRO
+enum class RolMiembro(val descripcion: String) {
+    ADMIN("Administrador"),
+    MIEMBRO("Miembro"),
 }

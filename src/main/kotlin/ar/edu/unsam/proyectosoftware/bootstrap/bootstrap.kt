@@ -35,7 +35,10 @@ class BootstrapData(
             descripcion = "Asadito en el campus",
             imagenUrl = "https://i.ytimg.com/vi/OWt0hpRwqSs/hqdefault.jpg",
             fechaCreacion = LocalDate.now()
-        ).apply { integrantes.addAll(listOf(juanA, agustinH, andresH, andresS)) }
+        ).apply {
+            integrantes.addAll(listOf(juanA, agustinH, andresH, andresS))
+            admins.addAll(listOf(juanA)) // esto es horrible, hay que refactorizar
+        }
 
         val grupoDepto = Grupo(
             nombre = "Depto Palermo",

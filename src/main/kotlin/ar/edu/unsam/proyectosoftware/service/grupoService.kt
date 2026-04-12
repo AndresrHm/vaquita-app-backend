@@ -126,8 +126,9 @@ class GrupoService(
         val tieneDeudas = tieneDeudas(grupoId, usuarioId) // TODO: Implementar
 
         return GrupoContextoUsuarioDTO(
+            usuarioId = usuarioId,
             esAdmin = esAdmin,
-            tieneDeudas = tieneDeudas
+            tieneDeudas = tieneDeudas,
         )
     }
 

@@ -43,6 +43,7 @@ data class GrupoSettingsDTO(
 )
 
 data class GrupoContextoUsuarioDTO (
+    val usuarioId: Long,
     val esAdmin: Boolean = false, // TODO: Hardcodeado
     val tieneDeudas: Boolean = true, // TODO: Hardcodeado
 )

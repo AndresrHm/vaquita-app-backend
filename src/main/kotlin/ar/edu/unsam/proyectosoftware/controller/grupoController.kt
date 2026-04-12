@@ -153,7 +153,7 @@ class GrupoController {
                 id = it.id,
                 nombre = it.nombre,
                 rol = if (it.esAdmin) RolMiembro.ADMIN else RolMiembro.MIEMBRO,
-                imagenUrl = it.imagenUrl
+                imagenUrl = it.imagenUrl,
             )
         }
 

@@ -20,6 +20,8 @@ class Usuario(
     @JsonIgnore
     @ManyToMany(mappedBy = "integrantes")
     var grupos: MutableList<Grupo> = mutableListOf()
+    @ManyToMany
+    var amigos: MutableList<Usuario> = mutableListOf()
 
     fun perteneceA(grupo: Grupo): Boolean{
         return true // Mock

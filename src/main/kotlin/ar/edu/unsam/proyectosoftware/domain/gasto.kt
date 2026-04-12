@@ -1,10 +1,12 @@
 package ar.edu.unsam.proyectosoftware.domain
 
-import ar.edu.unsam.proyectosoftware.dto.GastoDTO
+import ar.edu.unsam.proyectosoftware.dto.CreacionGastoDTO
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Id
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.JoinTable
@@ -32,6 +34,8 @@ class Gasto(
         inverseJoinColumns = [JoinColumn(name = "usuario_id")]
     )
     val participantes: List<Usuario>,
+    @Enumerated(EnumType.STRING)
+    val tipoGasto: TipoGasto
     //val archivo: String,
 ) {
     @Id
@@ -41,14 +45,17 @@ class Gasto(
     @OneToMany(mappedBy = "gasto", cascade = [CascadeType.ALL], orphanRemoval = true)
     var items: MutableList<ItemGasto> = mutableListOf()
 
-    // Quizás habría que tener entidades "splits" para llevar el control de pagos de cada usuario
-
     fun agregarItem(nombre: String, cantidad: Double, precio: Double) {
         items.add(ItemGasto(nombre, cantidad, precio, this))
     }
 
+    fun cantidadParticipantes(): Int =
+        participantes.size
+
+    fun repartirGasto(): List<FraccionGasto> = tipoGasto.repartirGasto(this)
+
     companion object {
-        fun fromGastoDTO(dto: GastoDTO, grupo: Grupo, pagador: Usuario, participantes: List<Usuario>): Gasto {
+        fun fromGastoDTO(dto: CreacionGastoDTO, grupo: Grupo, pagador: Usuario, participantes: List<Usuario>): Gasto {
             val gasto = Gasto(
                 descripcion = dto.descripcion,
                 categoria = dto.categoria,
@@ -56,7 +63,8 @@ class Gasto(
                 fecha = dto.fecha,
                 grupo = grupo,
                 pagador = pagador,
-                participantes = participantes
+                participantes = participantes,
+                tipoGasto = dto.tipoGasto
             )
             if (dto.items.isEmpty()) {
                 gasto.agregarItem("Pago único", 1.0, dto.monto)

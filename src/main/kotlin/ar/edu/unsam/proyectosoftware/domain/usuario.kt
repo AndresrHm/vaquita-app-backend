@@ -22,7 +22,7 @@ class Usuario(
     var grupos: MutableList<Grupo> = mutableListOf()
 
     fun perteneceA(grupo: Grupo): Boolean{
-        return true // Mock
+        return grupos.contains(grupo)
     }
 
     companion object {

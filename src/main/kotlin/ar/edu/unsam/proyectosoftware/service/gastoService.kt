@@ -4,9 +4,10 @@ import ar.edu.unsam.proyectosoftware.BusinessException
 import ar.edu.unsam.proyectosoftware.domain.Gasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.Usuario
-import ar.edu.unsam.proyectosoftware.dto.GastoDTO
+import ar.edu.unsam.proyectosoftware.dto.CreacionGastoDTO
 import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
+import ar.edu.unsam.proyectosoftware.repository.FraccionGastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
 import org.springframework.stereotype.Service
@@ -17,19 +18,19 @@ val MAX_CARACTERES_NOMBRE_PRODUCTO = 20
 
 @Service
 class GastoService(
+    var fraccionGastoRepository: FraccionGastoRepository,
     var gastoRepository: GastoRepository,
     var grupoRepository: GrupoRepository,
-    var usuarioRepository: UsuarioRepository,
+    var usuarioRepository: UsuarioRepository
 ) {
-    @Transactional
-    fun crearGasto(
-        gastoDTO: GastoDTO
-    ): Gasto {
-        val grupo = grupoRepository.findById(gastoDTO.grupoID)
-            .orElseThrow { BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO) }
 
-        val pagador = usuarioRepository.findById(gastoDTO.pagadorID)
-            .orElseThrow { BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO) }
+    @Transactional(readOnly = false, rollbackFor = [Exception::class])
+    fun crearGasto(
+        gastoDTO: CreacionGastoDTO
+    ): Gasto {
+        val grupo = obtenerGrupoOLanzarExcepcion(gastoDTO.grupoID)
+
+        val pagador = obtenerUsuarioOLanzarExcepcion(gastoDTO.pagadorID)
 
         val participantes = usuarioRepository.findAllById(gastoDTO.participantesIDs).toList()
 
@@ -53,16 +54,19 @@ class GastoService(
             throw BusinessException(ErrorStrings.USUARIO_SIN_PERMISO_GASTO)
         }
 
-        /* Próximamente
-                if (!participantesPertenecenAlGrupo(participantes, grupo)) {
-                    throw BusinessException(ErrorStrings.PARTICIPANTES_NO_PERTENECEN_AL_GRUPO)
-                }
-        */
-        //gasto.grupo.registrarGasto(gasto) // Agrega saldo en la db para x grupo
+        val fracciones = gasto.repartirGasto()
 
         gastoRepository.save(gasto)
+        fraccionGastoRepository.saveAll(fracciones)
 
         return gasto
+    }
+
+    fun obtenerDeuda(userId: Long): Double {
+        obtenerUsuarioOLanzarExcepcion(userId)
+
+        return fraccionGastoRepository.findByDeudorId(userId)
+            .sumOf { it.saldoPendiente() }
     }
 
     private fun participantesContienePagador(
@@ -92,13 +96,13 @@ class GastoService(
         return true
     }
 
-    /*
-        private fun participantesPertenecenAlGrupo(
-            participantes: List<Usuario>,
-            grupo: Grupo
-        ): Boolean {
-            return participantes.all{ participante -> participante.grupo == grupo}
-        }
-    */
+    private fun obtenerGrupoOLanzarExcepcion(grupoId: Long): Grupo =
+        grupoRepository.findById(grupoId)
+            .orElseThrow { BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO) }
+
+    private fun obtenerUsuarioOLanzarExcepcion(usuarioId: Long): Usuario =
+        usuarioRepository.findById(usuarioId)
+            .orElseThrow { BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO) }
+
 }
 

@@ -29,10 +29,6 @@ class Grupo(
         integrantes.add(nuevo)
     }
 
-    fun registrarGasto(gasto: Gasto) {
-        // TODO()
-    }
-
     companion object {
         fun toGrupoNombreIdDTO(grupo: Grupo): GrupoNombreIdDTO {
             return GrupoNombreIdDTO(

@@ -70,6 +70,7 @@ class UsuarioService(
         val token = jwtUtils.generarToken(usuario)
 
         return UsuarioLogueadoDTO(
+            id = usuario.id!!,
             nombre = usuario.nombre,
             email = usuario.email,
             token = token

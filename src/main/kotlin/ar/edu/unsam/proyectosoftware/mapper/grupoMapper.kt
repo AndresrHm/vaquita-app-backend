@@ -1,6 +1,8 @@
 package ar.edu.unsam.proyectosoftware.mapper
 
 import ar.edu.unsam.proyectosoftware.domain.Grupo
+import ar.edu.unsam.proyectosoftware.domain.Usuario
+import ar.edu.unsam.proyectosoftware.dto.GrupoContextoUsuarioDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoDetalleDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoSettingsDTO

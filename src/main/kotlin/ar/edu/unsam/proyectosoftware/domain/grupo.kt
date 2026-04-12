@@ -5,6 +5,8 @@ import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.JoinTable
 import jakarta.persistence.ManyToMany
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
@@ -25,10 +27,20 @@ class Grupo(
     var id: Long? = null
 
     @ManyToMany(fetch = FetchType.LAZY)
-    val integrantes = mutableListOf<Usuario>()
+    @JoinTable(
+        name = "grupo_integrantes",
+        joinColumns = [JoinColumn(name = "grupo_id")],
+        inverseJoinColumns = [JoinColumn(name = "usuario_id")]
+    )
+    val integrantes: MutableList<Usuario> = mutableListOf()
 
     @ManyToMany(fetch = FetchType.LAZY)
-    val admins = mutableListOf<Usuario>()
+    @JoinTable(
+        name = "grupo_admins",
+        joinColumns = [JoinColumn(name = "grupo_id")],
+        inverseJoinColumns = [JoinColumn(name = "usuario_id")]
+    )
+    val admins: MutableList<Usuario> = mutableListOf()
 
     var modoRata: Boolean = false // TODO: Implementar feature
 

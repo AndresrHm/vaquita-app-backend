@@ -123,23 +123,41 @@ class GrupoController {
     }
 
     // --- Endpoints para GroupSettings ---
-    @GetMapping("/{id}/settings")
-    fun obtenerSettings(@PathVariable id: Long): ResponseEntity<GrupoSettingsDTO> {
-        val grupo = grupoService.obtenerSettings(id)
+    @GetMapping("/{grupoId}/settings")
+    fun obtenerSettings(@PathVariable grupoId: Long): ResponseEntity<GrupoSettingsDTO> {
+        val grupo = grupoService.obtenerSettings(grupoId)
         return ResponseEntity.ok<GrupoSettingsDTO>(GrupoMapper.toGrupoSettingsDTO(grupo))
     }
 
-    @GetMapping("/{id}/contexto")
-    fun obtenerContexto(@PathVariable id: Long, @RequestParam usuarioId: Long): ResponseEntity<GrupoContextoUsuarioDTO> {
-        return ResponseEntity.ok<GrupoContextoUsuarioDTO>(grupoService.obtenerContextoUsuario(id, usuarioId))
+    @GetMapping("/{grupoId}/contexto")
+    fun obtenerContexto(
+        @PathVariable grupoId: Long,
+        @RequestParam usuarioId: Long
+    ): ResponseEntity<GrupoContextoUsuarioDTO> {
+
+        return ResponseEntity.ok(
+            grupoService.obtenerContextoUsuario(grupoId, usuarioId)
+        )
     }
 
-//    @GetMapping("/{id}/miembros")
-//    fun obtenerMiembros(
-//        @PathVariable id: Long
-//    ): ResponseEntity<List<MiembroDTO>> {
-//        return ResponseEntity.ok(grupoService.obtenerMiembros(id))
-//    }
+    @GetMapping("/{grupoId}/miembros")
+    fun obtenerMiembros(
+        @PathVariable grupoId: Long
+    ): ResponseEntity<List<MiembroDTO>> {
+
+        val miembros = grupoService.obtenerMiembrosConRol(grupoId)
+
+        val response = miembros.map {
+            MiembroDTO(
+                id = it.id,
+                nombre = it.nombre,
+                rol = if (it.esAdmin) RolMiembro.ADMIN else RolMiembro.MIEMBRO,
+                imagenUrl = it.imagenUrl
+            )
+        }
+
+        return ResponseEntity.ok(response)
+    }
 
     enum class TipoFiltrado {
         TODOS_LOS_GRUPOS,

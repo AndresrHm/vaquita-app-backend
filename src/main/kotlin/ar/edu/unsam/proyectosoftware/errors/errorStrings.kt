@@ -6,6 +6,7 @@ object ErrorStrings {
     const val PAGADOR_NO_PERTENECE_AL_GRUPO = "El usuario pagador no pertenece al grupo seleccionado."
     const val USUARIO_SIN_PERMISO_GASTO = "El usuario no tiene permisos para registrar gastos en este grupo."
     const val USUARIO_NO_ENCONTRADO = "El usuario no ha sido encontrado."
+    const val USUARIO_NO_PERTENECE_AL_GRUPO = "El usuario no pertenece al grupo."
     const val GRUPO_NO_ENCONTRADO = "El grupo no ha sido encontrado."
     const val NINGUN_USUARIO_ENCONTRADO = "Uno o más elementos no fueron encontrados"
     const val USUARIO_NO_ES_ADMIN = "El usuario no es administrador del grupo"

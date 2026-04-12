@@ -7,11 +7,10 @@ import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.GrupoContextoUsuarioDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoCreacionDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoNombreIdDTO
-import ar.edu.unsam.proyectosoftware.dto.GrupoSettingsDTO
-import ar.edu.unsam.proyectosoftware.dto.MiembroDTO
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
+import ar.edu.unsam.proyectosoftware.repository.MiembroProjection
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -111,34 +110,41 @@ class GrupoService(
     }
 
     fun obtenerContextoUsuario(grupoId: Long, usuarioId: Long): GrupoContextoUsuarioDTO {
-        val usuario = usuarioRepository.findByIdOrNull(usuarioId)
-            ?: throw BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO)
 
-        val grupo = grupoRepository.findByIdOrNull(grupoId)
-            ?: throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
+        if (!grupoRepository.existsById(grupoId)) {
+            throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
+        }
+
+        val esMiembro = grupoRepository.esMiembro(grupoId, usuarioId)
+        if (!esMiembro) {
+            throw BusinessException(ErrorStrings.USUARIO_NO_PERTENECE_AL_GRUPO)
+        }
+
+        val esAdmin = grupoRepository.esAdmin(grupoId, usuarioId)
+
+        val tieneDeudas = tieneDeudas(grupoId, usuarioId) // TODO: Implementar
 
         return GrupoContextoUsuarioDTO(
-            esAdmin = grupo.esAdmin(usuario),
-            tieneDeudas = true // TODO: Hardcodeado
+            esAdmin = esAdmin,
+            tieneDeudas = tieneDeudas
         )
     }
 
-//    fun obtenerMiembros(grupoId: Long): List<MiembroDTO> {
-//        val usuarios = grupoRepository.findBy
-//
-//        return usuarios.map { usuario ->
-//            MiembroDTO(
-//                id = usuario.id!!,
-//                nombre = usuario.nombre,
-//                rol = if (esAdminDelGrupo(usuario.id!!, grupoId)) "admin" else "member",
-//                imagenUrl = usuario.imagenUrl
-//            )
-//        }
-//    }
+    fun obtenerMiembrosConRol(grupoId: Long): List<MiembroProjection> {
+        if (!grupoRepository.existsById(grupoId)) {
+            throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
+        }
+
+        return grupoRepository.obtenerMiembrosConRol(grupoId)
+    }
 
     // --- Private functions
     private fun buscarUsuario(usuarioId: Long): Usuario {
         return usuarioRepository.findByIdOrNull(usuarioId)
             ?: throw BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO)
+    }
+
+    private fun tieneDeudas(grupoId: Long, usuarioId: Long): Boolean {
+        return true // TODO: Implementar
     }
 }

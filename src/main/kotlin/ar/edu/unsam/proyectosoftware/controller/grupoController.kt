@@ -5,6 +5,7 @@ import ar.edu.unsam.proyectosoftware.dto.*
 import ar.edu.unsam.proyectosoftware.mapper.GastoMapper
 import ar.edu.unsam.proyectosoftware.mapper.GrupoMapper
 import ar.edu.unsam.proyectosoftware.service.GrupoService
+import org.apache.coyote.Response
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -22,6 +23,7 @@ class GrupoController {
     @Autowired
     lateinit var grupoService: GrupoService
 
+    // Endpoints para creación de gastos
     @GetMapping
     fun obtenerGrupos(
         @RequestParam usuarioId: Long,
@@ -43,6 +45,7 @@ class GrupoController {
         return ResponseEntity.ok(response)
     }
 
+    // --- Endpoints para creación de grupo
     @PostMapping
     fun crearGrupo(
         @RequestParam usuarioId: Long,
@@ -56,7 +59,7 @@ class GrupoController {
             .body(GrupoMapper.toGrupoDTO(grupo))
     }
 
-    // Podríamos pasar un type para obtener el detalle en groupDetail y en groupSettings
+    // --- Endpoints para GroupDetail ---
     @GetMapping("/{grupoId}/detalle")
     fun obtenerDetalleGrupo(
         @PathVariable grupoId: Long,
@@ -111,6 +114,73 @@ class GrupoController {
         return ResponseEntity.ok(response)
     }
 
+    // --- Endpoints para GroupDetail ---
+    @GetMapping("/{id}")
+    fun obtenerGrupoPorId(
+        @PathVariable id: Long
+    ): ResponseEntity<GrupoNombreIdDTO?> {
+        val grupo: GrupoNombreIdDTO = grupoService.obtenerGrupoNombrePorId(id)
+        return ResponseEntity.ok<GrupoNombreIdDTO?>(grupo)
+    }
+
+    // --- Endpoints para GroupSettings ---
+    @GetMapping("/{grupoId}/settings")
+    fun obtenerSettings(@PathVariable grupoId: Long): ResponseEntity<GrupoSettingsDTO> {
+        val grupo = grupoService.obtenerSettings(grupoId)
+        return ResponseEntity.ok(GrupoMapper.toGrupoSettingsDTO(grupo))
+    }
+
+    @GetMapping("/{grupoId}/contexto")
+    fun obtenerContexto(
+        @PathVariable grupoId: Long,
+        @RequestParam usuarioId: Long
+    ): ResponseEntity<GrupoContextoUsuarioDTO> {
+
+        return ResponseEntity.ok(
+            grupoService.obtenerContextoUsuario(grupoId, usuarioId)
+        )
+    }
+
+    @GetMapping("/{grupoId}/miembros")
+    fun obtenerMiembros(
+        @PathVariable grupoId: Long
+    ): ResponseEntity<List<MiembroDTO>> {
+
+        val miembros = grupoService.obtenerMiembrosConRol(grupoId)
+
+        val response = miembros.map {
+            MiembroDTO(
+                id = it.id,
+                nombre = it.nombre,
+                rol = if (it.esAdmin) RolMiembro.ADMIN.descripcion else RolMiembro.MIEMBRO.descripcion,
+                imagenUrl = it.imagenUrl,
+            )
+        }
+
+        return ResponseEntity.ok(response)
+    }
+
+    @PatchMapping("/{grupoId}/settings")
+    fun actualizarSettings(
+        @PathVariable grupoId: Long,
+        @RequestBody grupoSettingsDTO: GrupoSettingsDTO,
+    ): ResponseEntity<GrupoSettingsDTO> {
+        val grupoActualizado = grupoService.actualizarGrupo(grupoId, grupoSettingsDTO)
+        return ResponseEntity.ok(GrupoMapper.toGrupoSettingsDTO(grupoActualizado))
+    }
+
+    @DeleteMapping("/{grupoId}/miembros")
+    fun eliminarMiembro(
+        @PathVariable grupoId: Long,
+        @RequestParam usuarioId: Long,
+        @RequestParam usuarioAEliminarId: Long,
+    ): ResponseEntity<Long> {
+
+        grupoService.eliminarMiembro(grupoId, usuarioId, usuarioAEliminarId)
+
+        return ResponseEntity.ok(usuarioId)
+    }
+
     enum class TipoFiltrado {
         TODOS_LOS_GRUPOS,
         SALDOS_PENDIENTES,
@@ -118,11 +188,4 @@ class GrupoController {
         GRUPOS_QUE_TE_DEBEN
     }
 
-    @GetMapping("/{id}")
-    fun obtenerGrupoPorId(
-        @PathVariable id: Long
-    ): ResponseEntity<GrupoNombreIdDTO?> {
-        val grupo: GrupoNombreIdDTO? = grupoService.obtenerGrupoNombrePorId(id)
-        return ResponseEntity.ok<GrupoNombreIdDTO?>(grupo)
-    }
 }

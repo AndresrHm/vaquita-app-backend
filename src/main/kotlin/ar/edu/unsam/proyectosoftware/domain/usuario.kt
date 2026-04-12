@@ -11,7 +11,8 @@ import jakarta.persistence.ManyToMany
 class Usuario(
     var nombre: String = "",
     var email: String = "",
-    var contrasena: String = ""
+    var contrasena: String = "",
+    var imagenUrl: String = ""
 ) {
     @Id
     @GeneratedValue
@@ -24,7 +25,7 @@ class Usuario(
     var amigos: MutableList<Usuario> = mutableListOf()
 
     fun perteneceA(grupo: Grupo): Boolean{
-        return true // Mock
+        return grupos.contains(grupo)
     }
 
     companion object {

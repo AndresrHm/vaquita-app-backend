@@ -11,7 +11,8 @@ import jakarta.persistence.ManyToMany
 class Usuario(
     var nombre: String = "",
     var email: String = "",
-    var contrasena: String = ""
+    var contrasena: String = "",
+    var imagenUrl: String = ""
 ) {
     @Id
     @GeneratedValue

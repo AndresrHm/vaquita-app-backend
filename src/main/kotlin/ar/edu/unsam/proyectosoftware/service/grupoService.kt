@@ -144,7 +144,7 @@ class GrupoService(
         if (grupoId != grupoSettingsDTO.id) throw BusinessException(ErrorStrings.INFORMACION_INVALIDA)
 
         val grupo = grupoRepository.findByIdOrNull(grupoId)
-        ?: throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
+            ?: throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
 
         if (grupoSettingsDTO.nombre.isBlank()) {
             throw BusinessException(ErrorStrings.NOMBRE_OBLIGATORIO)
@@ -160,6 +160,52 @@ class GrupoService(
         val guardado = grupoRepository.save(grupo)
 
         return guardado
+    }
+
+    @Transactional
+    fun eliminarMiembro(
+        grupoId: Long,
+        currentUserId: Long,
+        usuarioAEliminarId: Long
+    ) {
+
+        val grupo = grupoRepository.findByIdOrNull(grupoId)
+            ?: throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
+
+        val integrantes = grupoRepository.obtenerMiembrosConRol(grupoId)
+
+        // 🔍 Usuario a eliminar
+        val miembroAEliminar = integrantes.find { it.id == usuarioAEliminarId }
+            ?: throw BusinessException(ErrorStrings.USUARIO_NO_PERTENECE_AL_GRUPO)
+
+        // 🔍 Usuario actual (quien ejecuta)
+        val currentUser = integrantes.find { it.id == currentUserId }
+            ?: throw BusinessException(ErrorStrings.USUARIO_NO_PERTENECE_AL_GRUPO)
+
+        // 🔒 Permisos
+        if (!currentUser.esAdmin) {
+            throw BusinessException(ErrorStrings.USUARIO_NO_ES_ADMIN)
+        }
+
+        // ❗ No puede eliminarse a sí mismo
+        if (currentUserId == usuarioAEliminarId) {
+            throw BusinessException(ErrorStrings.NO_PODES_ELIMINARTE)
+        }
+
+        // ❗ Si el target es admin → validar que no sea el último
+        if (miembroAEliminar.esAdmin) {
+            val cantidadAdmins = integrantes.count { it.esAdmin }
+
+            if (cantidadAdmins <= 1) {
+                throw BusinessException(ErrorStrings.NO_SE_PUEDE_ELIMINAR_ULTIMO_ADMIN)
+            }
+        }
+
+        // 🧹 Eliminación en entidades
+        grupo.integrantes.removeIf { it.id == usuarioAEliminarId }
+        grupo.admins.removeIf { it.id == usuarioAEliminarId }
+
+        grupoRepository.save(grupo)
     }
 
     // --- Private functions

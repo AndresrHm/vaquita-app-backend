@@ -169,6 +169,18 @@ class GrupoController {
         return ResponseEntity.ok(GrupoMapper.toGrupoSettingsDTO(grupoActualizado))
     }
 
+    @DeleteMapping("/{grupoId}/miembros")
+    fun eliminarMiembro(
+        @PathVariable grupoId: Long,
+        @RequestParam usuarioId: Long,
+        @RequestParam usuarioAEliminarId: Long,
+    ): ResponseEntity<Long> {
+
+        grupoService.eliminarMiembro(grupoId, usuarioId, usuarioAEliminarId)
+
+        return ResponseEntity.ok(usuarioId)
+    }
+
     enum class TipoFiltrado {
         TODOS_LOS_GRUPOS,
         SALDOS_PENDIENTES,

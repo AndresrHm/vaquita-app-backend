@@ -8,8 +8,6 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.JoinTable
 import jakarta.persistence.ManyToMany
-import jakarta.persistence.ManyToOne
-import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import java.time.LocalDate
 import kotlin.collections.mutableListOf
@@ -21,6 +19,7 @@ class Grupo(
     var descripcion: String = "",
     var imagenUrl: String = "",
     val fechaCreacion: LocalDate,
+    var modoRata: Boolean = false // TODO: Implementar feature
 ) {
     @Id
     @GeneratedValue
@@ -46,22 +45,9 @@ class Grupo(
     )
     val admins: MutableList<Usuario> = mutableListOf()
 
-    var modoRata: Boolean = false // TODO: Implementar feature
 
     fun agregarIntegrante(nuevo: Usuario) {
         integrantes.add(nuevo)
-    }
-
-    fun registrarGasto(gasto: Gasto) {
-        // TODO()
-    }
-
-    fun esMiembro(usuario: Usuario): Boolean {
-        return integrantes.contains(usuario)
-    }
-
-    fun esAdmin(usuario: Usuario): Boolean {
-        return admins.contains(usuario)
     }
 
     companion object {

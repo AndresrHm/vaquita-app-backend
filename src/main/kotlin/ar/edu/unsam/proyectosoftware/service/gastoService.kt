@@ -28,11 +28,9 @@ class GastoService(
     fun crearGasto(
         gastoDTO: CreacionGastoDTO
     ): Gasto {
-        val grupo = grupoRepository.findById(gastoDTO.grupoID)
-            .orElseThrow { BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO) }
+        val grupo = obtenerGrupoOLanzarExcepcion(gastoDTO.grupoID)
 
-        val pagador = usuarioRepository.findById(gastoDTO.pagadorID)
-            .orElseThrow { BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO) }
+        val pagador = obtenerUsuarioOLanzarExcepcion(gastoDTO.pagadorID)
 
         val participantes = usuarioRepository.findAllById(gastoDTO.participantesIDs).toList()
 
@@ -64,6 +62,13 @@ class GastoService(
         return gasto
     }
 
+    fun obtenerDeuda(userId: Long): Double {
+        obtenerUsuarioOLanzarExcepcion(userId)
+
+        return fraccionGastoRepository.findByDeudorId(userId)
+            .sumOf { it.saldoPendiente() }
+    }
+
     private fun participantesContienePagador(
         participantes: List<Usuario>,
         pagador: Usuario
@@ -91,13 +96,13 @@ class GastoService(
         return true
     }
 
-    /*
-        private fun participantesPertenecenAlGrupo(
-            participantes: List<Usuario>,
-            grupo: Grupo
-        ): Boolean {
-            return participantes.all{ participante -> participante.grupo == grupo}
-        }
-    */
+    private fun obtenerGrupoOLanzarExcepcion(grupoId: Long): Grupo =
+        grupoRepository.findById(grupoId)
+            .orElseThrow { BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO) }
+
+    private fun obtenerUsuarioOLanzarExcepcion(usuarioId: Long): Usuario =
+        usuarioRepository.findById(usuarioId)
+            .orElseThrow { BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO) }
+
 }
 

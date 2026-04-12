@@ -28,3 +28,7 @@ Content-Type: application/json
 ###
 GET http://localhost:8080/grupo/usuario/2
 Content-Type: application/json
+
+###
+GET http://localhost:8080/gasto/1
+Content-Type: application/json

@@ -41,9 +41,8 @@ class UsuarioController(private val usuarioService: UsuarioService) {
 
     @GetMapping("/amigos/{id}")
     fun obtenerUsuarioAmigos(@PathVariable id: Long): ResponseEntity<Iterable<UsuarioNombreIdDTO>> {
-        val amigos = usuarioService.obtenerUsuario(id).amigos
-        val response = amigos.map { Usuario.toUsuarioNombreIdDTO(it) }
-        return ResponseEntity.ok(response)
+        val amigos = usuarioService.obtenerAmigos(id)
+        return ResponseEntity.ok(amigos)
     }
 
 

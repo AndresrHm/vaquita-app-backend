@@ -32,15 +32,18 @@ class BootstrapData(
             email = "juan.alvarez@mail.com"
             contrasena = passwordEncoder.encode("contrasena123")
         }
+
         val andresH = Usuario().apply {
             nombre = "Andrés Hernández"
             email = "andres.h@mail.com"
             contrasena = passwordEncoder.encode("contrasena123")
+
         }
         val agustinH = Usuario().apply {
             nombre = "Agustín Hoj"
             email = "agustin.hoj@mail.com"
             contrasena = passwordEncoder.encode("contrasena123")
+
         }
         val juanM = Usuario().apply {
             nombre = "Juan Maidana"
@@ -57,6 +60,10 @@ class BootstrapData(
             email = "andres.s@mail.com"
             contrasena = passwordEncoder.encode("contrasena123")
         }
+        juanA.amigos = mutableListOf(andresH, agustinH)
+        andresH.amigos = mutableListOf(agustinH, juanA)
+        agustinH.amigos = mutableListOf(andresH, juanA)
+
         usuarioRepository.saveAll(listOf(juanA, agustinH, juanM, andresH, giulianaM, andresS))
 
         // 2. Grupos con .addAll()

@@ -4,6 +4,7 @@ import ar.edu.unsam.proyectosoftware.config.JwtUtils
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.UsuarioLoginDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioLogueadoDTO
+import ar.edu.unsam.proyectosoftware.dto.UsuarioNombreIdDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioRegistradoDTO
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
@@ -91,6 +92,14 @@ class UsuarioService(
             .orElseThrow { Exception(ErrorStrings.GRUPO_NO_ENCONTRADO) }
 
         return usuarioRepository.findByGrupos_Id(grupoId)
+    }
+
+    @Transactional(readOnly = true)
+    fun obtenerAmigos(usuarioId: Long): List<UsuarioNombreIdDTO> {
+        val usuario = usuarioRepository.findById(usuarioId)
+            .orElseThrow { Exception("Usuario inexistente") }
+        // Access the collection while the session is still open
+        return usuario.amigos.map { Usuario.toUsuarioNombreIdDTO(it) }
     }
 
 }

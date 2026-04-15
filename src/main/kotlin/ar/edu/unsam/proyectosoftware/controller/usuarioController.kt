@@ -39,6 +39,13 @@ class UsuarioController(private val usuarioService: UsuarioService) {
         return ResponseEntity.ok(response)
     }
 
+    @GetMapping("/amigos/{id}")
+    fun obtenerUsuarioAmigos(@PathVariable id: Long): ResponseEntity<Iterable<UsuarioNombreIdDTO>> {
+        val amigos = usuarioService.obtenerAmigos(id)
+        return ResponseEntity.ok(amigos)
+    }
+
+
     @PostMapping("/register")
     fun registrarUsuario(@RequestBody dto: UsuarioRegistradoDTO): ResponseEntity<Usuario> {
         val usuarioCreado = usuarioService.registrarUsuario(dto)

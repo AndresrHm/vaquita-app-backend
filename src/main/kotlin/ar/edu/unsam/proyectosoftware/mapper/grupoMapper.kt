@@ -1,8 +1,11 @@
 package ar.edu.unsam.proyectosoftware.mapper
 
 import ar.edu.unsam.proyectosoftware.domain.Grupo
+import ar.edu.unsam.proyectosoftware.domain.Usuario
+import ar.edu.unsam.proyectosoftware.dto.GrupoContextoUsuarioDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoDetalleDTO
+import ar.edu.unsam.proyectosoftware.dto.GrupoSettingsDTO
 
 object GrupoMapper {
     fun toGrupoDTO(grupo: Grupo): GrupoDTO {
@@ -10,6 +13,7 @@ object GrupoMapper {
             id = grupo.id!!,
             nombre = grupo.nombre,
             imagenUrl = grupo.imagenUrl,
+            estadoGrupo = "Pendiente de pago" // TODO: Implementar
         )
     }
 
@@ -20,6 +24,19 @@ object GrupoMapper {
             descripcion = grupo.descripcion,
             imagenUrl = grupo.imagenUrl,
             cantidadIntegrantes = cantIntegrantes
+        )
+    }
+
+    fun toGrupoSettingsDTO(grupo: Grupo): GrupoSettingsDTO {
+        return GrupoSettingsDTO(
+            id = grupo.id!!,
+            nombre = grupo.nombre,
+            descripcion = grupo.descripcion,
+            imagenUrl = grupo.imagenUrl,
+            moneda = grupo.moneda,
+            simplificarDeudas = grupo.simplificarDeudas,
+            notificaciones = grupo.notificaciones,
+            modoRata = grupo.modoRata
         )
     }
 }

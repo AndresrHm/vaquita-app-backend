@@ -2,7 +2,6 @@ package ar.edu.unsam.proyectosoftware.domain
 
 import ar.edu.unsam.proyectosoftware.dto.UsuarioNombreIdDTO
 import com.fasterxml.jackson.annotation.JsonIgnore
-import jakarta.persistence.CascadeType
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
@@ -29,6 +28,17 @@ class Usuario(
 
     fun perteneceA(grupo: Grupo): Boolean{
         return grupos.contains(grupo)
+    }
+
+    fun agregarAmigo(amigo: Usuario) : Boolean {
+        if (!amigos.contains(amigo)){
+            return amigos.add(amigo)}
+        return false
+    }
+
+    fun eliminarAmigo(amigo: Usuario) {
+        if (amigos.contains(amigo)){
+            amigos.remove(amigo)}
     }
 
     companion object {

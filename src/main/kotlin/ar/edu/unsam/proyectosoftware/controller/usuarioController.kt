@@ -1,5 +1,6 @@
 package ar.edu.unsam.proyectosoftware.controller
 
+import ar.edu.unsam.proyectosoftware.domain.SolicitudAmistadFront
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.UsuarioLoginDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioLogueadoDTO
@@ -9,10 +10,13 @@ import ar.edu.unsam.proyectosoftware.service.UsuarioService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -39,6 +43,13 @@ class UsuarioController(private val usuarioService: UsuarioService) {
         return ResponseEntity.ok(response)
     }
 
+    @GetMapping("/amigos/{id}")
+    fun obtenerUsuarioAmigos(@PathVariable id: Long): ResponseEntity<Iterable<UsuarioNombreIdDTO>> {
+        val amigos = usuarioService.obtenerAmigos(id)
+        return ResponseEntity.ok(amigos)
+    }
+
+
     @PostMapping("/register")
     fun registrarUsuario(@RequestBody dto: UsuarioRegistradoDTO): ResponseEntity<Usuario> {
         val usuarioCreado = usuarioService.registrarUsuario(dto)
@@ -49,5 +60,30 @@ class UsuarioController(private val usuarioService: UsuarioService) {
     fun loginUser(@RequestBody dataUser: UsuarioLoginDTO): ResponseEntity<UsuarioLogueadoDTO> {
         val respuesta = usuarioService.login(dataUser)
         return ResponseEntity.ok(respuesta)
+    }
+
+    @GetMapping("/{idUsuario}/solicitudAmistad")
+    fun obtenerSolicitudesPendientes(@PathVariable idUsuario: Long): ResponseEntity<List<SolicitudAmistadFront>> {
+        val solicitudes = usuarioService.obtenerSolicitudesPendientes(idUsuario)
+        return ResponseEntity.ok(solicitudes)
+    }
+
+    @PostMapping("/{idEmisor}/solicitudAmistad/{idReceptor}")
+    fun enviarSolicitudAmistad(
+        @PathVariable idEmisor: Long,
+        @PathVariable idReceptor: Long
+    ): ResponseEntity<Long> {
+        val response = usuarioService.enviarSolicitudAmistad(idEmisor,idReceptor)
+        return ResponseEntity.ok(response)
+    }
+
+    @PatchMapping("/{idUsuario}/solicitudAmistad/{idSolicitud}")
+    fun responderSolicitudAmistad(
+        @PathVariable idUsuario: Long,
+        @PathVariable idSolicitud: Long,
+        @RequestParam aceptar: Boolean
+    ): ResponseEntity<Long> {
+        val result = usuarioService.responderSolicitudAmistad(idUsuario, idSolicitud, aceptar)
+        return ResponseEntity.ok(result)
     }
 }

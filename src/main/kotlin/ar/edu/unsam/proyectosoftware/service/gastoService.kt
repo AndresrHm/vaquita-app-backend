@@ -55,6 +55,10 @@ class GastoService(
             throw BusinessException(ErrorStrings.PAGADOR_NO_PERTENECE_AL_GRUPO)
         }
 
+        if (!todosLosParticipantesPertenecenAlGrupo(gasto)) {
+            throw BusinessException(ErrorStrings.PARTICIPANTES_NO_PERTENECEN_AL_GRUPO)
+        }
+
         if (!puedeCrearGasto(gasto.pagador, gasto.grupo)) {
             throw BusinessException(ErrorStrings.USUARIO_SIN_PERMISO_GASTO)
         }
@@ -157,6 +161,9 @@ class GastoService(
         if (gasto.monto <= 0) {
             throw BusinessException(ErrorStrings.MONTO_NEGATIVO)
         }
+        if (gasto.monto != gasto.totalItems()) {
+            throw BusinessException(ErrorStrings.MONTO_TOTAL_NO_COINCIDE_CON_TOTAL_ITEMS)
+        }
         if (gasto.descripcion.isBlank()) {
             throw BusinessException(ErrorStrings.DESCRIPCION_VACIA)
         }
@@ -164,8 +171,24 @@ class GastoService(
             throw BusinessException(ErrorStrings.DESCRIPCION_LARGA(MAX_CARACTERES_DESCRIPCION))
         }
         if (gasto.items.any { it.nombre.length > MAX_CARACTERES_NOMBRE_PRODUCTO }) {
-            throw BusinessException(ErrorStrings.DESCRIPCION_LARGA(MAX_CARACTERES_NOMBRE_PRODUCTO))
+            throw BusinessException(ErrorStrings.NOMBRE_PRODUCTO_LARGO(MAX_CARACTERES_NOMBRE_PRODUCTO))
         }
+    }
+
+    // Métodos auxiliares
+    private fun participantesContienePagador(
+        participantes: List<Usuario>,
+        pagador: Usuario
+    ): Boolean {
+        return participantes.contains(pagador)
+    }
+
+    private fun todosLosParticipantesPertenecenAlGrupo(
+        gasto: Gasto
+    ): Boolean {
+        val participantes = gasto.participantes
+        val grupo = gasto.grupo
+        return participantes.all { it.perteneceA(grupo) }
     }
 
     private fun puedeCrearGasto(usuario: Usuario, grupo: Grupo): Boolean {
@@ -180,5 +203,4 @@ class GastoService(
     private fun obtenerUsuarioOLanzarExcepcion(usuarioId: Long): Usuario =
         usuarioRepository.findById(usuarioId)
             .orElseThrow { BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO) }
-
 }

@@ -20,5 +20,5 @@ class ItemGasto(
     @GeneratedValue
     var id: Long? = null
 
-    val total: Double get() = cantidad * precioUnitario
+    fun total(): Double = cantidad * precioUnitario
 }

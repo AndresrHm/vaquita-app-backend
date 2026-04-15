@@ -91,6 +91,37 @@ class GrupoService(
         )
 
         grupo.agregarIntegrante(usuario)
+        grupo.admins.add(usuario)
+
+        return grupoRepository.save(grupo)
+    }
+
+    @Transactional
+    fun agregarMiembros(
+        grupoId: Long,
+        currentUserId: Long,
+        usuariosAgregarIds: List<Long>
+    ): Grupo {
+        val grupo = grupoRepository.findByIdOrNull(grupoId)
+            ?: throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
+
+        // Validar que el usuario actual es admin
+        val esAdmin = grupoRepository.esAdmin(grupoId, currentUserId)
+        if (!esAdmin) {
+            throw BusinessException(ErrorStrings.USUARIO_NO_ES_ADMIN)
+        }
+
+        // Agregar cada usuario
+        usuariosAgregarIds.forEach { usuarioId ->
+            val usuario = buscarUsuario(usuarioId)
+
+            // Validar que no está ya en el grupo
+            if (grupo.integrantes.any { it.id == usuarioId }) {
+                throw BusinessException(ErrorStrings.USUARIO_YA_PERTENECE_AL_GRUPO)
+            }
+
+            grupo.agregarIntegrante(usuario)
+        }
 
         return grupoRepository.save(grupo)
     }

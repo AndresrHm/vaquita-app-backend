@@ -55,6 +55,10 @@ data class MiembroDTO (
     val imagenUrl: String,
 )
 
+data class AgregarMiembrosDTO(
+    val usuarioIds: List<Long>
+)
+
 enum class RolMiembro(val descripcion: String) {
     ADMIN("Administrador"),
     MIEMBRO("Miembro"),

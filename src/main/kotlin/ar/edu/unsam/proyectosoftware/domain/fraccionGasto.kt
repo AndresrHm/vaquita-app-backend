@@ -19,6 +19,10 @@ class FraccionGasto(
     @JoinColumn(name = "acreedor_id")
     val acreedor: Usuario,
 
+    @ManyToOne(cascade = [(CascadeType.MERGE)])
+    @JoinColumn(name = "gasto_id")
+    val gastoAsociado: Gasto,
+
     val montoFraccion: Double,
     var pagoParcial: Double,
 ) {

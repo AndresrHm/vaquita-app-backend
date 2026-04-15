@@ -1,5 +1,6 @@
 package ar.edu.unsam.proyectosoftware.domain
 
+import ar.edu.unsam.proyectosoftware.domain.CategoriaGasto
 import ar.edu.unsam.proyectosoftware.dto.CreacionGastoDTO
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Id
@@ -18,7 +19,8 @@ import java.time.LocalDate
 @Entity
 class Gasto(
     var descripcion: String,
-    var categoria: String, // ¿class Categoria?
+    @Enumerated(EnumType.STRING)
+    var categoria: CategoriaGasto,
     var monto: Double,
     val fecha: LocalDate,
     @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.MERGE])

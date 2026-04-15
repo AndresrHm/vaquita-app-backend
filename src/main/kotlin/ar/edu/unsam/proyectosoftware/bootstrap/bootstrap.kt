@@ -3,6 +3,7 @@ package ar.edu.unsam.proyectosoftware.bootstrap
 import ar.edu.unsam.proyectosoftware.domain.Gasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.Usuario
+import ar.edu.unsam.proyectosoftware.domain.CategoriaGasto
 import ar.edu.unsam.proyectosoftware.domain.TipoGasto
 import ar.edu.unsam.proyectosoftware.repository.FraccionGastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GastoRepository
@@ -96,8 +97,21 @@ class BootstrapData(
         // 3. Gastos
         listOf(
             Gasto(
+              "algo para picar",
+                CategoriaGasto.COMIDA,
+                60000.0,
+                LocalDate.now(),
+                grupoAsado,
+                andresS,
+                grupoAsado.integrantes.toMutableList(),
+                TipoGasto.PARTES_IGUALES
+             ).apply {
+                 agregarItem("Picada completa", 1.0, 60000.0)
+            }
+            ,
+            Gasto(
                 "Compras para el asado",
-                "COMIDA",
+                CategoriaGasto.COMIDA,
                 15000.0,
                 LocalDate.now(),
                 grupoAsado,
@@ -111,7 +125,7 @@ class BootstrapData(
             },
             Gasto(
                 "Bebidas previa",
-                "BEBIDA",
+                CategoriaGasto.BEBIDA,
                 12000.0,
                 LocalDate.now(),
                 grupoAsado,
@@ -124,7 +138,7 @@ class BootstrapData(
             },
             Gasto(
                 "Panadería",
-                "COMIDA",
+                CategoriaGasto.COMIDA,
                 4500.0,
                 LocalDate.now(),
                 grupoAsado,
@@ -137,7 +151,7 @@ class BootstrapData(
             },
             Gasto(
                 "Verdulería",
-                "COMIDA",
+                CategoriaGasto.COMIDA,
                 5800.0,
                 LocalDate.now(),
                 grupoAsado,
@@ -151,7 +165,7 @@ class BootstrapData(
             },
             Gasto(
                 "Más Carne",
-                "COMIDA",
+                CategoriaGasto.COMIDA,
                 18000.0,
                 LocalDate.now(),
                 grupoAsado,
@@ -164,7 +178,7 @@ class BootstrapData(
             },
             Gasto(
                 "Hielo y Carbón extra",
-                "VARIOS",
+                CategoriaGasto.VARIOS,
                 4000.0,
                 LocalDate.now(),
                 grupoAsado,
@@ -177,7 +191,7 @@ class BootstrapData(
             },
             Gasto(
                 "Picada",
-                "COMIDA",
+                CategoriaGasto.COMIDA,
                 9500.0,
                 LocalDate.now(),
                 grupoAsado,
@@ -190,7 +204,7 @@ class BootstrapData(
             },
             Gasto(
                 "Snacks",
-                "COMIDA",
+                CategoriaGasto.COMIDA,
                 3200.0,
                 LocalDate.now(),
                 grupoAsado,
@@ -202,7 +216,7 @@ class BootstrapData(
             },
             Gasto(
                 "Postre Helado",
-                "COMIDA",
+                CategoriaGasto.COMIDA,
                 8000.0,
                 LocalDate.now(),
                 grupoAsado,
@@ -214,7 +228,7 @@ class BootstrapData(
             },
             Gasto(
                 "Vino",
-                "BEBIDA",
+                CategoriaGasto.BEBIDA,
                 11000.0,
                 LocalDate.now(),
                 grupoAsado,
@@ -226,7 +240,7 @@ class BootstrapData(
             },
             Gasto(
                 "Aderezos y servilletas",
-                "VARIOS",
+                CategoriaGasto.VARIOS,
                 2500.0,
                 LocalDate.now(),
                 grupoAsado,
@@ -239,7 +253,7 @@ class BootstrapData(
             },
             Gasto(
                 "Achuras",
-                "COMIDA",
+                CategoriaGasto.COMIDA,
                 7000.0,
                 LocalDate.now(),
                 grupoAsado,
@@ -252,7 +266,7 @@ class BootstrapData(
             },
             Gasto(
                 "Cerveza extra",
-                "BEBIDA",
+                CategoriaGasto.BEBIDA,
                 9000.0,
                 LocalDate.now(),
                 grupoAsado,
@@ -264,7 +278,7 @@ class BootstrapData(
             },
             Gasto(
                 "Postre Vigilante",
-                "COMIDA",
+                CategoriaGasto.COMIDA,
                 4000.0,
                 LocalDate.now(),
                 grupoAsado,
@@ -277,7 +291,7 @@ class BootstrapData(
             },
             Gasto(
                 "Soda",
-                "BEBIDA",
+                CategoriaGasto.BEBIDA,
                 2400.0,
                 LocalDate.now(),
                 grupoAsado,
@@ -289,7 +303,7 @@ class BootstrapData(
             },
             Gasto(
                 "Leña",
-                "VARIOS",
+                CategoriaGasto.VARIOS,
                 3000.0,
                 LocalDate.now(),
                 grupoAsado,
@@ -301,7 +315,7 @@ class BootstrapData(
             },
             Gasto(
                 "Provoleta",
-                "COMIDA",
+                CategoriaGasto.COMIDA,
                 5000.0,
                 LocalDate.now(),
                 grupoAsado,
@@ -313,7 +327,7 @@ class BootstrapData(
             },
             Gasto(
                 "Fernet de refuerzo",
-                "BEBIDA",
+                CategoriaGasto.BEBIDA,
                 7500.0,
                 LocalDate.now(),
                 grupoAsado,
@@ -325,7 +339,7 @@ class BootstrapData(
             },
             Gasto(
                 "Limones y Sal",
-                "VARIOS",
+                CategoriaGasto.VARIOS,
                 1800.0,
                 LocalDate.now(),
                 grupoAsado,
@@ -338,7 +352,7 @@ class BootstrapData(
             },
             Gasto(
                 "Gaseosas Dieta",
-                "BEBIDA",
+                CategoriaGasto.BEBIDA,
                 4600.0,
                 LocalDate.now(),
                 grupoAsado,
@@ -350,7 +364,7 @@ class BootstrapData(
             },
             Gasto(
                 "Carne de Cerdo",
-                "COMIDA",
+                CategoriaGasto.COMIDA,
                 12000.0,
                 LocalDate.now(),
                 grupoAsado,
@@ -363,7 +377,7 @@ class BootstrapData(
             },
             Gasto(
                 "Chimichurri ingredientes",
-                "VARIOS",
+                CategoriaGasto.VARIOS,
                 2200.0,
                 LocalDate.now(),
                 grupoAsado,
@@ -376,7 +390,7 @@ class BootstrapData(
             },
             Gasto(
                 "Vaso Descartable",
-                "VARIOS",
+                CategoriaGasto.VARIOS,
                 3500.0,
                 LocalDate.now(),
                 grupoAsado,

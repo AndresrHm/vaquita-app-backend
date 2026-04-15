@@ -1,6 +1,7 @@
 package ar.edu.unsam.proyectosoftware.mapper
 
 import ar.edu.unsam.proyectosoftware.domain.Gasto
+import ar.edu.unsam.proyectosoftware.dto.GastoDetalleDTO
 import ar.edu.unsam.proyectosoftware.dto.GastoItemDTO
 
 object GastoMapper {
@@ -14,6 +15,19 @@ object GastoMapper {
             currency = "$",
             paymentType = calcularPaymentType(gasto, userId),
             imageUrl = "https://cdn-icons-png.flaticon.com/512/891/891462.png"
+        )
+    }
+
+    fun toGastoViewDTO(gasto: Gasto, userId: Long): GastoDetalleDTO {
+        return GastoDetalleDTO(
+            id = gasto.id!!,
+            descripcion = gasto.descripcion,
+            categoria = gasto.categoria,
+            monto = gasto.monto,
+            fecha = gasto.fecha,
+            pagador = gasto.pagador.nombre,
+            participantes = gasto.participantes,
+            tipoGasto = gasto.tipoGasto
         )
     }
 

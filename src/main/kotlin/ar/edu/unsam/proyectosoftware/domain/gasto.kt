@@ -1,7 +1,12 @@
 package ar.edu.unsam.proyectosoftware.domain
 
+import ar.edu.unsam.proyectosoftware.BusinessException
 import ar.edu.unsam.proyectosoftware.dto.CreacionGastoDTO
+import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 import jakarta.persistence.CascadeType
+import jakarta.persistence.CollectionTable
+import jakarta.persistence.Column
+import jakarta.persistence.ElementCollection
 import jakarta.persistence.Id
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.Entity
@@ -12,6 +17,7 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.JoinTable
 import jakarta.persistence.ManyToMany
 import jakarta.persistence.ManyToOne
+import jakarta.persistence.MapKeyJoinColumn
 import jakarta.persistence.OneToMany
 import java.time.LocalDate
 
@@ -35,7 +41,7 @@ class Gasto(
     )
     val participantes: List<Usuario>,
     @Enumerated(EnumType.STRING)
-    val tipoGasto: TipoGasto
+    val tipoGasto: TipoGasto,
     //val archivo: String,
 ) {
     @Id
@@ -45,14 +51,40 @@ class Gasto(
     @OneToMany(mappedBy = "gasto", cascade = [CascadeType.ALL], orphanRemoval = true)
     var items: MutableList<ItemGasto> = mutableListOf()
 
+    @ElementCollection //Para guardar usuario / gasto
+    @CollectionTable(name = "gasto_asignaciones", joinColumns = [JoinColumn(name = "gasto_id")])
+    @MapKeyJoinColumn(name = "usuario_id")
+    @Column(name = "monto_asignado")
+    val asignacionesExactas: MutableMap<Usuario, Double> = mutableMapOf()
+
     fun agregarItem(nombre: String, cantidad: Double, precio: Double) {
         items.add(ItemGasto(nombre, cantidad, precio, this))
+    }
+
+    fun totalItems(): Double {
+        return items.sumOf { it.total() }
     }
 
     fun cantidadParticipantes(): Int =
         participantes.size
 
-    fun repartirGasto(): List<FraccionGasto> = tipoGasto.repartirGasto(this)
+    fun repartirGasto(): List<FraccionGasto> {
+        validarAsignaciones()
+        return tipoGasto.repartirGasto(this)
+    }
+
+    private fun validarAsignaciones() {
+        if (tipoGasto == TipoGasto.PARTES_EXACTAS) {
+            if (asignacionesExactas.values.any { it <= 0 }) {
+                throw BusinessException("Todas las asignaciones exactas deben tener un monto positivo")
+            }
+
+            val sumaAsignada = asignacionesExactas.values.sum()
+            if (Math.abs(sumaAsignada - monto) > 0.01) {
+                throw BusinessException(ErrorStrings.FRACCIONES_NO_COINCIDEN_CON_TOTAL_DE_GASTO)
+            }
+        }
+    }
 
     companion object {
         fun fromGastoDTO(dto: CreacionGastoDTO, grupo: Grupo, pagador: Usuario, participantes: List<Usuario>): Gasto {
@@ -64,13 +96,29 @@ class Gasto(
                 grupo = grupo,
                 pagador = pagador,
                 participantes = participantes,
-                tipoGasto = dto.tipoGasto
+                tipoGasto = dto.tipoGasto!!
             )
             if (dto.items.isEmpty()) {
                 gasto.agregarItem("Pago único", 1.0, dto.monto)
             } else {
                 dto.items.forEach {
                     gasto.agregarItem(it.nombre, it.cantidad, it.precioUnitario)
+                }
+            }
+
+            if (dto.tipoGasto == TipoGasto.PARTES_EXACTAS) {
+                val asignaciones = dto.asignacionesExactas
+                    ?: throw BusinessException("Faltan las asignaciones para el tipo PARTES_EXACTAS")
+
+                if (asignaciones.size != participantes.size) {
+                    throw BusinessException("La cantidad de asignaciones no coincide con la cantidad de participantes")
+                }
+
+                asignaciones.forEach { participanteId: Long, montoAsignado: Double ->
+                    val usuario = participantes.find { it.id == participanteId }
+                        ?: throw BusinessException("El usuario con ID $participanteId no pertenece a los participantes del gasto")
+
+                    gasto.asignacionesExactas.put(usuario, montoAsignado)
                 }
             }
 

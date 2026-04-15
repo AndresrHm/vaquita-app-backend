@@ -18,4 +18,19 @@ interface GastoRepository : CrudRepository<Gasto, Long> {
 """
     )
     fun findByGrupoId(grupoId: Long, pageable: Pageable): Page<Gasto>
+
+    /**
+     * Devuelve true si el usuario tiene al menos una fracción con saldo pendiente (> 0)
+     * dentro de cualquier gasto del grupo indicado.
+     */
+    @Query(
+        """
+        SELECT CASE WHEN COUNT(fg) > 0 THEN true ELSE false END
+        FROM FraccionGasto fg
+        WHERE fg.gastoAsociado.grupo.id = :grupoId
+          AND fg.deudor.id = :usuarioId
+          AND (fg.montoFraccion - fg.pagoParcial) > 0
+        """
+    )
+    fun existeDeudaPendienteEnGrupo(grupoId: Long, usuarioId: Long): Boolean
 }

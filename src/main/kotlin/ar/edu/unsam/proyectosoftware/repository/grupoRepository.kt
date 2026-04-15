@@ -3,7 +3,6 @@ package ar.edu.unsam.proyectosoftware.repository
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
-import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.CrudRepository
 import org.springframework.data.repository.query.Param
@@ -17,6 +16,7 @@ interface GrupoRepository : CrudRepository<Grupo, Long> {
     SELECT g FROM Grupo g
     JOIN g.integrantes i
     WHERE i.id = :usuarioId
+      AND g.activado = true
 """
     )
     fun findByUsuario(
@@ -31,7 +31,7 @@ interface GrupoRepository : CrudRepository<Grupo, Long> {
 """)
     fun countIntegrantes(grupoId: Long): Long
 
-    fun findByIntegrantes_Id(usuarioId: Long): List<Grupo>
+    fun findByIntegrantes_IdAndActivadoTrue(usuarioId: Long): List<Grupo>
 
     @Query("""
         SELECT COUNT(g) > 0
@@ -63,6 +63,7 @@ interface GrupoRepository : CrudRepository<Grupo, Long> {
 """)
     fun obtenerMiembrosConRol(@Param("grupoId") grupoId: Long): List<MiembroProjection>
 }
+
 
 data class MiembroProjection(
     val id: Long,

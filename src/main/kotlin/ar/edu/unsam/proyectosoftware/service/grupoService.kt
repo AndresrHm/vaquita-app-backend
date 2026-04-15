@@ -73,7 +73,7 @@ class GrupoService(
     fun obtenerGruposDeUsuario(usuarioId: Long): List<Grupo> {
         buscarUsuario(usuarioId)
 
-        return grupoRepository.findByIntegrantes_Id(usuarioId)
+        return grupoRepository.findByIntegrantes_IdAndActivadoTrue(usuarioId)
     }
 
     @Transactional
@@ -154,7 +154,7 @@ class GrupoService(
 
         val esAdmin = grupoRepository.esAdmin(grupoId, usuarioId)
 
-        val tieneDeudas = tieneDeudas(grupoId, usuarioId) // TODO: Implementar
+        val tieneDeudas = tieneDeudas(grupoId, usuarioId)
 
         return GrupoContextoUsuarioDTO(
             usuarioId = usuarioId,
@@ -239,6 +239,33 @@ class GrupoService(
 
         grupoRepository.save(grupo)
     }
+    /**
+     * Realiza una baja logica del grupo (activado = false).
+     * Solo un admin del grupo puede ejecutar esta accion.
+     */
+    @Transactional
+    fun eliminarGrupo(grupoId: Long, currentUserId: Long) {
+        // Valida que el usuario que solicita la baja exista en el sistema.
+        buscarUsuario(currentUserId)
+
+        val grupo = grupoRepository.findByIdOrNull(grupoId)
+            ?: throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
+
+        // Si ya estaba desactivado, se considera no disponible para operar.
+        if (!grupo.activado) {
+            throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
+        }
+
+        // Solo un administrador del grupo puede desactivarlo.
+        val esAdmin = grupoRepository.esAdmin(grupoId, currentUserId)
+        if (!esAdmin) {
+            throw BusinessException(ErrorStrings.USUARIO_NO_ES_ADMIN)
+        }
+
+        // Baja logica: preserva historico pero oculta el grupo como activo.
+        grupo.activado = false
+        grupoRepository.save(grupo)
+    }
 
     // --- Private functions
     private fun buscarUsuario(usuarioId: Long): Usuario {
@@ -246,7 +273,11 @@ class GrupoService(
             ?: throw BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO)
     }
 
+    /**
+     * Consulta en el repositorio de gastos si el usuario figura como deudor
+     * con saldo pendiente en alguna fracción de gastos del grupo.
+     */
     private fun tieneDeudas(grupoId: Long, usuarioId: Long): Boolean {
-        return true // TODO: Implementar
+        return gastoRepository.existeDeudaPendienteEnGrupo(grupoId, usuarioId)
     }
 }

@@ -47,7 +47,7 @@ class GastoService(
         }
 
         if (!todosLosParticipantesPertenecenAlGrupo(gasto)) {
-        throw BusinessException(ErrorStrings.PARTICIPANTES_NO_PERTENECEN_AL_GRUPO)
+            throw BusinessException(ErrorStrings.PARTICIPANTES_NO_PERTENECEN_AL_GRUPO)
         }
 
         if (!puedeCrearGasto(gasto.pagador, gasto.grupo)) {
@@ -87,7 +87,7 @@ class GastoService(
             throw BusinessException(ErrorStrings.DESCRIPCION_LARGA(MAX_CARACTERES_DESCRIPCION))
         }
         if (gasto.items.any { it.nombre.length > MAX_CARACTERES_NOMBRE_PRODUCTO }) {
-            throw BusinessException(ErrorStrings.DESCRIPCION_LARGA(MAX_CARACTERES_NOMBRE_PRODUCTO))
+            throw BusinessException(ErrorStrings.NOMBRE_PRODUCTO_LARGO(MAX_CARACTERES_NOMBRE_PRODUCTO))
         }
     }
 

@@ -76,7 +76,7 @@ class Gasto(
     private fun validarAsignaciones() {
         if (tipoGasto == TipoGasto.PARTES_EXACTAS) {
             if (asignacionesExactas.values.any { it <= 0 }) {
-                throw BusinessException("Todas las asignaciones exactas deben tener un monto positivo")
+                throw BusinessException(ErrorStrings.ASIGNACIONES_DEBEN_TENER_MONTO_POSITIVO)
             }
 
             val sumaAsignada = asignacionesExactas.values.sum()
@@ -108,15 +108,15 @@ class Gasto(
 
             if (dto.tipoGasto == TipoGasto.PARTES_EXACTAS) {
                 val asignaciones = dto.asignacionesExactas
-                    ?: throw BusinessException("Faltan las asignaciones para el tipo PARTES_EXACTAS")
+                    ?: throw BusinessException(ErrorStrings.FALTAN_ASIGNACIONES)
 
                 if (asignaciones.size != participantes.size) {
-                    throw BusinessException("La cantidad de asignaciones no coincide con la cantidad de participantes")
+                    throw BusinessException(ErrorStrings.CANTIDAD_PARTICIPANTES_NO_COINCIDE_CANTIDAD_ASIGNACIONES)
                 }
 
                 asignaciones.forEach { participanteId: Long, montoAsignado: Double ->
                     val usuario = participantes.find { it.id == participanteId }
-                        ?: throw BusinessException("El usuario con ID $participanteId no pertenece a los participantes del gasto")
+                        ?: throw BusinessException(ErrorStrings.USUARIO_NO_PERTENECE_A_PARTICIPANTES(participanteId))
 
                     gasto.asignacionesExactas.put(usuario, montoAsignado)
                 }

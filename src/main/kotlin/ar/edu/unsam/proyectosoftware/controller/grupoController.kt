@@ -5,7 +5,6 @@ import ar.edu.unsam.proyectosoftware.dto.*
 import ar.edu.unsam.proyectosoftware.mapper.GastoMapper
 import ar.edu.unsam.proyectosoftware.mapper.GrupoMapper
 import ar.edu.unsam.proyectosoftware.service.GrupoService
-import org.apache.coyote.Response
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -158,6 +157,22 @@ class GrupoController {
         }
 
         return ResponseEntity.ok(response)
+    }
+
+    @PostMapping("/{grupoId}/miembros")
+    fun agregarMiembros(
+        @PathVariable grupoId: Long,
+        @RequestParam usuarioId: Long,
+        @RequestBody body: Map<String, List<Long>>,
+    ): ResponseEntity<GrupoDTO> {
+
+        val grupoActualizado = grupoService.agregarMiembros(
+            grupoId,
+            usuarioId,
+            body["usuarioIds"].orEmpty()
+        )
+
+        return ResponseEntity.ok(GrupoMapper.toGrupoDTO(grupoActualizado))
     }
 
     @PatchMapping("/{grupoId}/settings")

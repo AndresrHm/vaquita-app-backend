@@ -15,6 +15,7 @@ object ErrorStrings {
     const val NINGUN_USUARIO_ENCONTRADO = "Uno o más elementos no fueron encontrados."
     const val NOMBRE_OBLIGATORIO = "El nombre es obligatorio."
     const val USUARIO_NO_ES_ADMIN = "El usuario no es administrador del grupo."
+    const val USUARIO_YA_PERTENECE_AL_GRUPO = "El usuario ya pertenece al grupo."
     const val NO_PODES_ELIMINARTE = "No podés eliminarte a vos mismo."
     const val NO_SE_PUEDE_ELIMINAR_ULTIMO_ADMIN = "No podés eliminar al último administrador."
     fun DESCRIPCION_LARGA(maxCaracteres: Int): String {

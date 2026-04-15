@@ -1,6 +1,8 @@
 package ar.edu.unsam.proyectosoftware.service
 
 import ar.edu.unsam.proyectosoftware.config.JwtUtils
+import ar.edu.unsam.proyectosoftware.domain.SolicitudAmistad
+import ar.edu.unsam.proyectosoftware.domain.SolicitudAmistadFront
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.UsuarioLoginDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioLogueadoDTO
@@ -8,16 +10,17 @@ import ar.edu.unsam.proyectosoftware.dto.UsuarioNombreIdDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioRegistradoDTO
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
+import ar.edu.unsam.proyectosoftware.repository.SolicitudAmistadRepository
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.lang.invoke.MethodHandles.throwException
 
 @Service
 class UsuarioService(
     val usuarioRepository: UsuarioRepository,
     val grupoRepository: GrupoRepository,
+    val solicitudAmistadRepository: SolicitudAmistadRepository,
     private val passwordEncoder: PasswordEncoder,
     private val jwtUtils: JwtUtils
 ) {
@@ -96,10 +99,43 @@ class UsuarioService(
 
     @Transactional(readOnly = true)
     fun obtenerAmigos(usuarioId: Long): List<UsuarioNombreIdDTO> {
-        val usuario = usuarioRepository.findById(usuarioId)
-            .orElseThrow { Exception("Usuario inexistente") }
-        // Access the collection while the session is still open
+        val usuario = obtenerUsuario(usuarioId)
         return usuario.amigos.map { Usuario.toUsuarioNombreIdDTO(it) }
+    }
+
+    @Transactional(readOnly = true)
+    fun obtenerSolicitudesPendientes(idUsuario: Long): List<SolicitudAmistadFront> {
+        return solicitudAmistadRepository.findByIdReceptor(idUsuario).map { solicitud ->
+            val emisor = obtenerUsuario(solicitud.idEmisor)
+            SolicitudAmistadFront(
+                id = solicitud.id!!,
+                nombre = emisor.nombre,
+                imagenUrl = emisor.imagenUrl
+            )
+        }
+    }
+
+    @Transactional
+    fun enviarSolicitudAmistad(idEmisor: Long, idReceptor: Long): Long? {
+        val solicitud = SolicitudAmistad(idEmisor, idReceptor)
+        solicitudAmistadRepository.save(solicitud)
+        return idReceptor
+    }
+
+    @Transactional
+    fun responderSolicitudAmistad(idUsuario: Long, idSolicitud: Long, aceptar: Boolean): Long? {
+        val solicitud = solicitudAmistadRepository.findById(idSolicitud)
+            .orElseThrow { Exception("Solicitud inexistente") }
+        if (aceptar) {
+            val emisor = obtenerUsuario(solicitud.idEmisor)
+            val receptor = obtenerUsuario(solicitud.idReceptor)
+            emisor.agregarAmigo(receptor)
+            receptor.agregarAmigo(emisor)
+            usuarioRepository.save(emisor)
+            usuarioRepository.save(receptor)
+        }
+        solicitudAmistadRepository.delete(solicitud)
+        return idUsuario
     }
 
 }

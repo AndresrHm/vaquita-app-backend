@@ -23,6 +23,7 @@ class Grupo(
     @Id
     @GeneratedValue
     var id: Long? = null
+    var activado = true
 
     // TODO: Implementar estas features
     var moneda: String = "ARS"

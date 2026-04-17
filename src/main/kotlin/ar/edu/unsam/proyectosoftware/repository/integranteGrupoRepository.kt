@@ -35,6 +35,8 @@ interface IntegranteGrupoRepository : CrudRepository<IntegranteGrupo, Long> {
         rol: RolIntegrante
     ): Boolean
 
+    fun existsByGrupoIdAndUsuarioId(grupoId: Long, usuarioId: Long): Boolean
+
     @Query(
         """
     SELECT new ar.edu.unsam.proyectosoftware.repository.MiembroProjection(
@@ -66,6 +68,17 @@ interface IntegranteGrupoRepository : CrudRepository<IntegranteGrupo, Long> {
     fun countByGrupoId(grupoId: Long): Long
 
     fun deleteByGrupoIdAndUsuarioId(grupoId: Long, usuarioId: Long)
+
+    @Query("""
+    SELECT ig.usuario.id
+    FROM IntegranteGrupo ig
+    WHERE ig.grupo.id = :grupoId
+      AND ig.usuario.id IN :usuarioIds
+""")
+    fun findIdsQuePertenecen(
+        @Param("grupoId") grupoId: Long,
+        @Param("usuarioIds") usuarioIds: List<Long>
+    ): List<Long>
 }
 
 data class MiembroProjection(

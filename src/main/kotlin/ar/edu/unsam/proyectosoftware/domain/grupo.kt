@@ -66,6 +66,10 @@ class Grupo(
             .map { it.usuario }
     }
 
+    fun usuarios(): List<Usuario> {
+        return integrantes.map { it.usuario }
+    }
+
     companion object {
         fun toGrupoNombreIdDTO(grupo: Grupo): GrupoNombreIdDTO {
             return GrupoNombreIdDTO(

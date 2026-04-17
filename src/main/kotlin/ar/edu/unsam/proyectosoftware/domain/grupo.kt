@@ -8,6 +8,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.JoinTable
 import jakarta.persistence.ManyToMany
+import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import java.time.LocalDate
 import kotlin.collections.mutableListOf
@@ -31,26 +32,9 @@ class Grupo(
     var notificaciones: Boolean = false
     var modoRata: Boolean = false
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "grupo_integrantes",
-        joinColumns = [JoinColumn(name = "grupo_id")],
-        inverseJoinColumns = [JoinColumn(name = "usuario_id")]
-    )
-    val integrantes: MutableList<Usuario> = mutableListOf()
+    @OneToMany(mappedBy = "grupo")
+    val integrantes: MutableList<IntegranteGrupo> = mutableListOf()
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "grupo_admins",
-        joinColumns = [JoinColumn(name = "grupo_id")],
-        inverseJoinColumns = [JoinColumn(name = "usuario_id")]
-    )
-    val admins: MutableList<Usuario> = mutableListOf()
-
-
-    fun agregarIntegrante(nuevo: Usuario) {
-        integrantes.add(nuevo)
-    }
 
     companion object {
         fun toGrupoNombreIdDTO(grupo: Grupo): GrupoNombreIdDTO {

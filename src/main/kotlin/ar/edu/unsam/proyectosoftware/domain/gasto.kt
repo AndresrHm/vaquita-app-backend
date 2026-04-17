@@ -1,6 +1,8 @@
 package ar.edu.unsam.proyectosoftware.domain
 
+import ar.edu.unsam.proyectosoftware.domain.CategoriaGasto
 import ar.edu.unsam.proyectosoftware.BusinessException
+import ar.edu.unsam.proyectosoftware.domain.enums.TipoGasto
 import ar.edu.unsam.proyectosoftware.dto.CreacionGastoDTO
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 import jakarta.persistence.CascadeType
@@ -12,6 +14,8 @@ import jakarta.persistence.ElementCollection
 import jakarta.persistence.Id
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.Inheritance
 import jakarta.persistence.InheritanceType
@@ -28,7 +32,8 @@ import java.time.LocalDate
 @DiscriminatorColumn(name = "tipo_gasto_id")
 abstract class Gasto(
     var descripcion: String,
-    var categoria: String, // ¿class Categoria?
+    @Enumerated(EnumType.STRING)
+    var categoria: CategoriaGasto,
     var monto: Double,
     val fecha: LocalDate,
     @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.MERGE])
@@ -66,13 +71,14 @@ abstract class Gasto(
 
     abstract fun repartirGasto(): List<FraccionGasto>
     abstract fun validar()
+    abstract fun tipoGasto(): TipoGasto
 }
 
 @Entity
 @DiscriminatorValue("EXACT")
 class PartesExactas(
     descripcion: String,
-    categoria: String,
+    categoria: CategoriaGasto,
     monto: Double,
     fecha: LocalDate,
     grupo: Grupo,
@@ -117,13 +123,15 @@ class PartesExactas(
             throw BusinessException(ErrorStrings.FRACCIONES_NO_COINCIDEN_CON_TOTAL_DE_GASTO)
         }
     }
+
+    override fun tipoGasto() = TipoGasto.PARTES_EXACTAS
 }
 
 @Entity
 @DiscriminatorValue("EQUAL")
 class PartesIguales(
     descripcion: String,
-    categoria: String,
+    categoria: CategoriaGasto,
     monto: Double,
     fecha: LocalDate,
     grupo: Grupo,
@@ -157,6 +165,8 @@ class PartesIguales(
     }
 
     override fun validar() {}
+
+    override fun tipoGasto() = TipoGasto.PARTES_IGUALES
 
     private fun calcularMontoPorParticipante(): Double {
         return monto / cantidadParticipantes()

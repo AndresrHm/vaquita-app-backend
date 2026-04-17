@@ -1,4 +1,6 @@
 package ar.edu.unsam.proyectosoftware.dto
+import ar.edu.unsam.proyectosoftware.domain.CategoriaGasto
+import ar.edu.unsam.proyectosoftware.domain.Usuario
 
 import ar.edu.unsam.proyectosoftware.domain.enums.TipoGasto
 import java.time.LocalDate
@@ -7,7 +9,7 @@ import java.util.Collections.emptyList
 data class CreacionGastoDTO(
     val id: Long?,
     val descripcion: String,
-    val categoria: String,
+    val categoria: CategoriaGasto,
     val monto: Double,
     val fecha: LocalDate,
     val grupoID: Long,
@@ -43,3 +45,29 @@ data class GastoItemDTO(
     val paymentType: String,
     val imageUrl: String
 )
+data class GastoDetalleDTO(
+    val id: Long,
+    val descripcion: String,
+    val categoria: CategoriaGasto,
+    val monto: Double,
+    val fecha: LocalDate,
+    val pagador: String,
+    val participantes: List<Usuario>,
+    val tipoGasto: TipoGasto
+)
+data class FilterGastosCustom(
+    val vista: TipoRelacionVista? = null,
+    val categoria: List<CategoriaGasto>? = null,
+    val fechaInicio: LocalDate? = null,
+    val fechaFin: LocalDate? = null,
+    val amigoID: Long? = null,
+    val search: String? = null,
+    val rangoIni: Double? = null,
+    val rangoFin: Double? = null,
+    val page: Int = 0,
+    val size: Int = 10,
+)
+
+enum class TipoRelacionVista {
+    PROPIA, GRUPO
+}

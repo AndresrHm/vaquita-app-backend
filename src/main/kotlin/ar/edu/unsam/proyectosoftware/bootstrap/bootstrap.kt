@@ -1,9 +1,12 @@
 package ar.edu.unsam.proyectosoftware.bootstrap
 
 import ar.edu.unsam.proyectosoftware.domain.CategoriaGasto
+import ar.edu.unsam.proyectosoftware.domain.Gasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.PartesIguales
+import ar.edu.unsam.proyectosoftware.domain.RolIntegrante
 import ar.edu.unsam.proyectosoftware.domain.Usuario
+import ar.edu.unsam.proyectosoftware.domain.enums.TipoGasto
 import ar.edu.unsam.proyectosoftware.repository.FraccionGastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
@@ -73,8 +76,13 @@ class BootstrapData(
             imagenUrl = "https://i.ytimg.com/vi/OWt0hpRwqSs/hqdefault.jpg",
             fechaCreacion = LocalDate.now()
         ).apply {
-            integrantes.addAll(listOf(juanA, agustinH, andresH, andresS))
-            admins.addAll(listOf(juanA)) // esto es horrible, hay que refactorizar
+            listOf(agustinH, juanM, andresH, giulianaM, andresS).forEach { it ->
+                agregarIntegrante(
+                    it,
+                    RolIntegrante.MIEMBRO
+                )
+            }
+            agregarIntegrante(juanA, RolIntegrante.ADMIN)
         }
 
         val grupoDepto = Grupo(
@@ -82,21 +90,42 @@ class BootstrapData(
             descripcion = "Gastos de convivencia",
             imagenUrl = "https://definicion.de/wp-content/uploads/2009/02/departamento-1.jpg",
             fechaCreacion = LocalDate.now()
-        ).apply { integrantes.addAll(listOf(agustinH, juanM, giulianaM)) }
+        ).apply {
+            listOf(agustinH, juanM, giulianaM).forEach { it ->
+                agregarIntegrante(
+                    it,
+                    RolIntegrante.MIEMBRO
+                )
+            }
+            agregarIntegrante(andresS, RolIntegrante.ADMIN)
+        }
 
         val grupoFutbol = Grupo(
             nombre = "Los Pibes FC",
             descripcion = "Canchita los martes",
             imagenUrl = "https://www.historiadeboca.com.ar/Fotos/Equipos/2000301.jpg",
             fechaCreacion = LocalDate.now()
-        ).apply { integrantes.addAll(listOf(juanM, andresH, juanA)) }
+        ).apply {
+            listOf(
+                juanM, andresH, juanA
+            ).forEach { it ->
+                agregarIntegrante(
+                    it,
+                    RolIntegrante.MIEMBRO
+                )
+            }
+            agregarIntegrante(giulianaM, RolIntegrante.ADMIN)
+        }
 
         val grupoEstudio = Grupo(
             nombre = "Final de Objetos",
             descripcion = "Café y apuntes",
             imagenUrl = "https://www.pcgamesn.com/wp-content/sites/pcgamesn/2019/06/minecraft-enchantments-enchanting-table.jpg",
             fechaCreacion = LocalDate.now()
-        ).apply { integrantes.addAll(listOf(giulianaM, juanA, agustinH, andresS)) }
+        ).apply {
+            listOf(giulianaM, juanA, andresS).forEach { it -> agregarIntegrante(it, RolIntegrante.MIEMBRO) }
+            agregarIntegrante(andresS, RolIntegrante.ADMIN)
+        }
 
         grupoRepository.saveAll(listOf(grupoAsado, grupoDepto, grupoFutbol, grupoEstudio))
 
@@ -109,7 +138,7 @@ class BootstrapData(
                 LocalDate.now(),
                 grupoAsado,
                 andresS,
-                grupoAsado.integrantes.toMutableList()
+                grupoAsado.usuarios()
             ).apply { agregarItem("Picada completa", 1.0, 60000.0) },
             PartesIguales(
                 "Compras para el asado",
@@ -118,7 +147,7 @@ class BootstrapData(
                 LocalDate.now(),
                 grupoAsado,
                 juanA,
-                grupoAsado.integrantes.toMutableList()
+                grupoAsado.usuarios(),
             ).apply {
                 agregarItem("Vacío", 2.5, 4000.0); agregarItem("Carbón", 1.0, 2000.0); agregarItem(
                 "Fernet",
@@ -133,7 +162,7 @@ class BootstrapData(
                 LocalDate.now(),
                 grupoAsado,
                 agustinH,
-                grupoAsado.integrantes.toMutableList()
+                grupoAsado.usuarios(),
             ).apply { agregarItem("Cerveza", 6.0, 1500.0); agregarItem("Gaseosa", 2.0, 1500.0) },
             PartesIguales(
                 "Panadería",
@@ -142,7 +171,7 @@ class BootstrapData(
                 LocalDate.now(),
                 grupoAsado,
                 andresH,
-                grupoAsado.integrantes.toMutableList()
+                grupoAsado.usuarios()
             ).apply { agregarItem("Mignon", 2.0, 1500.0); agregarItem("Facturas", 1.0, 1500.0) },
             PartesIguales(
                 "Verdulería",
@@ -151,7 +180,7 @@ class BootstrapData(
                 LocalDate.now(),
                 grupoAsado,
                 andresS,
-                grupoAsado.integrantes.toMutableList()
+                grupoAsado.usuarios()
             ).apply {
                 agregarItem("Papa", 3.0, 1000.0); agregarItem("Tomate", 1.0, 2000.0); agregarItem(
                 "Lechuga",
@@ -166,7 +195,7 @@ class BootstrapData(
                 LocalDate.now(),
                 grupoAsado,
                 juanA,
-                grupoAsado.integrantes.toMutableList()
+                grupoAsado.usuarios()
             ).apply { agregarItem("Chorizos", 12.0, 1000.0); agregarItem("Morcilla", 6.0, 1000.0) },
             PartesIguales(
                 "Hielo y Carbón extra",
@@ -175,7 +204,7 @@ class BootstrapData(
                 LocalDate.now(),
                 grupoAsado,
                 agustinH,
-                grupoAsado.integrantes.toMutableList()
+                grupoAsado.usuarios()
             ).apply { agregarItem("Hielo", 3.0, 1000.0); agregarItem("Carbón", 1.0, 1000.0) },
             PartesIguales(
                 "Picada",
@@ -184,7 +213,7 @@ class BootstrapData(
                 LocalDate.now(),
                 grupoAsado,
                 andresH,
-                grupoAsado.integrantes.toMutableList()
+                grupoAsado.usuarios()
             ).apply { agregarItem("Salame", 1.0, 4500.0); agregarItem("Queso", 1.0, 5000.0) },
             PartesIguales(
                 "Snacks",
@@ -193,7 +222,7 @@ class BootstrapData(
                 LocalDate.now(),
                 grupoAsado,
                 andresS,
-                grupoAsado.integrantes.toMutableList()
+                grupoAsado.usuarios()
             ).apply { agregarItem("Papas fritas", 2.0, 1600.0) },
             PartesIguales(
                 "Postre Helado",
@@ -202,7 +231,7 @@ class BootstrapData(
                 LocalDate.now(),
                 grupoAsado,
                 juanA,
-                grupoAsado.integrantes.toMutableList()
+                grupoAsado.usuarios()
             ).apply { agregarItem("Bombón Suizo", 8.0, 1000.0) },
             PartesIguales(
                 "Vino",
@@ -211,7 +240,7 @@ class BootstrapData(
                 LocalDate.now(),
                 grupoAsado,
                 agustinH,
-                grupoAsado.integrantes.toMutableList()
+                grupoAsado.usuarios()
             ).apply { agregarItem("Malbec", 2.0, 5500.0) },
             PartesIguales(
                 "Aderezos y servilletas",
@@ -220,7 +249,7 @@ class BootstrapData(
                 LocalDate.now(),
                 grupoAsado,
                 andresH,
-                grupoAsado.integrantes.toMutableList()
+                grupoAsado.usuarios()
             ).apply { agregarItem("Mayonesa", 1.0, 1000.0); agregarItem("Servilletas", 2.0, 750.0) },
             PartesIguales(
                 "Achuras",
@@ -229,7 +258,7 @@ class BootstrapData(
                 LocalDate.now(),
                 grupoAsado,
                 andresS,
-                grupoAsado.integrantes.toMutableList()
+                grupoAsado.usuarios()
             ).apply { agregarItem("Chinchulines", 1.0, 4000.0); agregarItem("Riñones", 1.0, 3000.0) },
             PartesIguales(
                 "Cerveza extra",
@@ -238,7 +267,7 @@ class BootstrapData(
                 LocalDate.now(),
                 grupoAsado,
                 juanA,
-                grupoAsado.integrantes.toMutableList()
+                grupoAsado.usuarios()
             ).apply { agregarItem("Latas", 6.0, 1500.0) },
             PartesIguales(
                 "Postre Vigilante",
@@ -247,7 +276,7 @@ class BootstrapData(
                 LocalDate.now(),
                 grupoAsado,
                 agustinH,
-                grupoAsado.integrantes.toMutableList()
+                grupoAsado.usuarios()
             ).apply { agregarItem("Dulce de membrillo", 1.0, 2000.0); agregarItem("Queso fresco", 1.0, 2000.0) },
             PartesIguales(
                 "Soda",
@@ -256,7 +285,7 @@ class BootstrapData(
                 LocalDate.now(),
                 grupoAsado,
                 andresH,
-                grupoAsado.integrantes.toMutableList()
+                grupoAsado.usuarios()
             ).apply { agregarItem("Sifón", 3.0, 800.0) },
             PartesIguales(
                 "Leña",
@@ -265,7 +294,7 @@ class BootstrapData(
                 LocalDate.now(),
                 grupoAsado,
                 andresS,
-                grupoAsado.integrantes.toMutableList()
+                grupoAsado.usuarios()
             ).apply { agregarItem("Bolsa leña", 2.0, 1500.0) },
             PartesIguales(
                 "Provoleta",
@@ -274,7 +303,7 @@ class BootstrapData(
                 LocalDate.now(),
                 grupoAsado,
                 juanA,
-                grupoAsado.integrantes.toMutableList()
+                grupoAsado.usuarios()
             ).apply { agregarItem("Provoleta unidad", 2.0, 2500.0) },
             PartesIguales(
                 "Fernet de refuerzo",
@@ -283,7 +312,7 @@ class BootstrapData(
                 LocalDate.now(),
                 grupoAsado,
                 agustinH,
-                grupoAsado.integrantes.toMutableList()
+                grupoAsado.usuarios()
             ).apply { agregarItem("Fernet 750ml", 1.0, 7500.0) },
             PartesIguales(
                 "Limones y Sal",
@@ -292,7 +321,7 @@ class BootstrapData(
                 LocalDate.now(),
                 grupoAsado,
                 andresH,
-                grupoAsado.integrantes.toMutableList()
+                grupoAsado.usuarios()
             ).apply { agregarItem("Limón", 1.0, 1000.0); agregarItem("Sal gruesa", 1.0, 800.0) },
             PartesIguales(
                 "Gaseosas Dieta",
@@ -301,7 +330,7 @@ class BootstrapData(
                 LocalDate.now(),
                 grupoAsado,
                 andresS,
-                grupoAsado.integrantes.toMutableList()
+                grupoAsado.usuarios()
             ).apply { agregarItem("Pepsi Black", 2.0, 2300.0) },
             PartesIguales(
                 "Carne de Cerdo",
@@ -310,7 +339,7 @@ class BootstrapData(
                 LocalDate.now(),
                 grupoAsado,
                 juanA,
-                grupoAsado.integrantes.toMutableList()
+                grupoAsado.usuarios()
             ).apply { agregarItem("Pechito", 1.5, 8000.0); agregarItem("Manta", 1.0, 4000.0) },
             PartesIguales(
                 "Chimichurri ingredientes",
@@ -319,7 +348,7 @@ class BootstrapData(
                 LocalDate.now(),
                 grupoAsado,
                 agustinH,
-                grupoAsado.integrantes.toMutableList()
+                grupoAsado.usuarios()
             ).apply { agregarItem("Aji molido", 1.0, 1100.0); agregarItem("Aceite", 1.0, 1100.0) },
             PartesIguales(
                 "Vaso Descartable",
@@ -328,7 +357,7 @@ class BootstrapData(
                 LocalDate.now(),
                 grupoAsado,
                 andresH,
-                grupoAsado.integrantes.toMutableList()
+                grupoAsado.usuarios()
             ).apply { agregarItem("Paquete vasos", 1.0, 3500.0) }
         ).forEach { gasto ->
             val gastoGuardado = gastoRepository.save(gasto)

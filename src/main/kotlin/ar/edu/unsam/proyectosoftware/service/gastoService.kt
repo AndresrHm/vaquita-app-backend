@@ -15,6 +15,7 @@ import ar.edu.unsam.proyectosoftware.mapper.GastoMapper
 import ar.edu.unsam.proyectosoftware.repository.FraccionGastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
+import ar.edu.unsam.proyectosoftware.repository.IntegranteGrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -28,6 +29,7 @@ val MAX_CARACTERES_NOMBRE_PRODUCTO = 20
 class GastoService(
     var fraccionGastoRepository: FraccionGastoRepository,
     var gastoRepository: GastoRepository,
+    var integranteGrupoRepository: IntegranteGrupoRepository,
     var grupoRepository: GrupoRepository,
     var usuarioRepository: UsuarioRepository
 ) {
@@ -37,9 +39,7 @@ class GastoService(
         gastoDTO: CreacionGastoDTO
     ): Gasto {
         val grupo = obtenerGrupoOLanzarExcepcion(gastoDTO.grupoID)
-
         val pagador = obtenerUsuarioOLanzarExcepcion(gastoDTO.pagadorID)
-
         val participantes = usuarioRepository.findAllById(gastoDTO.participantesIDs).toList()
 
         if (participantes.size != gastoDTO.participantesIDs.size) {
@@ -50,7 +50,7 @@ class GastoService(
 
         validarDatosBasicos(gasto)
 
-        if (!gasto.pagador.perteneceA(gasto.grupo)) {
+        if (integranteGrupoRepository.existsByGrupoIdAndUsuarioId(grupo.id!!, gasto.pagador.id!!)) {
             throw BusinessException(ErrorStrings.PAGADOR_NO_PERTENECE_AL_GRUPO)
         }
 
@@ -175,12 +175,23 @@ class GastoService(
         return participantes.contains(pagador)
     }
 
-    private fun todosLosParticipantesPertenecenAlGrupo(
+    private fun todosLosParticipantesPertenecenAlGrupo (
         gasto: Gasto
     ): Boolean {
-        val participantes = gasto.participantes
-        val grupo = gasto.grupo
-        return participantes.all { it.perteneceA(grupo) }
+        val grupoId = gasto.grupo.id!!
+        val ids = gasto.participantes.mapNotNull { it.id }.toSet()
+
+        val pertenecen = integranteGrupoRepository
+            .findIdsQuePertenecen(grupoId, ids.toList())
+            .toSet()
+
+        val faltantes = ids - pertenecen
+
+        if (faltantes.isNotEmpty()) {
+            throw BusinessException("Usuarios no pertenecen al grupo: $faltantes")
+        }
+
+        return true
     }
 
     private fun puedeCrearGasto(usuario: Usuario, grupo: Grupo): Boolean {

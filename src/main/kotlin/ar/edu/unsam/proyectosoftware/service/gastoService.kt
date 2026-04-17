@@ -7,6 +7,7 @@ import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.CreacionGastoDTO
 import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
+import ar.edu.unsam.proyectosoftware.mapper.GastoMapper
 import ar.edu.unsam.proyectosoftware.repository.FraccionGastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
@@ -24,7 +25,7 @@ class GastoService(
     var usuarioRepository: UsuarioRepository
 ) {
 
-    @Transactional(readOnly = false, rollbackFor = [Exception::class])
+    @Transactional
     fun crearGasto(
         gastoDTO: CreacionGastoDTO
     ): Gasto {
@@ -38,7 +39,7 @@ class GastoService(
             throw BusinessException(ErrorStrings.NINGUN_USUARIO_ENCONTRADO)
         }
 
-        val gasto = Gasto.fromGastoDTO(gastoDTO, grupo, pagador, participantes)
+        val gasto = GastoMapper.fromCreacionDTO(gastoDTO, grupo, pagador, participantes)
 
         validarDatosBasicos(gasto)
 

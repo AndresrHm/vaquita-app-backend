@@ -1,6 +1,6 @@
 package ar.edu.unsam.proyectosoftware.dto
 
-import ar.edu.unsam.proyectosoftware.domain.TipoGasto
+import ar.edu.unsam.proyectosoftware.domain.enums.TipoGasto
 import java.time.LocalDate
 import java.util.Collections.emptyList
 

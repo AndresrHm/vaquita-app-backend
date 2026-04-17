@@ -5,12 +5,20 @@ import ar.edu.unsam.proyectosoftware.domain.Gasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.CreacionGastoDTO
-import ar.edu.unsam.proyectosoftware.repository.GastoRepository
+import ar.edu.unsam.proyectosoftware.dto.FilterGastosCustom
+import ar.edu.unsam.proyectosoftware.dto.GastoDetalleDTO
+import ar.edu.unsam.proyectosoftware.dto.PageResponse
+import ar.edu.unsam.proyectosoftware.dto.TipoRelacionVista
+import ar.edu.unsam.proyectosoftware.dto.toPageResponse
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
+import ar.edu.unsam.proyectosoftware.mapper.GastoMapper
 import ar.edu.unsam.proyectosoftware.repository.FraccionGastoRepository
+import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.IntegranteGrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -26,7 +34,7 @@ class GastoService(
     var usuarioRepository: UsuarioRepository
 ) {
 
-    @Transactional(readOnly = false, rollbackFor = [Exception::class])
+    @Transactional
     fun crearGasto(
         gastoDTO: CreacionGastoDTO
     ): Gasto {
@@ -38,7 +46,7 @@ class GastoService(
             throw BusinessException(ErrorStrings.NINGUN_USUARIO_ENCONTRADO)
         }
 
-        val gasto = Gasto.fromGastoDTO(gastoDTO, grupo, pagador, participantes)
+        val gasto = GastoMapper.fromCreacionDTO(gastoDTO, grupo, pagador, participantes)
 
         validarDatosBasicos(gasto)
 
@@ -71,6 +79,74 @@ class GastoService(
 
         return fraccionGastoRepository.findByDeudorId(userId)
             .sumOf { it.saldoPendiente() }
+    }
+
+    @Transactional(readOnly = true)
+    fun getGastosByFilters(
+        userId: Long,
+        filters: FilterGastosCustom,
+    ): PageResponse<GastoDetalleDTO> {
+        obtenerUsuarioOLanzarExcepcion(userId)
+
+        // Validar rango de fechas
+        if (filters.fechaInicio != null && filters.fechaFin != null && filters.fechaInicio > filters.fechaFin) {
+            throw BusinessException(ErrorStrings.INFORMACION_INVALIDA)
+        }
+
+        // Validar rango de montos
+        if (filters.rangoIni != null && filters.rangoFin != null && filters.rangoIni > filters.rangoFin) {
+            throw BusinessException(ErrorStrings.INFORMACION_INVALIDA)
+        }
+
+        // Validar paginación
+        if (filters.page < 0 || filters.size <= 0) {
+            throw BusinessException(ErrorStrings.INFORMACION_INVALIDA)
+        }
+
+        // Procesar búsqueda: usar patrón LIKE solo si hay texto
+        val searchPattern = filters.search
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+            ?.lowercase()
+            ?.let { "%$it%" }
+            ?: ""
+
+        // Procesar categorías
+        val categorias = filters.categoria
+            ?.map { it.name }
+            ?.distinct()
+            ?: emptyList()
+
+        val filtrarCategorias = categorias.isNotEmpty()
+
+        // Procesar vistas (por defecto sin filtro de vista si no se especifica)
+        val vistaPropia = filters.vista == TipoRelacionVista.PROPIA
+        val vistaGrupo = filters.vista == TipoRelacionVista.GRUPO
+
+        // Configurar paginación
+        val pageable = PageRequest.of(
+            filters.page,
+            filters.size,
+            Sort.by(Sort.Order.desc("fecha"), Sort.Order.desc("id"))
+        )
+
+        // Ejecutar consulta con todos los filtros normalizados
+        val gastosPage = gastoRepository.buscarPorFiltros(
+            searchPattern = searchPattern,
+            fechaInicio = filters.fechaInicio,
+            fechaFin = filters.fechaFin,
+            rangoIni = filters.rangoIni,
+            rangoFin = filters.rangoFin,
+            filtrarCategorias = filtrarCategorias,
+            categorias = categorias,
+            userId = userId,
+            amigoId = filters.amigoID,
+            vistaPropia = vistaPropia,
+            vistaGrupo = vistaGrupo,
+            pageable = pageable,
+        )
+
+        return gastosPage.toPageResponse { GastoMapper.toViewDTO(it, userId) }
     }
 
     private fun validarDatosBasicos(gasto: Gasto) {
@@ -131,4 +207,3 @@ class GastoService(
         usuarioRepository.findById(usuarioId)
             .orElseThrow { BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO) }
 }
-

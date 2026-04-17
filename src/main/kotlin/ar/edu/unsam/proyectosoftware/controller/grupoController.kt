@@ -94,7 +94,7 @@ class GrupoController {
                             GastosPorMesDTO(
                                 month = mes.getDisplayName(TextStyle.FULL, locale),
                                 expenses = gastosDelMes.map {
-                                    GastoMapper.toGastoItemDTO(it, 1L) // userId hardcodeado por ahora
+                                    GastoMapper.toItemDTO(it, 1L) // userId hardcodeado por ahora
                                 }
                             )
                         }

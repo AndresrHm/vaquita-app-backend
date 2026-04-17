@@ -26,8 +26,8 @@ class GrupoController {
     @GetMapping
     fun obtenerGrupos(
         @RequestParam usuarioId: Long,
-        @RequestParam page: Int,
-        @RequestParam size: Int,
+        @RequestParam page: Int = 0,
+        @RequestParam size: Int = 8,
         // falta un poco para meter esto @RequestParam tipoFiltrado: TipoFiltrado,
     ): PageResponse<GrupoDTO> {
         val resultPage = grupoService.obtenerGrupos(usuarioId, page, size)

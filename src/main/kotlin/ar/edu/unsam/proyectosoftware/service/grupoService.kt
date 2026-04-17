@@ -36,15 +36,16 @@ class GrupoService(
         size: Int,
     ): Page<Grupo> {
 
-        if (usuarioRepository.findByIdOrNull(usuarioId) == null) throw BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO)
+        if (usuarioRepository.findByIdOrNull(usuarioId) == null)
+            throw BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO)
 
         val pageable = PageRequest.of(
             page,
             size,
-            Sort.by(Sort.Direction.DESC, "fechaCreacion")
+            Sort.by("fechaCreacion")
         )
 
-        return grupoRepository.findByUsuario(usuarioId, pageable)
+        return integranteGrupoRepository.findGruposByUsuario(usuarioId, pageable)
     }
 
     fun obtenerDetalleGrupo(

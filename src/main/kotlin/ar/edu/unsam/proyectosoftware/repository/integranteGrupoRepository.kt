@@ -3,6 +3,8 @@ package ar.edu.unsam.proyectosoftware.repository
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.IntegranteGrupo
 import ar.edu.unsam.proyectosoftware.domain.RolIntegrante
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.CrudRepository
 import org.springframework.data.repository.query.Param
@@ -79,6 +81,17 @@ interface IntegranteGrupoRepository : CrudRepository<IntegranteGrupo, Long> {
         @Param("grupoId") grupoId: Long,
         @Param("usuarioIds") usuarioIds: List<Long>
     ): List<Long>
+
+    @Query("""
+    SELECT g
+    FROM Grupo g
+    JOIN g.integrantes ig
+    WHERE ig.usuario.id = :usuarioId
+""")
+    fun findGruposByUsuario(
+        @Param("usuarioId") usuarioId: Long,
+        pageable: Pageable
+    ): Page<Grupo>
 }
 
 data class MiembroProjection(

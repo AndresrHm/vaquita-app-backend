@@ -105,7 +105,7 @@ class BootstrapData(
             fechaCreacion = LocalDate.now()
         ).apply {
             listOf(
-                juanM, andresH
+                juanM, andresH, juanA
             ).forEach { it ->
                 agregarIntegrante(
                     it,

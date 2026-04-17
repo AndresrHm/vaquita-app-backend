@@ -1,10 +1,9 @@
 package ar.edu.unsam.proyectosoftware.bootstrap
 
-import ar.edu.unsam.proyectosoftware.domain.Gasto
-import ar.edu.unsam.proyectosoftware.domain.Grupo
-import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.domain.CategoriaGasto
-import ar.edu.unsam.proyectosoftware.domain.TipoGasto
+import ar.edu.unsam.proyectosoftware.domain.Grupo
+import ar.edu.unsam.proyectosoftware.domain.PartesIguales
+import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.repository.FraccionGastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
@@ -103,316 +102,241 @@ class BootstrapData(
 
         // 3. Gastos
         listOf(
-            Gasto(
-              "algo para picar",
+            PartesIguales(
+                "Algo para picar",
                 CategoriaGasto.COMIDA,
                 60000.0,
                 LocalDate.now(),
                 grupoAsado,
                 andresS,
-                grupoAsado.integrantes.toMutableList(),
-                TipoGasto.PARTES_IGUALES
-             ).apply {
-                 agregarItem("Picada completa", 1.0, 60000.0)
-            }
-            ,
-            Gasto(
+                grupoAsado.integrantes.toMutableList()
+            ).apply { agregarItem("Picada completa", 1.0, 60000.0) },
+            PartesIguales(
                 "Compras para el asado",
                 CategoriaGasto.COMIDA,
                 15000.0,
                 LocalDate.now(),
                 grupoAsado,
                 juanA,
-                grupoAsado.integrantes.toMutableList(),
-                TipoGasto.PARTES_IGUALES
+                grupoAsado.integrantes.toMutableList()
             ).apply {
-                agregarItem("Vacío", 2.5, 4000.0)
-                agregarItem("Carbón", 1.0, 2000.0)
-                agregarItem("Fernet", 1.0, 3000.0)
+                agregarItem("Vacío", 2.5, 4000.0); agregarItem("Carbón", 1.0, 2000.0); agregarItem(
+                "Fernet",
+                1.0,
+                3000.0
+            )
             },
-            Gasto(
+            PartesIguales(
                 "Bebidas previa",
                 CategoriaGasto.BEBIDA,
                 12000.0,
                 LocalDate.now(),
                 grupoAsado,
                 agustinH,
-                grupoAsado.integrantes.toMutableList(),
-                TipoGasto.PARTES_IGUALES
-            ).apply {
-                agregarItem("Cerveza", 6.0, 1500.0)
-                agregarItem("Gaseosa", 2.0, 1500.0)
-            },
-            Gasto(
+                grupoAsado.integrantes.toMutableList()
+            ).apply { agregarItem("Cerveza", 6.0, 1500.0); agregarItem("Gaseosa", 2.0, 1500.0) },
+            PartesIguales(
                 "Panadería",
                 CategoriaGasto.COMIDA,
                 4500.0,
                 LocalDate.now(),
                 grupoAsado,
                 andresH,
-                grupoAsado.integrantes.toMutableList(),
-                TipoGasto.PARTES_IGUALES
-            ).apply {
-                agregarItem("Mignon", 2.0, 1500.0)
-                agregarItem("Facturas", 1.0, 1500.0)
-            },
-            Gasto(
+                grupoAsado.integrantes.toMutableList()
+            ).apply { agregarItem("Mignon", 2.0, 1500.0); agregarItem("Facturas", 1.0, 1500.0) },
+            PartesIguales(
                 "Verdulería",
                 CategoriaGasto.COMIDA,
                 5800.0,
                 LocalDate.now(),
                 grupoAsado,
                 andresS,
-                grupoAsado.integrantes.toMutableList(),
-                TipoGasto.PARTES_IGUALES
+                grupoAsado.integrantes.toMutableList()
             ).apply {
-                agregarItem("Papa", 3.0, 1000.0)
-                agregarItem("Tomate", 1.0, 2000.0)
-                agregarItem("Lechuga", 1.0, 800.0)
+                agregarItem("Papa", 3.0, 1000.0); agregarItem("Tomate", 1.0, 2000.0); agregarItem(
+                "Lechuga",
+                1.0,
+                800.0
+            )
             },
-            Gasto(
+            PartesIguales(
                 "Más Carne",
                 CategoriaGasto.COMIDA,
                 18000.0,
                 LocalDate.now(),
                 grupoAsado,
                 juanA,
-                grupoAsado.integrantes.toMutableList(),
-                TipoGasto.PARTES_IGUALES
-            ).apply {
-                agregarItem("Chorizos", 12.0, 1000.0)
-                agregarItem("Morcilla", 6.0, 1000.0)
-            },
-            Gasto(
+                grupoAsado.integrantes.toMutableList()
+            ).apply { agregarItem("Chorizos", 12.0, 1000.0); agregarItem("Morcilla", 6.0, 1000.0) },
+            PartesIguales(
                 "Hielo y Carbón extra",
                 CategoriaGasto.VARIOS,
                 4000.0,
                 LocalDate.now(),
                 grupoAsado,
                 agustinH,
-                grupoAsado.integrantes.toMutableList(),
-                TipoGasto.PARTES_IGUALES
-            ).apply {
-                agregarItem("Hielo", 3.0, 1000.0)
-                agregarItem("Carbón", 1.0, 1000.0)
-            },
-            Gasto(
+                grupoAsado.integrantes.toMutableList()
+            ).apply { agregarItem("Hielo", 3.0, 1000.0); agregarItem("Carbón", 1.0, 1000.0) },
+            PartesIguales(
                 "Picada",
                 CategoriaGasto.COMIDA,
                 9500.0,
                 LocalDate.now(),
                 grupoAsado,
                 andresH,
-                grupoAsado.integrantes.toMutableList(),
-                TipoGasto.PARTES_IGUALES
-            ).apply {
-                agregarItem("Salame", 1.0, 4500.0)
-                agregarItem("Queso", 1.0, 5000.0)
-            },
-            Gasto(
+                grupoAsado.integrantes.toMutableList()
+            ).apply { agregarItem("Salame", 1.0, 4500.0); agregarItem("Queso", 1.0, 5000.0) },
+            PartesIguales(
                 "Snacks",
                 CategoriaGasto.COMIDA,
                 3200.0,
                 LocalDate.now(),
                 grupoAsado,
                 andresS,
-                grupoAsado.integrantes.toMutableList(),
-                TipoGasto.PARTES_IGUALES
-            ).apply {
-                agregarItem("Papas fritas", 2.0, 1600.0)
-            },
-            Gasto(
+                grupoAsado.integrantes.toMutableList()
+            ).apply { agregarItem("Papas fritas", 2.0, 1600.0) },
+            PartesIguales(
                 "Postre Helado",
                 CategoriaGasto.COMIDA,
                 8000.0,
                 LocalDate.now(),
                 grupoAsado,
                 juanA,
-                grupoAsado.integrantes.toMutableList(),
-                TipoGasto.PARTES_IGUALES
-            ).apply {
-                agregarItem("Bombón Suizo", 8.0, 1000.0)
-            },
-            Gasto(
+                grupoAsado.integrantes.toMutableList()
+            ).apply { agregarItem("Bombón Suizo", 8.0, 1000.0) },
+            PartesIguales(
                 "Vino",
                 CategoriaGasto.BEBIDA,
                 11000.0,
                 LocalDate.now(),
                 grupoAsado,
                 agustinH,
-                grupoAsado.integrantes.toMutableList(),
-                TipoGasto.PARTES_IGUALES
-            ).apply {
-                agregarItem("Malbec", 2.0, 5500.0)
-            },
-            Gasto(
+                grupoAsado.integrantes.toMutableList()
+            ).apply { agregarItem("Malbec", 2.0, 5500.0) },
+            PartesIguales(
                 "Aderezos y servilletas",
                 CategoriaGasto.VARIOS,
                 2500.0,
                 LocalDate.now(),
                 grupoAsado,
                 andresH,
-                grupoAsado.integrantes.toMutableList(),
-                TipoGasto.PARTES_IGUALES
-            ).apply {
-                agregarItem("Mayonesa", 1.0, 1000.0)
-                agregarItem("Servilletas", 2.0, 750.0)
-            },
-            Gasto(
+                grupoAsado.integrantes.toMutableList()
+            ).apply { agregarItem("Mayonesa", 1.0, 1000.0); agregarItem("Servilletas", 2.0, 750.0) },
+            PartesIguales(
                 "Achuras",
                 CategoriaGasto.COMIDA,
                 7000.0,
                 LocalDate.now(),
                 grupoAsado,
                 andresS,
-                grupoAsado.integrantes.toMutableList(),
-                TipoGasto.PARTES_IGUALES
-            ).apply {
-                agregarItem("Chinchulines", 1.0, 4000.0)
-                agregarItem("Riñones", 1.0, 3000.0)
-            },
-            Gasto(
+                grupoAsado.integrantes.toMutableList()
+            ).apply { agregarItem("Chinchulines", 1.0, 4000.0); agregarItem("Riñones", 1.0, 3000.0) },
+            PartesIguales(
                 "Cerveza extra",
                 CategoriaGasto.BEBIDA,
                 9000.0,
                 LocalDate.now(),
                 grupoAsado,
                 juanA,
-                grupoAsado.integrantes.toMutableList(),
-                TipoGasto.PARTES_IGUALES
-            ).apply {
-                agregarItem("Latas", 6.0, 1500.0)
-            },
-            Gasto(
+                grupoAsado.integrantes.toMutableList()
+            ).apply { agregarItem("Latas", 6.0, 1500.0) },
+            PartesIguales(
                 "Postre Vigilante",
                 CategoriaGasto.COMIDA,
                 4000.0,
                 LocalDate.now(),
                 grupoAsado,
                 agustinH,
-                grupoAsado.integrantes.toMutableList(),
-                TipoGasto.PARTES_IGUALES
-            ).apply {
-                agregarItem("Dulce de membrillo", 1.0, 2000.0)
-                agregarItem("Queso fresco", 1.0, 2000.0)
-            },
-            Gasto(
+                grupoAsado.integrantes.toMutableList()
+            ).apply { agregarItem("Dulce de membrillo", 1.0, 2000.0); agregarItem("Queso fresco", 1.0, 2000.0) },
+            PartesIguales(
                 "Soda",
                 CategoriaGasto.BEBIDA,
                 2400.0,
                 LocalDate.now(),
                 grupoAsado,
                 andresH,
-                grupoAsado.integrantes.toMutableList(),
-                TipoGasto.PARTES_IGUALES
-            ).apply {
-                agregarItem("Sifón", 3.0, 800.0)
-            },
-            Gasto(
+                grupoAsado.integrantes.toMutableList()
+            ).apply { agregarItem("Sifón", 3.0, 800.0) },
+            PartesIguales(
                 "Leña",
                 CategoriaGasto.VARIOS,
                 3000.0,
                 LocalDate.now(),
                 grupoAsado,
                 andresS,
-                grupoAsado.integrantes.toMutableList(),
-                TipoGasto.PARTES_IGUALES
-            ).apply {
-                agregarItem("Bolsa leña", 2.0, 1500.0)
-            },
-            Gasto(
+                grupoAsado.integrantes.toMutableList()
+            ).apply { agregarItem("Bolsa leña", 2.0, 1500.0) },
+            PartesIguales(
                 "Provoleta",
                 CategoriaGasto.COMIDA,
                 5000.0,
                 LocalDate.now(),
                 grupoAsado,
                 juanA,
-                grupoAsado.integrantes.toMutableList(),
-                TipoGasto.PARTES_IGUALES
-            ).apply {
-                agregarItem("Provoleta unidad", 2.0, 2500.0)
-            },
-            Gasto(
+                grupoAsado.integrantes.toMutableList()
+            ).apply { agregarItem("Provoleta unidad", 2.0, 2500.0) },
+            PartesIguales(
                 "Fernet de refuerzo",
                 CategoriaGasto.BEBIDA,
                 7500.0,
                 LocalDate.now(),
                 grupoAsado,
                 agustinH,
-                grupoAsado.integrantes.toMutableList(),
-                TipoGasto.PARTES_IGUALES
-            ).apply {
-                agregarItem("Fernet 750ml", 1.0, 7500.0)
-            },
-            Gasto(
+                grupoAsado.integrantes.toMutableList()
+            ).apply { agregarItem("Fernet 750ml", 1.0, 7500.0) },
+            PartesIguales(
                 "Limones y Sal",
                 CategoriaGasto.VARIOS,
                 1800.0,
                 LocalDate.now(),
                 grupoAsado,
                 andresH,
-                grupoAsado.integrantes.toMutableList(),
-                TipoGasto.PARTES_IGUALES
-            ).apply {
-                agregarItem("Limón", 1.0, 1000.0)
-                agregarItem("Sal gruesa", 1.0, 800.0)
-            },
-            Gasto(
+                grupoAsado.integrantes.toMutableList()
+            ).apply { agregarItem("Limón", 1.0, 1000.0); agregarItem("Sal gruesa", 1.0, 800.0) },
+            PartesIguales(
                 "Gaseosas Dieta",
                 CategoriaGasto.BEBIDA,
                 4600.0,
                 LocalDate.now(),
                 grupoAsado,
                 andresS,
-                grupoAsado.integrantes.toMutableList(),
-                TipoGasto.PARTES_IGUALES
-            ).apply {
-                agregarItem("Pepsi Black", 2.0, 2300.0)
-            },
-            Gasto(
+                grupoAsado.integrantes.toMutableList()
+            ).apply { agregarItem("Pepsi Black", 2.0, 2300.0) },
+            PartesIguales(
                 "Carne de Cerdo",
                 CategoriaGasto.COMIDA,
                 12000.0,
                 LocalDate.now(),
                 grupoAsado,
                 juanA,
-                grupoAsado.integrantes.toMutableList(),
-                TipoGasto.PARTES_IGUALES
-            ).apply {
-                agregarItem("Pechito", 1.5, 8000.0)
-                agregarItem("Manta", 1.0, 4000.0)
-            },
-            Gasto(
+                grupoAsado.integrantes.toMutableList()
+            ).apply { agregarItem("Pechito", 1.5, 8000.0); agregarItem("Manta", 1.0, 4000.0) },
+            PartesIguales(
                 "Chimichurri ingredientes",
                 CategoriaGasto.VARIOS,
                 2200.0,
                 LocalDate.now(),
                 grupoAsado,
                 agustinH,
-                grupoAsado.integrantes.toMutableList(),
-                TipoGasto.PARTES_IGUALES
-            ).apply {
-                agregarItem("Aji molido", 1.0, 1100.0)
-                agregarItem("Aceite", 1.0, 1100.0)
-            },
-            Gasto(
+                grupoAsado.integrantes.toMutableList()
+            ).apply { agregarItem("Aji molido", 1.0, 1100.0); agregarItem("Aceite", 1.0, 1100.0) },
+            PartesIguales(
                 "Vaso Descartable",
                 CategoriaGasto.VARIOS,
                 3500.0,
                 LocalDate.now(),
                 grupoAsado,
                 andresH,
-                grupoAsado.integrantes.toMutableList(),
-                TipoGasto.PARTES_IGUALES
-            ).apply {
-                agregarItem("Paquete vasos", 1.0, 3500.0)
-            }
+                grupoAsado.integrantes.toMutableList()
+            ).apply { agregarItem("Paquete vasos", 1.0, 3500.0) }
         ).forEach { gasto ->
             val gastoGuardado = gastoRepository.save(gasto)
             val fracciones = gastoGuardado.repartirGasto()
+            // Lógica de filtrado de deudas propias
             val fraccionesExternas = fracciones.filter { it.deudor.id != it.acreedor.id }
             fraccionGastoRepository.saveAll(fraccionesExternas)
         }
-
     }
+
 }

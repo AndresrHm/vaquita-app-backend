@@ -32,7 +32,7 @@ class GastoService(
     var usuarioRepository: UsuarioRepository
 ) {
 
-    @Transactional(readOnly = false, rollbackFor = [Exception::class])
+    @Transactional
     fun crearGasto(
         gastoDTO: CreacionGastoDTO
     ): Gasto {
@@ -46,7 +46,7 @@ class GastoService(
             throw BusinessException(ErrorStrings.NINGUN_USUARIO_ENCONTRADO)
         }
 
-        val gasto = Gasto.fromGastoDTO(gastoDTO, grupo, pagador, participantes)
+        val gasto = GastoMapper.fromCreacionDTO(gastoDTO, grupo, pagador, participantes)
 
         validarDatosBasicos(gasto)
 

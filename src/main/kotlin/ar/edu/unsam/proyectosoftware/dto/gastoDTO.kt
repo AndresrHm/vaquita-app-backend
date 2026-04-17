@@ -1,8 +1,8 @@
 package ar.edu.unsam.proyectosoftware.dto
 import ar.edu.unsam.proyectosoftware.domain.CategoriaGasto
-import ar.edu.unsam.proyectosoftware.domain.ItemGasto
-import ar.edu.unsam.proyectosoftware.domain.TipoGasto
 import ar.edu.unsam.proyectosoftware.domain.Usuario
+
+import ar.edu.unsam.proyectosoftware.domain.enums.TipoGasto
 import java.time.LocalDate
 import java.util.Collections.emptyList
 

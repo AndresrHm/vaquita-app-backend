@@ -40,7 +40,7 @@ class GastoService(
     ): Gasto {
         val grupo = obtenerGrupoOLanzarExcepcion(gastoDTO.grupoID)
         val pagador = obtenerUsuarioOLanzarExcepcion(gastoDTO.pagadorID)
-        val participantes = usuarioRepository.findAllById(gastoDTO.participantesIDs).toList()
+        val participantes = integranteGrupoRepository.findUsuariosByGrupoAndIds(grupo.id!!, gastoDTO.participantesIDs)
 
         if (participantes.size != gastoDTO.participantesIDs.size) {
             throw BusinessException(ErrorStrings.NINGUN_USUARIO_ENCONTRADO)
@@ -50,7 +50,7 @@ class GastoService(
 
         validarDatosBasicos(gasto)
 
-        if (integranteGrupoRepository.existsByGrupoIdAndUsuarioId(grupo.id!!, gasto.pagador.id!!)) {
+        if (!integranteGrupoRepository.existsByGrupoIdAndUsuarioId(grupo.id!!, gasto.pagador.id!!)) {
             throw BusinessException(ErrorStrings.PAGADOR_NO_PERTENECE_AL_GRUPO)
         }
 

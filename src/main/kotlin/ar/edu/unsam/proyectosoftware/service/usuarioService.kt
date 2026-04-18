@@ -10,6 +10,7 @@ import ar.edu.unsam.proyectosoftware.dto.UsuarioNombreIdDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioRegistradoDTO
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
+import ar.edu.unsam.proyectosoftware.repository.IntegranteGrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.SolicitudAmistadRepository
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional
 class UsuarioService(
     val usuarioRepository: UsuarioRepository,
     val grupoRepository: GrupoRepository,
+    val integranteGrupoRepository: IntegranteGrupoRepository,
     val solicitudAmistadRepository: SolicitudAmistadRepository,
     private val passwordEncoder: PasswordEncoder,
     private val jwtUtils: JwtUtils
@@ -94,7 +96,7 @@ class UsuarioService(
         grupoRepository.findById(grupoId)
             .orElseThrow { Exception(ErrorStrings.GRUPO_NO_ENCONTRADO) }
 
-        return usuarioRepository.findByGrupos_Id(grupoId)
+        return integranteGrupoRepository.findAllByGrupoId(grupoId)
     }
 
     @Transactional(readOnly = true)

@@ -3,6 +3,7 @@ package ar.edu.unsam.proyectosoftware.repository
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.IntegranteGrupo
 import ar.edu.unsam.proyectosoftware.domain.RolIntegrante
+import ar.edu.unsam.proyectosoftware.domain.Usuario
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.Query
@@ -19,6 +20,13 @@ interface IntegranteGrupoRepository : CrudRepository<IntegranteGrupo, Long> {
 """
     )
     fun esMiembro(grupoId: Long, usuarioId: Long): Boolean
+
+    @Query(
+        """
+        SELECT ig.usuario FROM IntegranteGrupo ig WHERE ig.grupo.id = :grupoId
+"""
+    )
+    fun findAllByGrupoId(grupoId: Long): List<Usuario>
 
     @Query(
         """
@@ -54,40 +62,48 @@ interface IntegranteGrupoRepository : CrudRepository<IntegranteGrupo, Long> {
     )
     fun obtenerMiembrosConRol(@Param("grupoId") grupoId: Long): List<MiembroProjection>
 
-    @Query("""
+    @Query(
+        """
     SELECT g FROM Grupo g
     JOIN g.integrantes ig
     WHERE ig.usuario.id = :usuarioId
       AND g.activado = true
-""")
+"""
+    )
     fun findByIntegrantesIdAndActivadoTrue(usuarioId: Long): List<Grupo>
 
-    @Query("""
+    @Query(
+        """
     SELECT COUNT(ig)
     FROM IntegranteGrupo ig
     WHERE ig.grupo.id = :grupoId
-""")
+"""
+    )
     fun countByGrupoId(grupoId: Long): Long
 
     fun deleteByGrupoIdAndUsuarioId(grupoId: Long, usuarioId: Long)
 
-    @Query("""
+    @Query(
+        """
     SELECT ig.usuario.id
     FROM IntegranteGrupo ig
     WHERE ig.grupo.id = :grupoId
       AND ig.usuario.id IN :usuarioIds
-""")
+"""
+    )
     fun findIdsQuePertenecen(
         @Param("grupoId") grupoId: Long,
         @Param("usuarioIds") usuarioIds: List<Long>
     ): List<Long>
 
-    @Query("""
+    @Query(
+        """
     SELECT g
     FROM Grupo g
     JOIN g.integrantes ig
     WHERE ig.usuario.id = :usuarioId
-""")
+"""
+    )
     fun findGruposByUsuario(
         @Param("usuarioId") usuarioId: Long,
         pageable: Pageable

@@ -10,6 +10,7 @@ import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 import ar.edu.unsam.proyectosoftware.repository.FraccionGastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
+import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -21,15 +22,21 @@ class GastoService(
     var fraccionGastoRepository: FraccionGastoRepository,
     var gastoRepository: GastoRepository,
     var grupoRepository: GrupoRepository,
-    var usuarioRepository: UsuarioRepository
+    var usuarioRepository: UsuarioRepository,
+    private val usuarioService: UsuarioService // Agregado para el refactor
 ) {
 
     @Transactional(readOnly = false, rollbackFor = [Exception::class])
     fun crearGasto(
+        auth: Authentication,
         gastoDTO: CreacionGastoDTO
     ): Gasto {
+        // 1. Identificamos QUIÉN está usando la app (el creador)
+        val usuarioQueCargaElGasto = usuarioService.obtenerUsuarioLogueado(auth)
+
         val grupo = obtenerGrupoOLanzarExcepcion(gastoDTO.grupoID)
 
+        // 2. Buscamos al pagador que viene en el DTO (puede ser el mismo u otro)
         val pagador = obtenerUsuarioOLanzarExcepcion(gastoDTO.pagadorID)
 
         val participantes = usuarioRepository.findAllById(gastoDTO.participantesIDs).toList()
@@ -42,6 +49,14 @@ class GastoService(
 
         validarDatosBasicos(gasto)
 
+        // --- VALIDACIONES DE SEGURIDAD ---
+
+        // Validamos que el que está cargando el gasto PERTENECE al grupo
+        if (!usuarioQueCargaElGasto.perteneceA(gasto.grupo)) {
+            throw BusinessException(ErrorStrings.USUARIO_SIN_PERMISO_GASTO)
+        }
+
+        // Validamos que el pagador elegido PERTENECE al grupo
         if (!gasto.pagador.perteneceA(gasto.grupo)) {
             throw BusinessException(ErrorStrings.PAGADOR_NO_PERTENECE_AL_GRUPO)
         }
@@ -50,7 +65,8 @@ class GastoService(
             throw BusinessException(ErrorStrings.PARTICIPANTES_NO_PERTENECEN_AL_GRUPO)
         }
 
-        if (!puedeCrearGasto(gasto.pagador, gasto.grupo)) {
+        // Aquí podrías agregar: if (!usuarioQueCargaElGasto.esAdmin) { ... } si solo admins cargan por otros
+        if (!puedeCrearGasto(usuarioQueCargaElGasto, gasto.grupo)) {
             throw BusinessException(ErrorStrings.USUARIO_SIN_PERMISO_GASTO)
         }
 
@@ -66,7 +82,10 @@ class GastoService(
         return gasto
     }
 
-    fun obtenerDeuda(userId: Long): Double {
+    fun obtenerDeuda(auth: Authentication): Double {
+        val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
+        val userId = usuarioLogueado.id!!
+
         obtenerUsuarioOLanzarExcepcion(userId)
 
         return fraccionGastoRepository.findByDeudorId(userId)

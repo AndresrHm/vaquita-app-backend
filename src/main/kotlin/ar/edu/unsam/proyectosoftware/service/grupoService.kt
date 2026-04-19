@@ -17,6 +17,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
@@ -25,13 +26,16 @@ import java.time.LocalDate
 class GrupoService(
     var grupoRepository: GrupoRepository,
     var usuarioRepository: UsuarioRepository,
-    var gastoRepository: GastoRepository
+    var gastoRepository: GastoRepository,
+    private val usuarioService: UsuarioService // Necesario para obtener al usuario del token
 ) {
     fun obtenerGrupos(
-        usuarioId: Long,
+        auth: Authentication,
         page: Int,
         size: Int,
     ): Page<Grupo> {
+        val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
+        val usuarioId = usuarioLogueado.id!!
 
         if (usuarioRepository.findByIdOrNull(usuarioId) == null) throw BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO)
 
@@ -70,7 +74,10 @@ class GrupoService(
         return gastoRepository.findByGrupoId(grupoId, pageable)
     }
 
-    fun obtenerGruposDeUsuario(usuarioId: Long): List<Grupo> {
+    fun obtenerGruposDeUsuario(auth: Authentication): List<Grupo> {
+        val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
+        val usuarioId = usuarioLogueado.id!!
+
         buscarUsuario(usuarioId)
 
         return grupoRepository.findByIntegrantes_Id(usuarioId)
@@ -78,9 +85,12 @@ class GrupoService(
 
     @Transactional
     fun crearGrupo(
-        usuarioId: Long,
+        auth: Authentication,
         dto: GrupoCreacionDTO
     ): Grupo {
+        val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
+        val usuarioId = usuarioLogueado.id!!
+
         val usuario = buscarUsuario(usuarioId)
 
         val grupo = Grupo(
@@ -99,9 +109,12 @@ class GrupoService(
     @Transactional
     fun agregarMiembros(
         grupoId: Long,
-        currentUserId: Long,
+        auth: Authentication,
         usuariosAgregarIds: List<Long>
     ): Grupo {
+        val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
+        val currentUserId = usuarioLogueado.id!!
+
         val grupo = grupoRepository.findByIdOrNull(grupoId)
             ?: throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
 
@@ -141,7 +154,9 @@ class GrupoService(
         return grupo
     }
 
-    fun obtenerContextoUsuario(grupoId: Long, usuarioId: Long): GrupoContextoUsuarioDTO {
+    fun obtenerContextoUsuario(grupoId: Long, auth: Authentication): GrupoContextoUsuarioDTO {
+        val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
+        val usuarioId = usuarioLogueado.id!!
 
         if (!grupoRepository.existsById(grupoId)) {
             throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
@@ -197,9 +212,11 @@ class GrupoService(
     @Transactional
     fun eliminarMiembro(
         grupoId: Long,
-        currentUserId: Long,
+        auth: Authentication,
         usuarioAEliminarId: Long
     ) {
+        val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
+        val currentUserId = usuarioLogueado.id!!
 
         val grupo = grupoRepository.findByIdOrNull(grupoId)
             ?: throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)

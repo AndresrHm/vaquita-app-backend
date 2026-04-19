@@ -12,6 +12,7 @@ import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.SolicitudAmistadRepository
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
+import org.springframework.security.core.Authentication
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -24,12 +25,13 @@ class UsuarioService(
     private val passwordEncoder: PasswordEncoder,
     private val jwtUtils: JwtUtils
 ) {
+
+
     @Transactional
     fun registrarUsuario(dto: UsuarioRegistradoDTO): Usuario {
 
         val errores = mutableListOf<String>()
 
-        // 2. Vamos revisando y anotando, PERO SIN HACER THROW TODAVÍA
         if (dto.nombre.isBlank()) {
             errores.add("• El nombre no puede estar vacío")
         }
@@ -37,7 +39,6 @@ class UsuarioService(
         if (dto.email.isBlank()) {
             errores.add("• El email no puede estar vacío")
         } else if (usuarioRepository.findByEmail(dto.email).isPresent) {
-            // Ponemos esto en un 'else' para no decirle que ya existe si en realidad está vacío
             errores.add("• El email ya está registrado")
         }
 
@@ -47,17 +48,13 @@ class UsuarioService(
             errores.add("• La contraseña debe tener al menos 6 caracteres")
         }
 
-        // 3. El momento de la verdad: ¿Hay errores anotados?
         if (errores.isNotEmpty()) {
-            // Unimos todos los mensajes con un salto de línea (\n) y explotamos
             val mensajeFinal = errores.joinToString("\n")
             throw Exception(mensajeFinal)
         }
 
-        //Hash de contraseña
         val contrasenaHasheada = passwordEncoder.encode(dto.contrasena)
 
-        //Se instancia un nuevo usuario
         val nuevoUsuario = Usuario(nombre = dto.nombre, email = dto.email, contrasena = contrasenaHasheada)
 
         return usuarioRepository.save(nuevoUsuario)
@@ -81,6 +78,17 @@ class UsuarioService(
         )
     }
 
+    fun obtenerUsuarioPorEmail(email: String): Usuario {
+        return usuarioRepository.findByEmail(email)
+            .orElseThrow { Exception("Usuario no encontrado para el email: $email") }
+    }
+
+    fun obtenerUsuarioLogueado(auth: Authentication): Usuario {
+        // auth.name trae el subject del JWT (el email)
+        return usuarioRepository.findByEmail(auth.name)
+            .orElseThrow { Exception("Sesión inválida o usuario no encontrado") }
+    }
+
     fun obtenerUsuario(usuarioID: Long): Usuario {
         return usuarioRepository.findById(usuarioID)
             .orElseThrow { Exception("Usuario inexistente") }
@@ -98,14 +106,17 @@ class UsuarioService(
     }
 
     @Transactional(readOnly = true)
-    fun obtenerAmigos(usuarioId: Long): List<UsuarioNombreIdDTO> {
-        val usuario = obtenerUsuario(usuarioId)
+    fun obtenerAmigos(auth: Authentication): List<UsuarioNombreIdDTO> {
+        val usuario = obtenerUsuarioLogueado(auth)
         return usuario.amigos.map { Usuario.toUsuarioNombreIdDTO(it) }
     }
 
+    // 1. Ahora recibe 'auth' y busca las solicitudes del usuario logueado
     @Transactional(readOnly = true)
-    fun obtenerSolicitudesPendientes(idUsuario: Long): List<SolicitudAmistadFront> {
-        return solicitudAmistadRepository.findByIdReceptor(idUsuario).map { solicitud ->
+    fun obtenerSolicitudesPendientes(auth: Authentication): List<SolicitudAmistadFront> {
+        val usuarioLogueado = obtenerUsuarioLogueado(auth)
+
+        return solicitudAmistadRepository.findByIdReceptor(usuarioLogueado.id!!).map { solicitud ->
             val emisor = obtenerUsuario(solicitud.idEmisor)
             SolicitudAmistadFront(
                 id = solicitud.id!!,
@@ -115,27 +126,44 @@ class UsuarioService(
         }
     }
 
+    // 2. El emisor ya no se pasa por ID, es el dueño del token
     @Transactional
-    fun enviarSolicitudAmistad(idEmisor: Long, idReceptor: Long): Long? {
-        val solicitud = SolicitudAmistad(idEmisor, idReceptor)
+    fun enviarSolicitudAmistad(auth: Authentication, idReceptor: Long): Long? {
+        val emisor = obtenerUsuarioLogueado(auth)
+
+        // Validación básica: no mandarse solicitud a uno mismo
+        if (emisor.id == idReceptor) throw Exception("No podés enviarte una solicitud a vos mismo")
+
+        val solicitud = SolicitudAmistad(emisor.id!!, idReceptor)
         solicitudAmistadRepository.save(solicitud)
         return idReceptor
     }
 
+    // 3. El que responde es el usuario logueado. Validamos que la solicitud sea para él.
     @Transactional
-    fun responderSolicitudAmistad(idUsuario: Long, idSolicitud: Long, aceptar: Boolean): Long? {
+    fun responderSolicitudAmistad(auth: Authentication, idSolicitud: Long, aceptar: Boolean): Long? {
+        val usuarioLogueado = obtenerUsuarioLogueado(auth)
+
         val solicitud = solicitudAmistadRepository.findById(idSolicitud)
             .orElseThrow { Exception("Solicitud inexistente") }
+
+        // SEGURIDAD: Validamos que el receptor de la solicitud coincida con el usuario del token
+        if (solicitud.idReceptor != usuarioLogueado.id) {
+            throw Exception("No tenés permiso para responder esta solicitud")
+        }
+
         if (aceptar) {
             val emisor = obtenerUsuario(solicitud.idEmisor)
-            val receptor = obtenerUsuario(solicitud.idReceptor)
-            emisor.agregarAmigo(receptor)
-            receptor.agregarAmigo(emisor)
+            // Agregamos la relación de amistad mutua
+            usuarioLogueado.agregarAmigo(emisor)
+            emisor.agregarAmigo(usuarioLogueado)
+
+            usuarioRepository.save(usuarioLogueado)
             usuarioRepository.save(emisor)
-            usuarioRepository.save(receptor)
         }
+
         solicitudAmistadRepository.delete(solicitud)
-        return idUsuario
+        return usuarioLogueado.id
     }
 
 }

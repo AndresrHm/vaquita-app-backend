@@ -24,4 +24,13 @@ class JwtUtils {
             .signWith(SECRET_KEY)
             .compact()
     }
+
+    fun getEmailDesdeToken(token: String): String? {
+        return Jwts.parser()
+            .verifyWith(SECRET_KEY)
+            .build()
+            .parseSignedClaims(token)
+            .payload
+            .subject
+    }
 }

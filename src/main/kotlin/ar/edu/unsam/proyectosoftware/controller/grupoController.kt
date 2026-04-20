@@ -22,7 +22,6 @@ class GrupoController {
     @Autowired
     lateinit var grupoService: GrupoService
 
-    // Endpoints para creación de gastos
     @GetMapping
     fun obtenerGrupos(
         @RequestParam usuarioId: Long,
@@ -35,8 +34,9 @@ class GrupoController {
         return resultPage.toPageResponse { GrupoMapper.toGrupoDTO(it) }
     }
 
+    // Endpoint para creación de gastos
     @GetMapping("/usuario/{usuarioId}")
-    fun obtenerGruposDeUsuario(
+    fun obtenerGruposConNombreId(
         @PathVariable usuarioId: Long,
     ): ResponseEntity<Iterable<GrupoNombreIdDTO>> {
         val grupos = grupoService.obtenerGruposDeUsuario(usuarioId)
@@ -204,12 +204,11 @@ class GrupoController {
         grupoService.eliminarGrupo(grupoId, usuarioId)
         return ResponseEntity.ok(grupoId)
     }
+}
 
-    enum class TipoFiltrado {
-        TODOS_LOS_GRUPOS,
-        SALDOS_PENDIENTES,
-        GRUPOS_A_LOS_QUE_DEBES,
-        GRUPOS_QUE_TE_DEBEN
-    }
-
+enum class TipoFiltrado {
+    TODOS_LOS_GRUPOS,
+    SALDOS_PENDIENTES,
+    GRUPOS_A_LOS_QUE_DEBES,
+    GRUPOS_QUE_TE_DEBEN
 }

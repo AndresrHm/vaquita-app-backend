@@ -26,5 +26,6 @@ data class UsuarioNombreIdDTO(
 data class UsuarioInfoDTO(
     val nombre: String,
     val imagenUrl: String,
-    val esAmigo: Boolean
+    val esAmigo: Boolean,
+    val gruposCompartidos: List<GrupoNombreIdDTO>
 )

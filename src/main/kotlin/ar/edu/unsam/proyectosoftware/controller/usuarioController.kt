@@ -9,6 +9,7 @@ import ar.edu.unsam.proyectosoftware.dto.UsuarioNombreIdDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioRegistradoDTO
 import ar.edu.unsam.proyectosoftware.service.UsuarioService
 import ar.edu.unsam.proyectosoftware.mapper.UsuarioMapper
+import ar.edu.unsam.proyectosoftware.service.GrupoService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -25,7 +26,9 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/auth")
 @CrossOrigin(origins = ["http://localhost:5173"])
 class UsuarioController(
-    private val usuarioService: UsuarioService) {
+    private val usuarioService: UsuarioService,
+    private val grupoService: GrupoService
+) {
 
     @GetMapping("/{id}")
     fun obtenerUsuario(@PathVariable id: Long): ResponseEntity<Usuario> {
@@ -37,7 +40,8 @@ class UsuarioController(
     fun obtenerUsuarioInfo(@PathVariable id: Long, @PathVariable idBuscado: Long): ResponseEntity<UsuarioInfoDTO> {
         val usuario = usuarioService.obtenerUsuario(id)
         val usuarioBuscado = usuarioService.obtenerUsuario(idBuscado)
-        val usuarioBuscadoInfo = UsuarioMapper.toInfoDTO(usuarioBuscado,usuario)
+        val gruposCompartidos = grupoService.obtenerGruposCompartidos(usuario.id!!, usuarioBuscado.id!!)
+        val usuarioBuscadoInfo = UsuarioMapper.toInfoDTO(usuarioBuscado, usuario, gruposCompartidos)
         return ResponseEntity.ok(usuarioBuscadoInfo)
     }
 

@@ -22,3 +22,9 @@ data class UsuarioNombreIdDTO(
     val nombre: String,
     val id: Long
 )
+
+data class UsuarioInfoDTO(
+    val nombre: String,
+    val imagenUrl: String,
+    val esAmigo: Boolean
+)

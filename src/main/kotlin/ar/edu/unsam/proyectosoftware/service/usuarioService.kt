@@ -125,6 +125,16 @@ class UsuarioService(
     }
 
     @Transactional
+    fun eliminarAmigo(idUsuario: Long, idAmigo: Long) {
+        val usuario = obtenerUsuario(idUsuario)
+        val amigo = obtenerUsuario(idAmigo)
+        usuario.eliminarAmigo(amigo)
+        amigo.eliminarAmigo(usuario)
+        usuarioRepository.save(usuario)
+        usuarioRepository.save(amigo)
+    }
+
+    @Transactional
     fun responderSolicitudAmistad(idUsuario: Long, idSolicitud: Long, aceptar: Boolean): Long? {
         val solicitud = solicitudAmistadRepository.findById(idSolicitud)
             .orElseThrow { Exception("Solicitud inexistente") }

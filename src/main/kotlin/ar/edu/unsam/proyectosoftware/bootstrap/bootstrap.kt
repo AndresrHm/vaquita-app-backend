@@ -373,42 +373,42 @@ class BootstrapData(
             PartesExactas(
                 "Regalo Cumpleaños",
                 CategoriaGasto.VARIOS,
-                30000.0,
+                35000.0,
                 LocalDate.now(),
                 grupoAsado,
                 juanA,
                 grupoAsado.usuarios(),
-                mutableMapOf(juanA to 10000.0, andresH to 10000.0, agustinH to 10000.0)
+                mutableMapOf(juanA to 20000.0, andresH to 10000.0, agustinH to 5000.0)
             ),
             PartesExactas(
                 "Bebidas Premium",
                 CategoriaGasto.BEBIDA,
-                20000.0,
+                25000.0,
                 LocalDate.now(),
                 grupoAsado,
                 andresS,
                 grupoAsado.usuarios(),
-                mutableMapOf(andresS to 15000.0, giulianaM to 5000.0)
+                mutableMapOf(andresS to 20000.0, giulianaM to 5000.0)
             ),
             PartesExactas(
                 "Internet Fibra",
                 CategoriaGasto.VARIOS,
-                15000.0,
+                12000.0,
                 LocalDate.now(),
                 grupoDepto,
                 andresS,
                 grupoDepto.usuarios(),
-                mutableMapOf(agustinH to 7500.0, juanM to 7500.0)
+                mutableMapOf(agustinH to 7500.0, juanM to 4500.0)
             ),
             PartesExactas(
                 "Limpieza Profunda",
                 CategoriaGasto.VARIOS,
-                10000.0,
+                12000.0,
                 LocalDate.now(),
                 grupoDepto,
                 andresS,
                 grupoDepto.usuarios(),
-                mutableMapOf(giulianaM to 5000.0, agustinH to 5000.0)
+                mutableMapOf(giulianaM to 6000.0, agustinH to 8000.0)
             ),
             PartesExactas(
                 "Alquiler Cancha",
@@ -418,7 +418,7 @@ class BootstrapData(
                 grupoFutbol,
                 juanM,
                 grupoFutbol.usuarios(),
-                mutableMapOf(juanM to 12500.0, andresH to 12500.0)
+                mutableMapOf(juanM to 12000.0, andresH to 13000.0)
             ),
             PartesExactas(
                 "Pelota Nueva",
@@ -428,17 +428,17 @@ class BootstrapData(
                 grupoFutbol,
                 juanA,
                 grupoFutbol.usuarios(),
-                mutableMapOf(juanM to 4000.0, andresH to 4000.0, juanA to 4000.0)
+                mutableMapOf(juanM to 5000.0, andresH to 3000.0, juanA to 4000.0)
             ),
             PartesExactas(
                 "Fotocopias TP",
                 CategoriaGasto.VARIOS,
-                4000.0,
+                5000.0,
                 LocalDate.now(),
                 grupoEstudio,
                 andresS,
                 grupoEstudio.usuarios(),
-                mutableMapOf(giulianaM to 2000.0, juanA to 2000.0)
+                mutableMapOf(giulianaM to 3000.0, juanA to 2000.0)
             ),
             PartesExactas(
                 "Café y medialunas",

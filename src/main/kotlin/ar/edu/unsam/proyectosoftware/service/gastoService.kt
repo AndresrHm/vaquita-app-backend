@@ -22,10 +22,9 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.math.BigDecimal
 
-val MAX_CARACTERES_DESCRIPCION = 50
-val MAX_CARACTERES_NOMBRE_PRODUCTO = 20
+const val MAX_CARACTERES_DESCRIPCION = 50
+const val MAX_CARACTERES_NOMBRE_PRODUCTO = 20
 
 @Service
 class GastoService(
@@ -52,7 +51,7 @@ class GastoService(
 
         validarDatosBasicos(gasto)
 
-        if (!integranteGrupoRepository.existsByGrupoIdAndUsuarioId(grupo.id!!, gasto.pagador.id!!)) {
+        if (!existeIntegranteYGrupo(grupo.id, gasto)) {
             throw BusinessException(ErrorStrings.PAGADOR_NO_PERTENECE_AL_GRUPO)
         }
 
@@ -75,6 +74,7 @@ class GastoService(
 
         return gasto
     }
+
 
     fun obtenerDeuda(userId: Long): Double {
         obtenerUsuarioOLanzarExcepcion(userId)
@@ -258,6 +258,9 @@ class GastoService(
         // Por ahora devolvemos true, pero acá iría la lógica de roles (administrador)
         return true
     }
+
+    private fun existeIntegranteYGrupo(id: Long?, gasto: Gasto): Boolean =
+        integranteGrupoRepository.existsByGrupoIdAndUsuarioId(id!!, gasto.pagador.id!!)
 
     private fun obtenerGrupoOLanzarExcepcion(grupoId: Long): Grupo =
         grupoRepository.findById(grupoId)

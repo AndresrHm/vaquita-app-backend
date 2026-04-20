@@ -2,6 +2,7 @@ package ar.edu.unsam.proyectosoftware.bootstrap
 
 import ar.edu.unsam.proyectosoftware.domain.enums.CategoriaGasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo
+import ar.edu.unsam.proyectosoftware.domain.PartesExactas
 import ar.edu.unsam.proyectosoftware.domain.PartesIguales
 import ar.edu.unsam.proyectosoftware.domain.RolIntegrante
 import ar.edu.unsam.proyectosoftware.domain.Usuario
@@ -29,104 +30,115 @@ class BootstrapData(
     @Bean
     fun initData() = CommandLineRunner {
         // 1. Usuarios
-        val juanA = Usuario().apply {
-            nombre = "Juan Alvarez"
-            email = "juan.alvarez@mail.com"
-            contrasena = passwordEncoder.encode("contrasena123")
-        }
+        val usuarios = listOf(
+            Usuario(
+                "Juan Alvarez",
+                "juan.alvarez@mail.com",
+                passwordEncoder.encode("contrasena123")
+            ),
+            Usuario(
+                "Andrés Hernández",
+                "andres.h@mail.com",
+                passwordEncoder.encode("contrasena123")
+            ),
+            Usuario(
+                "Agustín Hoj",
+                "agustin.hoj@mail.com",
+                passwordEncoder.encode("contrasena123")
+            ),
+            Usuario(
+                "Juan Maidana",
+                "juan.m@mail.com",
+                passwordEncoder.encode("contrasena123")
+            ),
+            Usuario(
+                "Giuliana Massanet",
+                "giuli.m@mail.com",
+                passwordEncoder.encode("contrasena123")
+            ),
+            Usuario(
+                "Andrés Simonini",
+                "andres.s@mail.com",
+                passwordEncoder.encode("contrasena123")
+            )
+        )
 
-        val andresH = Usuario().apply {
-            nombre = "Andrés Hernández"
-            email = "andres.h@mail.com"
-            contrasena = passwordEncoder.encode("contrasena123")
+        val juanA = usuarios[0]
+        val andresH = usuarios[1]
+        val agustinH = usuarios[2]
+        val juanM = usuarios[3]
+        val giulianaM = usuarios[4]
+        val andresS = usuarios[5]
 
-        }
-        val agustinH = Usuario().apply {
-            nombre = "Agustín Hoj"
-            email = "agustin.hoj@mail.com"
-            contrasena = passwordEncoder.encode("contrasena123")
+        juanA.apply { amigos = mutableListOf(andresH, agustinH) }
+        andresH.apply { amigos = mutableListOf(agustinH, juanA) }
+        agustinH.apply { amigos = mutableListOf(andresH, juanA) }
 
-        }
-        val juanM = Usuario().apply {
-            nombre = "Juan Maidana"
-            email = "juan.m@mail.com"
-            contrasena = passwordEncoder.encode("contrasena123")
-        }
-        val giulianaM = Usuario().apply {
-            nombre = "Giuliana Massanet"
-            email = "giuli.m@mail.com"
-            contrasena = passwordEncoder.encode("contrasena123")
-        }
-        val andresS = Usuario().apply {
-            nombre = "Andrés Simonini"
-            email = "andres.s@mail.com"
-            contrasena = passwordEncoder.encode("contrasena123")
-        }
-        juanA.amigos = mutableListOf(andresH, agustinH)
-        andresH.amigos = mutableListOf(agustinH, juanA)
-        agustinH.amigos = mutableListOf(andresH, juanA)
-
-        usuarioRepository.saveAll(listOf(juanA, agustinH, juanM, andresH, giulianaM, andresS))
+        usuarioRepository.saveAll(usuarios)
 
         // 2. Grupos con .addAll()
-        val grupoAsado = Grupo(
-            nombre = "Asado UNSAM",
-            descripcion = "Asadito en el campus",
-            imagenUrl = "https://i.ytimg.com/vi/OWt0hpRwqSs/hqdefault.jpg",
-            fechaCreacion = LocalDate.now()
-        ).apply {
-            listOf(agustinH, juanM, andresH, giulianaM, andresS).forEach { it ->
-                agregarIntegrante(
-                    it,
-                    RolIntegrante.MIEMBRO
-                )
+        val grupos = listOf(
+            Grupo(
+                nombre = "Asado UNSAM",
+                descripcion = "Asadito en el campus",
+                imagenUrl = "https://i.ytimg.com/vi/OWt0hpRwqSs/hqdefault.jpg",
+                fechaCreacion = LocalDate.now()
+            ).apply {
+                listOf(agustinH, juanM, andresH, giulianaM, andresS).forEach { it ->
+                    agregarIntegrante(
+                        it,
+                        RolIntegrante.MIEMBRO
+                    )
+                }
+                agregarIntegrante(juanA, RolIntegrante.ADMIN)
+            },
+            Grupo(
+                nombre = "Depto Palermo",
+                descripcion = "Gastos de convivencia",
+                imagenUrl = "https://definicion.de/wp-content/uploads/2009/02/departamento-1.jpg",
+                fechaCreacion = LocalDate.now()
+            ).apply {
+                listOf(agustinH, juanM, giulianaM).forEach { it ->
+                    agregarIntegrante(
+                        it,
+                        RolIntegrante.MIEMBRO
+                    )
+                }
+                agregarIntegrante(andresS, RolIntegrante.ADMIN)
+            },
+            Grupo(
+                nombre = "Los Pibes FC",
+                descripcion = "Canchita los martes",
+                imagenUrl = "https://www.historiadeboca.com.ar/Fotos/Equipos/2000301.jpg",
+                fechaCreacion = LocalDate.now()
+            ).apply {
+                listOf(
+                    juanM, andresH, juanA
+                ).forEach { it ->
+                    agregarIntegrante(
+                        it,
+                        RolIntegrante.MIEMBRO
+                    )
+                }
+                agregarIntegrante(giulianaM, RolIntegrante.ADMIN)
+            },
+            Grupo(
+                nombre = "Final de Objetos",
+                descripcion = "Café y apuntes",
+                imagenUrl = "https://www.pcgamesn.com/wp-content/sites/pcgamesn/2019/06/minecraft-enchantments-enchanting-table.jpg",
+                fechaCreacion = LocalDate.now()
+            ).apply {
+                listOf(giulianaM, juanA, andresS).forEach { it -> agregarIntegrante(it, RolIntegrante.MIEMBRO) }
+                agregarIntegrante(andresS, RolIntegrante.ADMIN)
             }
-            agregarIntegrante(juanA, RolIntegrante.ADMIN)
-        }
+        )
 
-        val grupoDepto = Grupo(
-            nombre = "Depto Palermo",
-            descripcion = "Gastos de convivencia",
-            imagenUrl = "https://definicion.de/wp-content/uploads/2009/02/departamento-1.jpg",
-            fechaCreacion = LocalDate.now()
-        ).apply {
-            listOf(agustinH, juanM, giulianaM).forEach { it ->
-                agregarIntegrante(
-                    it,
-                    RolIntegrante.MIEMBRO
-                )
-            }
-            agregarIntegrante(andresS, RolIntegrante.ADMIN)
-        }
+        grupoRepository.saveAll(grupos)
 
-        val grupoFutbol = Grupo(
-            nombre = "Los Pibes FC",
-            descripcion = "Canchita los martes",
-            imagenUrl = "https://www.historiadeboca.com.ar/Fotos/Equipos/2000301.jpg",
-            fechaCreacion = LocalDate.now()
-        ).apply {
-            listOf(
-                juanM, andresH, juanA
-            ).forEach { it ->
-                agregarIntegrante(
-                    it,
-                    RolIntegrante.MIEMBRO
-                )
-            }
-            agregarIntegrante(giulianaM, RolIntegrante.ADMIN)
-        }
-
-        val grupoEstudio = Grupo(
-            nombre = "Final de Objetos",
-            descripcion = "Café y apuntes",
-            imagenUrl = "https://www.pcgamesn.com/wp-content/sites/pcgamesn/2019/06/minecraft-enchantments-enchanting-table.jpg",
-            fechaCreacion = LocalDate.now()
-        ).apply {
-            listOf(giulianaM, juanA, andresS).forEach { it -> agregarIntegrante(it, RolIntegrante.MIEMBRO) }
-            agregarIntegrante(andresS, RolIntegrante.ADMIN)
-        }
-
-        grupoRepository.saveAll(listOf(grupoAsado, grupoDepto, grupoFutbol, grupoEstudio))
+        val grupoAsado = grupos[0]
+        val grupoDepto = grupos[1]
+        val grupoFutbol = grupos[2]
+        val grupoEstudio = grupos[3]
 
         // 3. Gastos
         listOf(
@@ -357,7 +369,87 @@ class BootstrapData(
                 grupoAsado,
                 andresH,
                 grupoAsado.usuarios()
-            ).apply { agregarItem("Paquete vasos", 1.0, 3500.0) }
+            ).apply { agregarItem("Paquete vasos", 1.0, 3500.0) },
+            PartesExactas(
+                "Regalo Cumpleaños",
+                CategoriaGasto.VARIOS,
+                30000.0,
+                LocalDate.now(),
+                grupoAsado,
+                juanA,
+                grupoAsado.usuarios(),
+                mutableMapOf(juanA to 10000.0, andresH to 10000.0, agustinH to 10000.0)
+            ),
+            PartesExactas(
+                "Bebidas Premium",
+                CategoriaGasto.BEBIDA,
+                20000.0,
+                LocalDate.now(),
+                grupoAsado,
+                andresS,
+                grupoAsado.usuarios(),
+                mutableMapOf(andresS to 15000.0, giulianaM to 5000.0)
+            ),
+            PartesExactas(
+                "Internet Fibra",
+                CategoriaGasto.VARIOS,
+                15000.0,
+                LocalDate.now(),
+                grupoDepto,
+                andresS,
+                grupoDepto.usuarios(),
+                mutableMapOf(agustinH to 7500.0, juanM to 7500.0)
+            ),
+            PartesExactas(
+                "Limpieza Profunda",
+                CategoriaGasto.VARIOS,
+                10000.0,
+                LocalDate.now(),
+                grupoDepto,
+                andresS,
+                grupoDepto.usuarios(),
+                mutableMapOf(giulianaM to 5000.0, agustinH to 5000.0)
+            ),
+            PartesExactas(
+                "Alquiler Cancha",
+                CategoriaGasto.VARIOS,
+                25000.0,
+                LocalDate.now(),
+                grupoFutbol,
+                juanM,
+                grupoFutbol.usuarios(),
+                mutableMapOf(juanM to 12500.0, andresH to 12500.0)
+            ),
+            PartesExactas(
+                "Pelota Nueva",
+                CategoriaGasto.VARIOS,
+                12000.0,
+                LocalDate.now(),
+                grupoFutbol,
+                juanA,
+                grupoFutbol.usuarios(),
+                mutableMapOf(juanM to 4000.0, andresH to 4000.0, juanA to 4000.0)
+            ),
+            PartesExactas(
+                "Fotocopias TP",
+                CategoriaGasto.VARIOS,
+                4000.0,
+                LocalDate.now(),
+                grupoEstudio,
+                andresS,
+                grupoEstudio.usuarios(),
+                mutableMapOf(giulianaM to 2000.0, juanA to 2000.0)
+            ),
+            PartesExactas(
+                "Café y medialunas",
+                CategoriaGasto.COMIDA,
+                6000.0,
+                LocalDate.now(),
+                grupoEstudio,
+                giulianaM,
+                grupoEstudio.usuarios(),
+                mutableMapOf(giulianaM to 3000.0, andresS to 3000.0)
+            )
         ).forEach { gasto ->
             val gastoGuardado = gastoRepository.save(gasto)
             val fracciones = gastoGuardado.repartirGasto()

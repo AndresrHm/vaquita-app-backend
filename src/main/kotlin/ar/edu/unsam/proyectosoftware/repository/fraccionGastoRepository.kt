@@ -13,5 +13,7 @@ interface SaldoPendiente {
 
 @Repository
 interface FraccionGastoRepository : CrudRepository<FraccionGasto, Long> {
+    fun findByAcreedorIdAndGastoAsociadoGrupoId(acreedorId: Long, grupoId: Long): List<SaldoPendiente>
+    fun findByDeudorIdAndGastoAsociadoGrupoId(deudorId: Long, grupoId: Long): List<SaldoPendiente>
     fun findByDeudorId(id: Long): List<SaldoPendiente>
 }

@@ -1,5 +1,5 @@
 package ar.edu.unsam.proyectosoftware.dto
-import ar.edu.unsam.proyectosoftware.domain.CategoriaGasto
+import ar.edu.unsam.proyectosoftware.domain.enums.CategoriaGasto
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 
 import ar.edu.unsam.proyectosoftware.domain.enums.TipoGasto

@@ -1,12 +1,10 @@
 package ar.edu.unsam.proyectosoftware.bootstrap
 
-import ar.edu.unsam.proyectosoftware.domain.CategoriaGasto
-import ar.edu.unsam.proyectosoftware.domain.Gasto
+import ar.edu.unsam.proyectosoftware.domain.enums.CategoriaGasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.PartesIguales
 import ar.edu.unsam.proyectosoftware.domain.RolIntegrante
 import ar.edu.unsam.proyectosoftware.domain.Usuario
-import ar.edu.unsam.proyectosoftware.domain.enums.TipoGasto
 import ar.edu.unsam.proyectosoftware.repository.FraccionGastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
@@ -14,6 +12,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
+import ar.edu.unsam.proyectosoftware.service.GastoService
 import org.springframework.boot.CommandLineRunner
 import org.springframework.security.crypto.password.PasswordEncoder
 import java.time.LocalDate
@@ -367,5 +366,4 @@ class BootstrapData(
             fraccionGastoRepository.saveAll(fraccionesExternas)
         }
     }
-
 }

@@ -1,7 +1,5 @@
 package ar.edu.unsam.proyectosoftware.dto
 
-import ar.edu.unsam.proyectosoftware.service.GrupoService
-
 data class GrupoDTO(
     val id: Long,
     val nombre: String,

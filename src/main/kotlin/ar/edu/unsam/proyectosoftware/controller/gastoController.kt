@@ -2,11 +2,9 @@ package ar.edu.unsam.proyectosoftware.controller
 
 import ar.edu.unsam.proyectosoftware.service.GastoService
 import ar.edu.unsam.proyectosoftware.dto.CreacionGastoDTO
-import ar.edu.unsam.proyectosoftware.dto.FilterGastosCustom
 import ar.edu.unsam.proyectosoftware.dto.GastoDetalleDTO
 import ar.edu.unsam.proyectosoftware.dto.PageResponse
-import ar.edu.unsam.proyectosoftware.dto.TipoRelacionVista
-import ar.edu.unsam.proyectosoftware.domain.CategoriaGasto
+import ar.edu.unsam.proyectosoftware.domain.enums.CategoriaGasto
 import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -25,7 +23,6 @@ class GastoController(
     @PostMapping
     fun crearGasto(@RequestBody gastoDTO: CreacionGastoDTO): String {
         val gasto = gastoService.crearGasto(gastoDTO)
-
         return "Gasto de $${gasto.monto} creado exitosamente en ${gasto.grupo.nombre}."
     }
 
@@ -60,7 +57,7 @@ class GastoController(
         // Convertir lista de categorías string a enum
         val categoriasEnum = categoria?.mapNotNull { catStr ->
             try {
-                ar.edu.unsam.proyectosoftware.domain.CategoriaGasto.valueOf(catStr.uppercase())
+                CategoriaGasto.valueOf(catStr.uppercase())
             } catch (e: IllegalArgumentException) {
                 null
             }

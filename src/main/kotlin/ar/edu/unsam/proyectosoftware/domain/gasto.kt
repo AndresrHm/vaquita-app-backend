@@ -1,9 +1,8 @@
 package ar.edu.unsam.proyectosoftware.domain
 
-import ar.edu.unsam.proyectosoftware.domain.CategoriaGasto
+import ar.edu.unsam.proyectosoftware.domain.enums.CategoriaGasto
 import ar.edu.unsam.proyectosoftware.BusinessException
 import ar.edu.unsam.proyectosoftware.domain.enums.TipoGasto
-import ar.edu.unsam.proyectosoftware.dto.CreacionGastoDTO
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 import jakarta.persistence.CascadeType
 import jakarta.persistence.CollectionTable

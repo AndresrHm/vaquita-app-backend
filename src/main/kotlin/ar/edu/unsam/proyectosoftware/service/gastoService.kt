@@ -7,6 +7,7 @@ import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.CreacionGastoDTO
 import ar.edu.unsam.proyectosoftware.dto.FilterGastosCustom
 import ar.edu.unsam.proyectosoftware.dto.GastoDetalleDTO
+import ar.edu.unsam.proyectosoftware.dto.BalanceDTO
 import ar.edu.unsam.proyectosoftware.dto.PageResponse
 import ar.edu.unsam.proyectosoftware.dto.TipoRelacionVista
 import ar.edu.unsam.proyectosoftware.dto.toPageResponse
@@ -21,6 +22,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
 
 val MAX_CARACTERES_DESCRIPCION = 50
 val MAX_CARACTERES_NOMBRE_PRODUCTO = 20
@@ -40,7 +42,7 @@ class GastoService(
     ): Gasto {
         val grupo = obtenerGrupoOLanzarExcepcion(gastoDTO.grupoID)
         val pagador = obtenerUsuarioOLanzarExcepcion(gastoDTO.pagadorID)
-        val participantes = usuarioRepository.findAllById(gastoDTO.participantesIDs).toList()
+        val participantes = integranteGrupoRepository.findUsuariosByGrupoAndIds(grupo.id!!, gastoDTO.participantesIDs)
 
         if (participantes.size != gastoDTO.participantesIDs.size) {
             throw BusinessException(ErrorStrings.NINGUN_USUARIO_ENCONTRADO)
@@ -50,7 +52,7 @@ class GastoService(
 
         validarDatosBasicos(gasto)
 
-        if (integranteGrupoRepository.existsByGrupoIdAndUsuarioId(grupo.id!!, gasto.pagador.id!!)) {
+        if (!integranteGrupoRepository.existsByGrupoIdAndUsuarioId(grupo.id!!, gasto.pagador.id!!)) {
             throw BusinessException(ErrorStrings.PAGADOR_NO_PERTENECE_AL_GRUPO)
         }
 
@@ -76,12 +78,10 @@ class GastoService(
 
     fun obtenerDeuda(userId: Long): Double {
         obtenerUsuarioOLanzarExcepcion(userId)
-
         return fraccionGastoRepository.findByDeudorId(userId)
             .sumOf { it.saldoPendiente() }
     }
 
-    @Transactional(readOnly = true)
     fun getGastosByFilters(
         userId: Long,
         filters: FilterGastosCustom,
@@ -149,6 +149,19 @@ class GastoService(
         return gastosPage.toPageResponse { GastoMapper.toViewDTO(it, userId) }
     }
 
+    fun calcularBalancesSimplificados(grupoId: Long): List<BalanceDTO> {
+        val integrantes = integranteGrupoRepository.findAllByGrupoId(grupoId)
+
+        // 1 - Calcular el neto de cada uno en este grupo
+        val balancesNetos = obtenerBalancesNetos(integrantes, grupoId)
+
+        val deudores = balancesNetos.filter { it.value < 0 }.toList().sortedBy { it.second }.toMutableList()
+        val acreedores = balancesNetos.filter { it.value > 0 }.toList().sortedByDescending { it.second }.toMutableList()
+
+        // 2 - Algoritmo de liquidación
+        return simplificarDeudas(deudores, acreedores)
+    }
+
     private fun validarDatosBasicos(gasto: Gasto) {
         if (gasto.monto <= 0) {
             throw BusinessException(ErrorStrings.MONTO_NEGATIVO)
@@ -167,6 +180,53 @@ class GastoService(
         }
     }
 
+    private fun obtenerBalancesNetos(
+        integrantes: List<Usuario>,
+        grupoId: Long
+    ): Map<Usuario, Double> {
+        // AssociateWith crea un map con los valores de la
+        // primera lista como keys y los de la segunda como values
+        return integrantes.associateWith { integrante ->
+            val loQueLeDeben =
+                fraccionGastoRepository.findByAcreedorIdAndGastoAsociadoGrupoId(integrante.id!!, grupoId)
+                    .sumOf { it.saldoPendiente() }
+            val loQueDebe =
+                fraccionGastoRepository.findByDeudorIdAndGastoAsociadoGrupoId(integrante.id!!, grupoId)
+                    .sumOf { it.saldoPendiente() }
+            loQueLeDeben - loQueDebe
+        }.filter { it.value != 0.0 }.toMutableMap()
+    }
+
+    private fun simplificarDeudas(
+        deudores: MutableList<Pair<Usuario, Double>>,
+        acreedores: MutableList<Pair<Usuario, Double>>
+    ): List<BalanceDTO> {
+        val resultados = mutableListOf<BalanceDTO>()
+
+        var dIdx = 0
+        var aIdx = 0
+
+        while (dIdx < deudores.size && aIdx < acreedores.size) {
+            val (deudor, deudaTotal) = deudores[dIdx]
+            val (acreedor, creditoTotal) = acreedores[aIdx]
+
+            val montoATransferir = minOf(-deudaTotal, creditoTotal)
+
+            resultados.add(BalanceDTO(deudor.id!!, deudor.nombre, acreedor.id!!, acreedor.nombre, montoATransferir))
+
+            // Restamos lo transferido de los saldos temporales
+            deudores[dIdx] = deudor to (deudores[dIdx].second + montoATransferir)
+            acreedores[aIdx] = acreedor to (acreedores[aIdx].second - montoATransferir)
+
+            // Si el deudor ya no debe nada (o casi nada por redondeo), pasamos al siguiente
+            if (Math.abs(deudores[dIdx].second) < 0.01) dIdx++
+            // Si al acreedor ya no le deben nada, pasamos al siguiente
+            if (Math.abs(acreedores[aIdx].second) < 0.01) aIdx++
+        }
+
+        return resultados
+    }
+
     // Métodos auxiliares
     private fun participantesContienePagador(
         participantes: List<Usuario>,
@@ -175,7 +235,7 @@ class GastoService(
         return participantes.contains(pagador)
     }
 
-    private fun todosLosParticipantesPertenecenAlGrupo (
+    private fun todosLosParticipantesPertenecenAlGrupo(
         gasto: Gasto
     ): Boolean {
         val grupoId = gasto.grupo.id!!
@@ -206,4 +266,5 @@ class GastoService(
     private fun obtenerUsuarioOLanzarExcepcion(usuarioId: Long): Usuario =
         usuarioRepository.findById(usuarioId)
             .orElseThrow { BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO) }
+
 }

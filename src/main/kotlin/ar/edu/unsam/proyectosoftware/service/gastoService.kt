@@ -75,7 +75,6 @@ class GastoService(
         return gasto
     }
 
-
     fun obtenerDeuda(userId: Long): Double {
         obtenerUsuarioOLanzarExcepcion(userId)
         return fraccionGastoRepository.findByDeudorId(userId)
@@ -149,7 +148,7 @@ class GastoService(
         return gastosPage.toPageResponse { GastoMapper.toViewDTO(it, userId) }
     }
 
-    fun calcularBalancesSimplificados(grupoId: Long): List<BalanceDTO> {
+    fun obtenerBalancesSimplificados(grupoId: Long): List<BalanceDTO> {
         val integrantes = integranteGrupoRepository.findAllByGrupoId(grupoId)
 
         // 1 - Calcular el neto de cada uno en este grupo

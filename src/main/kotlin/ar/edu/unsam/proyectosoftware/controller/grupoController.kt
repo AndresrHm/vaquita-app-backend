@@ -4,8 +4,8 @@ import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.dto.*
 import ar.edu.unsam.proyectosoftware.mapper.GastoMapper
 import ar.edu.unsam.proyectosoftware.mapper.GrupoMapper
+import ar.edu.unsam.proyectosoftware.service.GastoService
 import ar.edu.unsam.proyectosoftware.service.GrupoService
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.net.URI
@@ -18,9 +18,10 @@ import java.util.*
 @RestController
 @RequestMapping("grupo")
 @CrossOrigin(origins = ["http://localhost:5173"])
-class GrupoController {
-    @Autowired
-    lateinit var grupoService: GrupoService
+class GrupoController(
+    var grupoService: GrupoService,
+    var gastoService: GastoService
+) {
 
     @GetMapping
     fun obtenerGrupos(
@@ -111,6 +112,14 @@ class GrupoController {
         )
 
         return ResponseEntity.ok(response)
+    }
+
+    @GetMapping("/{grupoId}/balances")
+    fun obtenerBalancesGrupo(
+        @PathVariable grupoId: Long
+    ): ResponseEntity<List<BalanceDTO>?> {
+        val balances = gastoService.obtenerBalancesSimplificados(grupoId)
+        return ResponseEntity.ok<List<BalanceDTO>?>(balances)
     }
 
     // --- Endpoints para GroupDetail ---

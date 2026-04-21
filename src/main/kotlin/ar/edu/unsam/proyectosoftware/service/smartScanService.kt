@@ -29,6 +29,12 @@ class SmartScanService(
         return parseGeminiResponse(responseJson)
     }
 
+    fun scanReceipt(imageBase64: String, mimeType: String = "image/jpeg"): ReceiptScanResultDto {
+        val payload = buildGeminiPayload(imageBase64, mimeType)
+        val responseJson = callGeminiApi(payload)
+        return parseGeminiResponse(responseJson)
+    }
+
     // ------------------------------------------------------------
     // Imagen hardcodeada: URL pública de un ticket de prueba
     // Podés reemplazar esto por un Base64 real de un ticket argentino
@@ -48,7 +54,7 @@ class SmartScanService(
     // ------------------------------------------------------------
     // Construcción del payload con Structured Output (responseSchema)
     // ------------------------------------------------------------
-    private fun buildGeminiPayload(imageBase64: String): Map<String, Any> {
+    private fun buildGeminiPayload(imageBase64: String, mimeType: String = "image/jpeg"): Map<String, Any> {
         return mapOf(
             "system_instruction" to mapOf(
                 "parts" to listOf(
@@ -67,7 +73,7 @@ class SmartScanService(
                     "parts" to listOf(
                         mapOf(
                             "inline_data" to mapOf(
-                                "mime_type" to "image/jpeg",
+                                "mime_type" to mimeType,
                                 "data" to imageBase64
                             )
                         ),

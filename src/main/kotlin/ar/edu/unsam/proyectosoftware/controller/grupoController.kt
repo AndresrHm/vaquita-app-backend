@@ -163,13 +163,13 @@ class GrupoController {
     fun agregarMiembros(
         @PathVariable grupoId: Long,
         @RequestParam usuarioId: Long,
-        @RequestBody body: Map<String, List<Long>>,
+        @RequestBody body: AgregarMiembrosDTO,
     ): ResponseEntity<GrupoDTO> {
 
         val grupoActualizado = grupoService.agregarMiembros(
             grupoId,
             usuarioId,
-            body["usuarioIds"].orEmpty()
+            body.usuarioIds
         )
 
         return ResponseEntity.ok(GrupoMapper.toGrupoDTO(grupoActualizado))

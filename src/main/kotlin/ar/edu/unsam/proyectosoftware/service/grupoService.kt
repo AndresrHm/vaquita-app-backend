@@ -95,6 +95,7 @@ class GrupoService(
         )
 
         grupo.agregarIntegrante(usuario, RolIntegrante.ADMIN)
+        agregarMiembrosAlGrupo(grupo, dto.usuarioIds.filterNot { it == usuario.id })
 
         return grupoRepository.save(grupo)
     }
@@ -115,16 +116,7 @@ class GrupoService(
             )
         ) throw BusinessException(ErrorStrings.USUARIO_NO_ES_ADMIN)
 
-        // Agregar cada usuario
-        usuariosAgregarIds.forEach { id ->
-            val usuario = buscarUsuario(id)
-
-            if (grupo.integrantes.any { it.usuario.id == id }) {
-                throw BusinessException(ErrorStrings.USUARIO_YA_PERTENECE_AL_GRUPO)
-            }
-
-            grupo.agregarIntegrante(usuario, RolIntegrante.MIEMBRO)
-        }
+        agregarMiembrosAlGrupo(grupo, usuariosAgregarIds)
 
         return grupoRepository.save(grupo)
     }
@@ -260,6 +252,18 @@ class GrupoService(
     private fun buscarUsuario(usuarioId: Long): Usuario {
         return usuarioRepository.findByIdOrNull(usuarioId)
             ?: throw BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO)
+    }
+
+    private fun agregarMiembrosAlGrupo(grupo: Grupo, usuariosAgregarIds: List<Long>) {
+        usuariosAgregarIds.distinct().forEach { id ->
+            val usuario = buscarUsuario(id)
+
+            if (grupo.integrantes.any { it.usuario.id == id }) {
+                throw BusinessException(ErrorStrings.USUARIO_YA_PERTENECE_AL_GRUPO)
+            }
+
+            grupo.agregarIntegrante(usuario, RolIntegrante.MIEMBRO)
+        }
     }
 
     /**

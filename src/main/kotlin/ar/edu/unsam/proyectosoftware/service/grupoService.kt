@@ -95,7 +95,7 @@ class GrupoService(
         )
 
         grupo.agregarIntegrante(usuario, RolIntegrante.ADMIN)
-        agregarMiembrosAlGrupo(grupo, dto.usuarioIds.filterNot { it == usuario.id })
+        agregarMiembrosAlGrupo(grupo, dto.integrantesIds.filterNot { it == usuario.id })
 
         return grupoRepository.save(grupo)
     }

@@ -1,10 +1,5 @@
 package ar.edu.unsam.proyectosoftware.dto
 
-import com.fasterxml.jackson.annotation.JsonAlias
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonSetter
-import com.fasterxml.jackson.annotation.Nulls
-
 data class GrupoDTO(
     val id: Long,
     val nombre: String,
@@ -16,9 +11,7 @@ data class GrupoCreacionDTO(
     val nombre: String,
     val imagenUrl: String,
     val descripcion: String,
-    @param:JsonAlias("integrantesIds")
-    @param:JsonSetter(nulls = Nulls.AS_EMPTY)
-    val usuarioIds: List<Long> = emptyList(),
+    val integrantesIds: List<Long> = emptyList(),
 )
 
 // Para /groups
@@ -62,9 +55,6 @@ data class MiembroDTO (
 )
 
 data class AgregarMiembrosDTO(
-    @param:JsonProperty("usuarioIds")
-    @param:JsonAlias("integrantesIds")
-    @param:JsonSetter(nulls = Nulls.AS_EMPTY)
     val usuarioIds: List<Long> = emptyList()
 )
 

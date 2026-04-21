@@ -7,6 +7,7 @@ import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.Id
 import jakarta.persistence.ManyToMany
+import jakarta.persistence.OneToMany
 
 @Entity
 class Usuario(
@@ -20,15 +21,12 @@ class Usuario(
     var id: Long? = null
 
     @JsonIgnore
-    @ManyToMany(mappedBy = "integrantes")
-    var grupos: MutableList<Grupo> = mutableListOf()
+    @OneToMany(mappedBy = "usuario")
+    var grupos: MutableList<IntegranteGrupo> = mutableListOf()
+
     @JsonIgnore
     @ManyToMany(fetch = FetchType.LAZY)
     var amigos: MutableList<Usuario> = mutableListOf()
-
-    fun perteneceA(grupo: Grupo): Boolean{
-        return grupos.contains(grupo)
-    }
 
     fun agregarAmigo(amigo: Usuario) : Boolean {
         if (!amigos.contains(amigo)){

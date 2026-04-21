@@ -5,10 +5,8 @@ import ar.edu.unsam.proyectosoftware.dto.*
 import ar.edu.unsam.proyectosoftware.mapper.GastoMapper
 import ar.edu.unsam.proyectosoftware.mapper.GrupoMapper
 import ar.edu.unsam.proyectosoftware.service.GrupoService
-import ar.edu.unsam.proyectosoftware.service.UsuarioService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
-import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.*
 import java.net.URI
 import java.time.format.TextStyle
@@ -22,29 +20,26 @@ import java.util.*
 @CrossOrigin(origins = ["http://localhost:5173"])
 class GrupoController {
     @Autowired
-    private lateinit var usuarioService: UsuarioService
-
-    @Autowired
     lateinit var grupoService: GrupoService
 
     // Endpoints para creación de gastos
     @GetMapping
     fun obtenerGrupos(
-        auth: Authentication,
-        @RequestParam page: Int,
-        @RequestParam size: Int,
+        @RequestParam usuarioId: Long,
+        @RequestParam page: Int = 0,
+        @RequestParam size: Int = 8,
         // falta un poco para meter esto @RequestParam tipoFiltrado: TipoFiltrado,
     ): PageResponse<GrupoDTO> {
-        val resultPage = grupoService.obtenerGrupos(auth, page, size)
+        val resultPage = grupoService.obtenerGrupos(usuarioId, page, size)
 
         return resultPage.toPageResponse { GrupoMapper.toGrupoDTO(it) }
     }
 
     @GetMapping("/usuario/{usuarioId}")
     fun obtenerGruposDeUsuario(
-        auth: Authentication,
+        @PathVariable usuarioId: Long,
     ): ResponseEntity<Iterable<GrupoNombreIdDTO>> {
-        val grupos = grupoService.obtenerGruposDeUsuario(auth)
+        val grupos = grupoService.obtenerGruposDeUsuario(usuarioId)
         val response = grupos.map { Grupo.toGrupoNombreIdDTO(it) }
         return ResponseEntity.ok(response)
     }
@@ -52,11 +47,11 @@ class GrupoController {
     // --- Endpoints para creación de grupo
     @PostMapping
     fun crearGrupo(
-        auth: Authentication,
+        @RequestParam usuarioId: Long,
         @RequestBody dto: GrupoCreacionDTO,
     ): ResponseEntity<GrupoDTO> {
 
-        val grupo = grupoService.crearGrupo(auth, dto)
+        val grupo = grupoService.crearGrupo(usuarioId, dto)
 
         return ResponseEntity
             .created(URI.create("/grupos/${grupo.id}"))
@@ -75,12 +70,11 @@ class GrupoController {
     }
 
     @GetMapping("/{id}/gastos")
-    fun obtenerGastosPaginados( auth: Authentication,
+    fun obtenerGastosPaginados(
         @PathVariable id: Long,
         @RequestParam page: Int = 0,
         @RequestParam size: Int = 10,
     ): ResponseEntity<PageResponse<GastosPorAnioDTO>> {
-        val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
 
         val gastosPage = grupoService.obtenerGastosGrupo(id, page, size)
 
@@ -100,8 +94,7 @@ class GrupoController {
                             GastosPorMesDTO(
                                 month = mes.getDisplayName(TextStyle.FULL, locale),
                                 expenses = gastosDelMes.map {
-                                    // Usamos el ID del usuario logueado en lugar del 1L hardcodeado
-                                    GastoMapper.toGastoItemDTO(it, usuarioLogueado.id!!)
+                                    GastoMapper.toItemDTO(it, 1L) // userId hardcodeado por ahora
                                 }
                             )
                         }
@@ -139,11 +132,11 @@ class GrupoController {
     @GetMapping("/{grupoId}/contexto")
     fun obtenerContexto(
         @PathVariable grupoId: Long,
-        auth: Authentication
+        @RequestParam usuarioId: Long
     ): ResponseEntity<GrupoContextoUsuarioDTO> {
 
         return ResponseEntity.ok(
-            grupoService.obtenerContextoUsuario(grupoId, auth)
+            grupoService.obtenerContextoUsuario(grupoId, usuarioId)
         )
     }
 
@@ -169,14 +162,14 @@ class GrupoController {
     @PostMapping("/{grupoId}/miembros")
     fun agregarMiembros(
         @PathVariable grupoId: Long,
-        auth: Authentication,
-        @RequestBody body: Map<String, List<Long>>,
+        @RequestParam usuarioId: Long,
+        @RequestBody body: AgregarMiembrosDTO,
     ): ResponseEntity<GrupoDTO> {
 
         val grupoActualizado = grupoService.agregarMiembros(
             grupoId,
-            auth,
-            body["usuarioIds"].orEmpty()
+            usuarioId,
+            body.usuarioIds
         )
 
         return ResponseEntity.ok(GrupoMapper.toGrupoDTO(grupoActualizado))
@@ -194,13 +187,22 @@ class GrupoController {
     @DeleteMapping("/{grupoId}/miembros")
     fun eliminarMiembro(
         @PathVariable grupoId: Long,
-        auth: Authentication,
+        @RequestParam usuarioId: Long,
         @RequestParam usuarioAEliminarId: Long,
     ): ResponseEntity<Long> {
 
-        grupoService.eliminarMiembro(grupoId, auth, usuarioAEliminarId)
+        grupoService.eliminarMiembro(grupoId, usuarioId, usuarioAEliminarId)
 
-        return ResponseEntity.ok(usuarioAEliminarId)
+        return ResponseEntity.ok(usuarioId)
+    }
+
+    @DeleteMapping("/{grupoId}")
+    fun eliminarGrupo(
+        @PathVariable grupoId: Long,
+        @RequestParam usuarioId: Long,
+    ): ResponseEntity<Long> {
+        grupoService.eliminarGrupo(grupoId, usuarioId)
+        return ResponseEntity.ok(grupoId)
     }
 
     enum class TipoFiltrado {

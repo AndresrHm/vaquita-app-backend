@@ -3,6 +3,7 @@ package ar.edu.unsam.proyectosoftware.service
 import ar.edu.unsam.proyectosoftware.BusinessException
 import ar.edu.unsam.proyectosoftware.domain.Gasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo
+import ar.edu.unsam.proyectosoftware.domain.RolIntegrante
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.GrupoContextoUsuarioDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoCreacionDTO
@@ -11,41 +12,40 @@ import ar.edu.unsam.proyectosoftware.dto.GrupoSettingsDTO
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
+import ar.edu.unsam.proyectosoftware.repository.IntegranteGrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.MiembroProjection
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
 
 @Service
 class GrupoService(
-    var grupoRepository: GrupoRepository,
-    var usuarioRepository: UsuarioRepository,
-    var gastoRepository: GastoRepository,
-    private val usuarioService: UsuarioService // Necesario para obtener al usuario del token
+    val grupoRepository: GrupoRepository,
+    val integranteGrupoRepository: IntegranteGrupoRepository,
+    val usuarioRepository: UsuarioRepository,
+    val gastoRepository: GastoRepository,
 ) {
     fun obtenerGrupos(
-        auth: Authentication,
+        usuarioId: Long,
         page: Int,
         size: Int,
     ): Page<Grupo> {
-        val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
-        val usuarioId = usuarioLogueado.id!!
 
-        if (usuarioRepository.findByIdOrNull(usuarioId) == null) throw BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO)
+        if (usuarioRepository.findByIdOrNull(usuarioId) == null)
+            throw BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO)
 
         val pageable = PageRequest.of(
             page,
             size,
-            Sort.by(Sort.Direction.DESC, "fechaCreacion")
+            Sort.by("fechaCreacion")
         )
 
-        return grupoRepository.findByUsuario(usuarioId, pageable)
+        return integranteGrupoRepository.findGruposByUsuario(usuarioId, pageable)
     }
 
     fun obtenerDetalleGrupo(
@@ -62,7 +62,7 @@ class GrupoService(
     ): Long {
         if (grupoRepository.findByIdOrNull(grupoId) == null) throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
 
-        return grupoRepository.countIntegrantes(grupoId)
+        return integranteGrupoRepository.countByGrupoId(grupoId)
     }
 
     fun obtenerGastosGrupo(
@@ -74,23 +74,17 @@ class GrupoService(
         return gastoRepository.findByGrupoId(grupoId, pageable)
     }
 
-    fun obtenerGruposDeUsuario(auth: Authentication): List<Grupo> {
-        val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
-        val usuarioId = usuarioLogueado.id!!
-
+    fun obtenerGruposDeUsuario(usuarioId: Long): List<Grupo> {
         buscarUsuario(usuarioId)
 
-        return grupoRepository.findByIntegrantes_Id(usuarioId)
+        return integranteGrupoRepository.findByIntegrantesIdAndActivadoTrue(usuarioId)
     }
 
     @Transactional
     fun crearGrupo(
-        auth: Authentication,
+        usuarioId: Long,
         dto: GrupoCreacionDTO
     ): Grupo {
-        val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
-        val usuarioId = usuarioLogueado.id!!
-
         val usuario = buscarUsuario(usuarioId)
 
         val grupo = Grupo(
@@ -100,8 +94,8 @@ class GrupoService(
             fechaCreacion = LocalDate.now()
         )
 
-        grupo.agregarIntegrante(usuario)
-        grupo.admins.add(usuario)
+        grupo.agregarIntegrante(usuario, RolIntegrante.ADMIN)
+        agregarMiembrosAlGrupo(grupo, dto.integrantesIds.filterNot { it == usuario.id })
 
         return grupoRepository.save(grupo)
     }
@@ -109,32 +103,20 @@ class GrupoService(
     @Transactional
     fun agregarMiembros(
         grupoId: Long,
-        auth: Authentication,
+        usuarioId: Long,
         usuariosAgregarIds: List<Long>
     ): Grupo {
-        val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
-        val currentUserId = usuarioLogueado.id!!
-
         val grupo = grupoRepository.findByIdOrNull(grupoId)
             ?: throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
 
         // Validar que el usuario actual es admin
-        val esAdmin = grupoRepository.esAdmin(grupoId, currentUserId)
-        if (!esAdmin) {
-            throw BusinessException(ErrorStrings.USUARIO_NO_ES_ADMIN)
-        }
+        if (!integranteGrupoRepository.esAdmin(
+                grupoId,
+                usuarioId
+            )
+        ) throw BusinessException(ErrorStrings.USUARIO_NO_ES_ADMIN)
 
-        // Agregar cada usuario
-        usuariosAgregarIds.forEach { usuarioId ->
-            val usuario = buscarUsuario(usuarioId)
-
-            // Validar que no está ya en el grupo
-            if (grupo.integrantes.any { it.id == usuarioId }) {
-                throw BusinessException(ErrorStrings.USUARIO_YA_PERTENECE_AL_GRUPO)
-            }
-
-            grupo.agregarIntegrante(usuario)
-        }
+        agregarMiembrosAlGrupo(grupo, usuariosAgregarIds)
 
         return grupoRepository.save(grupo)
     }
@@ -154,27 +136,18 @@ class GrupoService(
         return grupo
     }
 
-    fun obtenerContextoUsuario(grupoId: Long, auth: Authentication): GrupoContextoUsuarioDTO {
-        val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
-        val usuarioId = usuarioLogueado.id!!
+    fun obtenerContextoUsuario(grupoId: Long, usuarioId: Long): GrupoContextoUsuarioDTO {
 
-        if (!grupoRepository.existsById(grupoId)) {
+        if (!grupoRepository.existsById(grupoId))
             throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
-        }
 
-        val esMiembro = grupoRepository.esMiembro(grupoId, usuarioId)
-        if (!esMiembro) {
+        if (!integranteGrupoRepository.esMiembro(grupoId, usuarioId))
             throw BusinessException(ErrorStrings.USUARIO_NO_PERTENECE_AL_GRUPO)
-        }
-
-        val esAdmin = grupoRepository.esAdmin(grupoId, usuarioId)
-
-        val tieneDeudas = tieneDeudas(grupoId, usuarioId) // TODO: Implementar
 
         return GrupoContextoUsuarioDTO(
             usuarioId = usuarioId,
-            esAdmin = esAdmin,
-            tieneDeudas = tieneDeudas,
+            esAdmin = integranteGrupoRepository.esAdmin(grupoId, usuarioId),
+            tieneDeudas = tieneDeudas(grupoId, usuarioId),
         )
     }
 
@@ -183,7 +156,7 @@ class GrupoService(
             throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
         }
 
-        return grupoRepository.obtenerMiembrosConRol(grupoId)
+        return integranteGrupoRepository.obtenerMiembrosConRol(grupoId)
     }
 
     fun actualizarGrupo(grupoId: Long, grupoSettingsDTO: GrupoSettingsDTO): Grupo {
@@ -212,16 +185,14 @@ class GrupoService(
     @Transactional
     fun eliminarMiembro(
         grupoId: Long,
-        auth: Authentication,
+        currentUserId: Long,
         usuarioAEliminarId: Long
     ) {
-        val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
-        val currentUserId = usuarioLogueado.id!!
 
         val grupo = grupoRepository.findByIdOrNull(grupoId)
             ?: throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
 
-        val integrantes = grupoRepository.obtenerMiembrosConRol(grupoId)
+        val integrantes = integranteGrupoRepository.obtenerMiembrosConRol(grupoId)
 
         // 🔍 Usuario a eliminar
         val miembroAEliminar = integrantes.find { it.id == usuarioAEliminarId }
@@ -251,9 +222,29 @@ class GrupoService(
         }
 
         // 🧹 Eliminación en entidades
-        grupo.integrantes.removeIf { it.id == usuarioAEliminarId }
-        grupo.admins.removeIf { it.id == usuarioAEliminarId }
+        integranteGrupoRepository.deleteByGrupoIdAndUsuarioId(grupoId, usuarioAEliminarId)
 
+        grupoRepository.save(grupo)
+    }
+
+    @Transactional
+    fun eliminarGrupo(grupoId: Long, currentUserId: Long) {
+        // Valida que el usuario que solicita la baja exista en el sistema.
+        buscarUsuario(currentUserId)
+
+        val grupo = grupoRepository.findByIdOrNull(grupoId)
+            ?: throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
+
+        // Si ya estaba desactivado, se considera no disponible para operar.
+        if (!grupo.activado)
+            throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
+
+        // Solo un administrador del grupo puede desactivarlo.
+        if (!integranteGrupoRepository.esAdmin(grupoId, currentUserId))
+            throw BusinessException(ErrorStrings.USUARIO_NO_ES_ADMIN)
+
+        // Baja lógica: preserva histórico, pero oculta el grupo como activo.
+        grupo.activado = false
         grupoRepository.save(grupo)
     }
 
@@ -263,7 +254,23 @@ class GrupoService(
             ?: throw BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO)
     }
 
+    private fun agregarMiembrosAlGrupo(grupo: Grupo, usuariosAgregarIds: List<Long>) {
+        usuariosAgregarIds.distinct().forEach { id ->
+            val usuario = buscarUsuario(id)
+
+            if (grupo.integrantes.any { it.usuario.id == id }) {
+                throw BusinessException(ErrorStrings.USUARIO_YA_PERTENECE_AL_GRUPO)
+            }
+
+            grupo.agregarIntegrante(usuario, RolIntegrante.MIEMBRO)
+        }
+    }
+
+    /**
+     * Consulta en el repositorio de gastos si el usuario figura como deudor
+     * con saldo pendiente en alguna fracción de gastos del grupo.
+     */
     private fun tieneDeudas(grupoId: Long, usuarioId: Long): Boolean {
-        return true // TODO: Implementar
+        return gastoRepository.existeDeudaPendienteEnGrupo(grupoId, usuarioId)
     }
 }

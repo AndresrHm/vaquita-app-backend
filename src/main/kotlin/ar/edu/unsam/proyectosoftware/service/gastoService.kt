@@ -5,12 +5,20 @@ import ar.edu.unsam.proyectosoftware.domain.Gasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.CreacionGastoDTO
-import ar.edu.unsam.proyectosoftware.repository.GastoRepository
+import ar.edu.unsam.proyectosoftware.dto.FilterGastosCustom
+import ar.edu.unsam.proyectosoftware.dto.GastoDetalleDTO
+import ar.edu.unsam.proyectosoftware.dto.PageResponse
+import ar.edu.unsam.proyectosoftware.dto.TipoRelacionVista
+import ar.edu.unsam.proyectosoftware.dto.toPageResponse
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
+import ar.edu.unsam.proyectosoftware.mapper.GastoMapper
 import ar.edu.unsam.proyectosoftware.repository.FraccionGastoRepository
+import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
+import ar.edu.unsam.proyectosoftware.repository.IntegranteGrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
-import org.springframework.security.core.Authentication
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -21,43 +29,28 @@ val MAX_CARACTERES_NOMBRE_PRODUCTO = 20
 class GastoService(
     var fraccionGastoRepository: FraccionGastoRepository,
     var gastoRepository: GastoRepository,
+    var integranteGrupoRepository: IntegranteGrupoRepository,
     var grupoRepository: GrupoRepository,
-    var usuarioRepository: UsuarioRepository,
-    private val usuarioService: UsuarioService // Agregado para el refactor
+    var usuarioRepository: UsuarioRepository
 ) {
 
-    @Transactional(readOnly = false, rollbackFor = [Exception::class])
+    @Transactional
     fun crearGasto(
-        auth: Authentication,
         gastoDTO: CreacionGastoDTO
     ): Gasto {
-        // 1. Identificamos QUIÉN está usando la app (el creador)
-        val usuarioQueCargaElGasto = usuarioService.obtenerUsuarioLogueado(auth)
-
         val grupo = obtenerGrupoOLanzarExcepcion(gastoDTO.grupoID)
-
-        // 2. Buscamos al pagador que viene en el DTO (puede ser el mismo u otro)
         val pagador = obtenerUsuarioOLanzarExcepcion(gastoDTO.pagadorID)
-
-        val participantes = usuarioRepository.findAllById(gastoDTO.participantesIDs).toList()
+        val participantes = integranteGrupoRepository.findUsuariosByGrupoAndIds(grupo.id!!, gastoDTO.participantesIDs)
 
         if (participantes.size != gastoDTO.participantesIDs.size) {
             throw BusinessException(ErrorStrings.NINGUN_USUARIO_ENCONTRADO)
         }
 
-        val gasto = Gasto.fromGastoDTO(gastoDTO, grupo, pagador, participantes)
+        val gasto = GastoMapper.fromCreacionDTO(gastoDTO, grupo, pagador, participantes)
 
         validarDatosBasicos(gasto)
 
-        // --- VALIDACIONES DE SEGURIDAD ---
-
-        // Validamos que el que está cargando el gasto PERTENECE al grupo
-        if (!usuarioQueCargaElGasto.perteneceA(gasto.grupo)) {
-            throw BusinessException(ErrorStrings.USUARIO_SIN_PERMISO_GASTO)
-        }
-
-        // Validamos que el pagador elegido PERTENECE al grupo
-        if (!gasto.pagador.perteneceA(gasto.grupo)) {
+        if (!integranteGrupoRepository.existsByGrupoIdAndUsuarioId(grupo.id!!, gasto.pagador.id!!)) {
             throw BusinessException(ErrorStrings.PAGADOR_NO_PERTENECE_AL_GRUPO)
         }
 
@@ -65,8 +58,7 @@ class GastoService(
             throw BusinessException(ErrorStrings.PARTICIPANTES_NO_PERTENECEN_AL_GRUPO)
         }
 
-        // Aquí podrías agregar: if (!usuarioQueCargaElGasto.esAdmin) { ... } si solo admins cargan por otros
-        if (!puedeCrearGasto(usuarioQueCargaElGasto, gasto.grupo)) {
+        if (!puedeCrearGasto(gasto.pagador, gasto.grupo)) {
             throw BusinessException(ErrorStrings.USUARIO_SIN_PERMISO_GASTO)
         }
 
@@ -82,14 +74,79 @@ class GastoService(
         return gasto
     }
 
-    fun obtenerDeuda(auth: Authentication): Double {
-        val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
-        val userId = usuarioLogueado.id!!
-
+    fun obtenerDeuda(userId: Long): Double {
         obtenerUsuarioOLanzarExcepcion(userId)
 
         return fraccionGastoRepository.findByDeudorId(userId)
             .sumOf { it.saldoPendiente() }
+    }
+
+    @Transactional(readOnly = true)
+    fun getGastosByFilters(
+        userId: Long,
+        filters: FilterGastosCustom,
+    ): PageResponse<GastoDetalleDTO> {
+        obtenerUsuarioOLanzarExcepcion(userId)
+
+        // Validar rango de fechas
+        if (filters.fechaInicio != null && filters.fechaFin != null && filters.fechaInicio > filters.fechaFin) {
+            throw BusinessException(ErrorStrings.INFORMACION_INVALIDA)
+        }
+
+        // Validar rango de montos
+        if (filters.rangoIni != null && filters.rangoFin != null && filters.rangoIni > filters.rangoFin) {
+            throw BusinessException(ErrorStrings.INFORMACION_INVALIDA)
+        }
+
+        // Validar paginación
+        if (filters.page < 0 || filters.size <= 0) {
+            throw BusinessException(ErrorStrings.INFORMACION_INVALIDA)
+        }
+
+        // Procesar búsqueda: usar patrón LIKE solo si hay texto
+        val searchPattern = filters.search
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+            ?.lowercase()
+            ?.let { "%$it%" }
+            ?: ""
+
+        // Procesar categorías
+        val categorias = filters.categoria
+            ?.map { it.name }
+            ?.distinct()
+            ?: emptyList()
+
+        val filtrarCategorias = categorias.isNotEmpty()
+
+        // Procesar vistas (por defecto sin filtro de vista si no se especifica)
+        val vistaPropia = filters.vista == TipoRelacionVista.PROPIA
+        val vistaGrupo = filters.vista == TipoRelacionVista.GRUPO
+
+        // Configurar paginación
+        val pageable = PageRequest.of(
+            filters.page,
+            filters.size,
+            Sort.by(Sort.Order.desc("fecha"), Sort.Order.desc("id"))
+        )
+
+        // Ejecutar consulta con todos los filtros normalizados
+        val gastosPage = gastoRepository.buscarPorFiltros(
+            searchPattern = searchPattern,
+            fechaInicio = filters.fechaInicio,
+            fechaFin = filters.fechaFin,
+            rangoIni = filters.rangoIni,
+            rangoFin = filters.rangoFin,
+            filtrarCategorias = filtrarCategorias,
+            categorias = categorias,
+            userId = userId,
+            amigoId = filters.amigoID,
+            vistaPropia = vistaPropia,
+            vistaGrupo = vistaGrupo,
+            pageable = pageable,
+        )
+
+        return gastosPage.toPageResponse { GastoMapper.toViewDTO(it, userId) }
     }
 
     private fun validarDatosBasicos(gasto: Gasto) {
@@ -118,12 +175,23 @@ class GastoService(
         return participantes.contains(pagador)
     }
 
-    private fun todosLosParticipantesPertenecenAlGrupo(
+    private fun todosLosParticipantesPertenecenAlGrupo (
         gasto: Gasto
     ): Boolean {
-        val participantes = gasto.participantes
-        val grupo = gasto.grupo
-        return participantes.all { it.perteneceA(grupo) }
+        val grupoId = gasto.grupo.id!!
+        val ids = gasto.participantes.mapNotNull { it.id }.toSet()
+
+        val pertenecen = integranteGrupoRepository
+            .findIdsQuePertenecen(grupoId, ids.toList())
+            .toSet()
+
+        val faltantes = ids - pertenecen
+
+        if (faltantes.isNotEmpty()) {
+            throw BusinessException("Usuarios no pertenecen al grupo: $faltantes")
+        }
+
+        return true
     }
 
     private fun puedeCrearGasto(usuario: Usuario, grupo: Grupo): Boolean {
@@ -139,4 +207,3 @@ class GastoService(
         usuarioRepository.findById(usuarioId)
             .orElseThrow { BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO) }
 }
-

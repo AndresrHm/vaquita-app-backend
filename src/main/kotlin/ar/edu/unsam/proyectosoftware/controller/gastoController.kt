@@ -24,8 +24,8 @@ class GastoController(
     val gastoService: GastoService,
 ) {
     @PostMapping
-    fun crearGasto(auth: Authentication, @RequestBody gastoDTO: CreacionGastoDTO): String {
-        val gasto = gastoService.crearGasto(auth, gastoDTO)
+    fun crearGasto(@RequestBody gastoDTO: CreacionGastoDTO): String {
+        val gasto = gastoService.crearGasto(gastoDTO)
 
         return "Gasto de $${gasto.monto} creado exitosamente en ${gasto.grupo.nombre}."
     }

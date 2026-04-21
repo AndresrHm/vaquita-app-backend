@@ -113,6 +113,7 @@ interface IntegranteGrupoRepository : CrudRepository<IntegranteGrupo, Long> {
     FROM Grupo g
     JOIN g.integrantes ig
     WHERE ig.usuario.id = :usuarioId
+      AND g.activado = true
 """
     )
     fun findGruposByUsuario(

@@ -39,6 +39,17 @@ interface IntegranteGrupoRepository : CrudRepository<IntegranteGrupo, Long> {
     )
     fun esAdmin(grupoId: Long, usuarioId: Long): Boolean
 
+    @Query("""
+    SELECT ig.usuario 
+    FROM IntegranteGrupo ig 
+    WHERE ig.grupo.id = :grupoId 
+    AND ig.usuario.id IN :usuarioIds
+""")
+    fun findUsuariosByGrupoAndIds(
+        @Param("grupoId") grupoId: Long,
+        @Param("usuarioIds") usuarioIds: List<Long>
+    ): List<Usuario>
+
     fun existsByGrupoIdAndUsuarioIdAndRol(
         grupoId: Long,
         usuarioId: Long,
@@ -102,6 +113,7 @@ interface IntegranteGrupoRepository : CrudRepository<IntegranteGrupo, Long> {
     FROM Grupo g
     JOIN g.integrantes ig
     WHERE ig.usuario.id = :usuarioId
+      AND g.activado = true
 """
     )
     fun findGruposByUsuario(

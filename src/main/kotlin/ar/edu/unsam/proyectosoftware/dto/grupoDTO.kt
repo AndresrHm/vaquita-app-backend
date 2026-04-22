@@ -1,7 +1,5 @@
 package ar.edu.unsam.proyectosoftware.dto
 
-import ar.edu.unsam.proyectosoftware.service.GrupoService
-
 data class GrupoDTO(
     val id: Long,
     val nombre: String,
@@ -11,8 +9,9 @@ data class GrupoDTO(
 
 data class GrupoCreacionDTO(
     val nombre: String,
-    val imagenUrl: String,
-    val descripcion: String,
+    val imagenUrl: String?,
+    val descripcion: String?,
+    val integrantesIds: List<Long> = emptyList(),
 )
 
 // Para /groups
@@ -56,7 +55,7 @@ data class MiembroDTO (
 )
 
 data class AgregarMiembrosDTO(
-    val usuarioIds: List<Long>
+    val usuarioIds: List<Long> = emptyList()
 )
 
 enum class RolMiembro(val descripcion: String) {

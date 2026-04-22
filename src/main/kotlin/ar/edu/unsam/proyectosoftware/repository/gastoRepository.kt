@@ -52,9 +52,18 @@ interface GastoRepository : CrudRepository<Gasto, Long> {
               AND p.id = :userId
               AND (CAST(:amigoId AS long) IS NULL OR g.pagador.id = :amigoId)
               AND (
-                    (:vistaPropia = false AND :vistaGrupo = false)
-                    OR (:vistaPropia = true AND g.pagador.id = :userId)
-                    OR (:vistaGrupo = true AND g.pagador.id <> :userId)
+                    (:vistaTodos = true)
+                    OR (
+                        :vistaDeuda = true
+                        AND EXISTS (
+                            SELECT 1
+                            FROM FraccionGasto fg
+                            WHERE fg.gastoAsociado = g
+                              AND fg.deudor.id = :userId
+                              AND (fg.montoFraccion - fg.pagoParcial) > 0
+                        )
+                    )
+                    OR (:vistaAmigos = true AND g.pagador.id = :userId)
                   )
         """
     )
@@ -68,8 +77,9 @@ interface GastoRepository : CrudRepository<Gasto, Long> {
         @Param("categorias") categorias: List<String>,
         @Param("userId") userId: Long,
         @Param("amigoId") amigoId: Long?,
-        @Param("vistaPropia") vistaPropia: Boolean,
-        @Param("vistaGrupo") vistaGrupo: Boolean,
+        @Param("vistaTodos") vistaTodos: Boolean,
+        @Param("vistaDeuda") vistaDeuda: Boolean,
+        @Param("vistaAmigos") vistaAmigos: Boolean,
         pageable: Pageable,
     ): Page<Gasto>
 }

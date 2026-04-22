@@ -28,7 +28,6 @@ class UsuarioService(
     private val jwtUtils: JwtUtils
 ) {
 
-
     @Transactional
     fun registrarUsuario(dto: UsuarioRegistradoDTO): Usuario {
 
@@ -80,13 +79,7 @@ class UsuarioService(
         )
     }
 
-    fun obtenerUsuarioPorEmail(email: String): Usuario {
-        return usuarioRepository.findByEmail(email)
-            .orElseThrow { Exception("Usuario no encontrado para el email: $email") }
-    }
-
     fun obtenerUsuarioLogueado(auth: Authentication): Usuario {
-        // auth.name trae el subject del JWT (el email)
         return usuarioRepository.findByEmail(auth.name)
             .orElseThrow { Exception("Sesión inválida o usuario no encontrado") }
     }
@@ -113,7 +106,6 @@ class UsuarioService(
         return usuario.amigos.map { Usuario.toUsuarioNombreIdDTO(it) }
     }
 
-    // 1. Ahora recibe 'auth' y busca las solicitudes del usuario logueado
     @Transactional(readOnly = true)
     fun obtenerSolicitudesPendientes(auth: Authentication): List<SolicitudAmistadFront> {
         val usuarioLogueado = obtenerUsuarioLogueado(auth)
@@ -128,12 +120,10 @@ class UsuarioService(
         }
     }
 
-    // 2. El emisor ya no se pasa por ID, es el dueño del token
     @Transactional
     fun enviarSolicitudAmistad(auth: Authentication, idReceptor: Long): Long? {
         val emisor = obtenerUsuarioLogueado(auth)
 
-        // Validación básica: no mandarse solicitud a uno mismo
         if (emisor.id == idReceptor) throw Exception("No podés enviarte una solicitud a vos mismo")
 
         val solicitud = SolicitudAmistad(emisor.id!!, idReceptor)
@@ -141,7 +131,6 @@ class UsuarioService(
         return idReceptor
     }
 
-    // 3. El que responde es el usuario logueado. Validamos que la solicitud sea para él.
     @Transactional
     fun responderSolicitudAmistad(auth: Authentication, idSolicitud: Long, aceptar: Boolean): Long? {
         val usuarioLogueado = obtenerUsuarioLogueado(auth)
@@ -149,14 +138,12 @@ class UsuarioService(
         val solicitud = solicitudAmistadRepository.findById(idSolicitud)
             .orElseThrow { Exception("Solicitud inexistente") }
 
-        // SEGURIDAD: Validamos que el receptor de la solicitud coincida con el usuario del token
         if (solicitud.idReceptor != usuarioLogueado.id) {
             throw Exception("No tenés permiso para responder esta solicitud")
         }
 
         if (aceptar) {
             val emisor = obtenerUsuario(solicitud.idEmisor)
-            // Agregamos la relación de amistad mutua
             usuarioLogueado.agregarAmigo(emisor)
             emisor.agregarAmigo(usuarioLogueado)
 
@@ -167,5 +154,4 @@ class UsuarioService(
         solicitudAmistadRepository.delete(solicitud)
         return usuarioLogueado.id
     }
-
 }

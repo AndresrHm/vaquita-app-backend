@@ -9,8 +9,8 @@ data class GrupoDTO(
 
 data class GrupoCreacionDTO(
     val nombre: String,
-    val imagenUrl: String,
-    val descripcion: String,
+    val imagenUrl: String?,
+    val descripcion: String?,
     val integrantesIds: List<Long> = emptyList(),
 )
 

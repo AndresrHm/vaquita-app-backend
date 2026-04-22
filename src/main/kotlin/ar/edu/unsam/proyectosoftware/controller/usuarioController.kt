@@ -59,11 +59,10 @@ class UsuarioController(private val usuarioService: UsuarioService) {
         return ResponseEntity.ok(amigos)
     }
 
-
     @PostMapping("/register")
     fun registrarUsuario(@RequestBody dto: UsuarioRegistradoDTO): ResponseEntity<Usuario> {
         val usuarioCreado = usuarioService.registrarUsuario(dto)
-        return ResponseEntity.ok(usuarioCreado) // Devolvemos el objeto entero, no un texto
+        return ResponseEntity.ok(usuarioCreado)
     }
 
     @PostMapping("/login")
@@ -76,7 +75,6 @@ class UsuarioController(private val usuarioService: UsuarioService) {
     @GetMapping("/me/solicitudes")
     fun obtenerSolicitudesPendientes(auth: Authentication?): ResponseEntity<List<SolicitudAmistadFront>> {
         val authentication = auth ?: throw Exception("No autorizado: Token no encontrado")
-        // FIJATE ACÁ: Le pasamos 'authentication' directo al service
         val solicitudes = usuarioService.obtenerSolicitudesPendientes(authentication)
         return ResponseEntity.ok(solicitudes)
     }
@@ -88,12 +86,11 @@ class UsuarioController(private val usuarioService: UsuarioService) {
         @PathVariable idReceptor: Long
     ): ResponseEntity<Long> {
         val authentication = auth ?: throw Exception("No autorizado: Token no encontrado")
-        // FIJATE ACÁ: Le pasamos 'authentication' como primer parámetro
         val response = usuarioService.enviarSolicitudAmistad(authentication, idReceptor)
         return ResponseEntity.ok(response)
     }
 
-    // 3. Responder solicitud
+    // 3. Responder solicitud (Es PatchMapping, el Front debe usar api.patch)
     @PatchMapping("/me/solicitud/{idSolicitud}")
     fun responderSolicitudAmistad(
         auth: Authentication?,
@@ -101,7 +98,6 @@ class UsuarioController(private val usuarioService: UsuarioService) {
         @RequestParam aceptar: Boolean
     ): ResponseEntity<Long> {
         val authentication = auth ?: throw Exception("No autorizado: Token no encontrado")
-        // FIJATE ACÁ: Le pasamos 'authentication' como primer parámetro
         val result = usuarioService.responderSolicitudAmistad(authentication, idSolicitud, aceptar)
         return ResponseEntity.ok(result)
     }

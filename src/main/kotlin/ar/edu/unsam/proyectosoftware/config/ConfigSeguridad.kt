@@ -13,7 +13,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 class SecurityConfig(
-    private val jwtAuthenticationFilter: JwtAuthenticationFilter // El filtro que creamos
+    private val jwtAuthenticationFilter: JwtAuthenticationFilter
 ) {
 
     @Bean
@@ -23,18 +23,20 @@ class SecurityConfig(
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .cors { it.configurationSource(corsConfigurationSource()) }
-            .csrf { it.disable() } // Obligatorio para Postman y APIs
+            .csrf { it.disable() }
             .sessionManagement {
-                // Le avisamos que no guarde sesiones en memoria, que use solo tokens (Stateless)
                 it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             }
             .authorizeHttpRequests { auth ->
-                // EXCEPCIONES: Estas rutas NO piden token
+                // 1. EXCEPCIONES: Estas rutas NO piden token
                 auth.requestMatchers("/usuarios/login", "/usuarios/register", "/usuarios").permitAll()
-                // TODO LO DEMÁS: Pide token sí o sí
+
+                // 👉 LÍNEA CORREGIDA: Va ANTES del anyRequest()
+                auth.requestMatchers("/error").permitAll()
+
+                // 2. TODO LO DEMÁS: Pide token sí o sí (¡SIEMPRE AL FINAL!)
                 auth.anyRequest().authenticated()
             }
-            // CONEXIÓN CLAVE: Ponemos tu filtro a trabajar antes de que Spring rebote a la gente
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
 
         return http.build()

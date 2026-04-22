@@ -9,6 +9,7 @@ import ar.edu.unsam.proyectosoftware.dto.CreacionGastoDTO
 import ar.edu.unsam.proyectosoftware.dto.FilterGastosCustom
 import ar.edu.unsam.proyectosoftware.dto.GastoDetalleDTO
 import ar.edu.unsam.proyectosoftware.dto.PageResponse
+import ar.edu.unsam.proyectosoftware.dto.OrdenHomePage
 import ar.edu.unsam.proyectosoftware.dto.TipoRelacionVista
 import ar.edu.unsam.proyectosoftware.dto.toPageResponse
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
@@ -34,6 +35,12 @@ class GastoService(
     var grupoRepository: GrupoRepository,
     var usuarioRepository: UsuarioRepository
 ) {
+
+    private data class VistaFlags(
+        val todos: Boolean,
+        val deuda: Boolean,
+        val amigos: Boolean,
+    )
 
     @Transactional
     fun crearGasto(
@@ -120,16 +127,9 @@ class GastoService(
 
         val filtrarCategorias = categorias.isNotEmpty()
 
-        // Procesar vistas (por defecto sin filtro de vista si no se especifica)
-        val vistaPropia = filters.vista == TipoRelacionVista.PROPIA
-        val vistaGrupo = filters.vista == TipoRelacionVista.GRUPO
+        val vistaFlags = resolverVistaFlags(filters.vista)
 
-        // Configurar paginación
-        val pageable = PageRequest.of(
-            filters.page,
-            filters.size,
-            Sort.by(Sort.Order.desc("fecha"), Sort.Order.desc("id"))
-        )
+        val pageable = PageRequest.of(filters.page, filters.size, sortHomePage(filters.orden))
 
         // Ejecutar consulta con todos los filtros normalizados
         val gastosPage = gastoRepository.buscarPorFiltros(
@@ -142,8 +142,9 @@ class GastoService(
             categorias = categorias,
             userId = userId,
             amigoId = filters.amigoID,
-            vistaPropia = vistaPropia,
-            vistaGrupo = vistaGrupo,
+            vistaTodos = vistaFlags.todos,
+            vistaDeuda = vistaFlags.deuda,
+            vistaAmigos = vistaFlags.amigos,
             pageable = pageable,
         )
 
@@ -219,6 +220,7 @@ import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.CreacionGastoDTO
 import ar.edu.unsam.proyectosoftware.dto.FilterGastosCustom
 import ar.edu.unsam.proyectosoftware.dto.GastoDetalleDTO
+import ar.edu.unsam.proyectosoftware.dto.OrdenGasto
 import ar.edu.unsam.proyectosoftware.dto.PageResponse
 import ar.edu.unsam.proyectosoftware.dto.TipoRelacionVista
 import ar.edu.unsam.proyectosoftware.dto.toPageResponse
@@ -247,6 +249,12 @@ class GastoService(
     var usuarioRepository: UsuarioRepository,
     private val usuarioService: UsuarioService
 ) {
+
+    private data class VistaFlags(
+        val todos: Boolean,
+        val deuda: Boolean,
+        val amigos: Boolean,
+    )
 
     @Transactional
     fun crearGasto(
@@ -341,13 +349,15 @@ class GastoService(
 
         val filtrarCategorias = categorias.isNotEmpty()
 
-        val vistaPropia = filters.vista == TipoRelacionVista.PROPIA
-        val vistaGrupo = filters.vista == TipoRelacionVista.GRUPO
+        val vistaFlags = resolverVistaFlags(filters.vista)
+
+        val sort = construirSort(filters.orden)
+
 
         val pageable = PageRequest.of(
             filters.page,
             filters.size,
-            Sort.by(Sort.Order.desc("fecha"), Sort.Order.desc("id"))
+            sort
         )
 
         val gastosPage = gastoRepository.buscarPorFiltros(
@@ -360,8 +370,9 @@ class GastoService(
             categorias = categorias,
             userId = userId,
             amigoId = filters.amigoID,
-            vistaPropia = vistaPropia,
-            vistaGrupo = vistaGrupo,
+            vistaTodos = vistaFlags.todos,
+            vistaDeuda = vistaFlags.deuda,
+            vistaAmigos = vistaFlags.amigos,
             pageable = pageable,
         )
 
@@ -412,8 +423,41 @@ class GastoService(
         return true
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun puedeCrearGasto(usuario: Usuario, grupo: Grupo): Boolean {
         return true
+    }
+
+    private fun resolverVistaFlags(vista: TipoRelacionVista?): VistaFlags = when (vista ?: TipoRelacionVista.TODOS) {
+        TipoRelacionVista.TODOS -> VistaFlags(todos = true, deuda = false, amigos = false)
+        TipoRelacionVista.DEUDA -> VistaFlags(todos = false, deuda = true, amigos = false)
+        TipoRelacionVista.AMIGOS -> VistaFlags(todos = false, deuda = false, amigos = true)
+    }
+
+    private fun construirSort(orden: OrdenGasto?): Sort {
+        return when (orden) {
+
+            OrdenGasto.FECHA_ASC ->
+                Sort.by(Sort.Direction.ASC, "fecha")
+
+            OrdenGasto.FECHA_DESC ->
+                Sort.by(Sort.Direction.DESC, "fecha")
+
+            OrdenGasto.NOMBRE_ASC ->
+                Sort.by(Sort.Direction.ASC, "descripcion")
+
+            OrdenGasto.NOMBRE_DESC ->
+                Sort.by(Sort.Direction.DESC, "descripcion")
+
+            OrdenGasto.CREADOR_ASC ->
+                Sort.by(Sort.Direction.ASC, "pagador.nombre")
+
+            OrdenGasto.CREADOR_DESC ->
+                Sort.by(Sort.Direction.DESC, "pagador.nombre")
+
+            null ->
+                Sort.by(Sort.Direction.DESC, "fecha") // default
+        }
     }
 
     private fun obtenerGrupoOLanzarExcepcion(grupoId: Long): Grupo =

@@ -1,3 +1,4 @@
+/*
 package ar.edu.unsam.proyectosoftware.service
 
 import ar.edu.unsam.proyectosoftware.BusinessException
@@ -8,6 +9,7 @@ import ar.edu.unsam.proyectosoftware.dto.CreacionGastoDTO
 import ar.edu.unsam.proyectosoftware.dto.FilterGastosCustom
 import ar.edu.unsam.proyectosoftware.dto.GastoDetalleDTO
 import ar.edu.unsam.proyectosoftware.dto.PageResponse
+import ar.edu.unsam.proyectosoftware.dto.OrdenHomePage
 import ar.edu.unsam.proyectosoftware.dto.TipoRelacionVista
 import ar.edu.unsam.proyectosoftware.dto.toPageResponse
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
@@ -33,6 +35,12 @@ class GastoService(
     var grupoRepository: GrupoRepository,
     var usuarioRepository: UsuarioRepository
 ) {
+
+    private data class VistaFlags(
+        val todos: Boolean,
+        val deuda: Boolean,
+        val amigos: Boolean,
+    )
 
     @Transactional
     fun crearGasto(
@@ -119,16 +127,9 @@ class GastoService(
 
         val filtrarCategorias = categorias.isNotEmpty()
 
-        // Procesar vistas (por defecto sin filtro de vista si no se especifica)
-        val vistaPropia = filters.vista == TipoRelacionVista.PROPIA
-        val vistaGrupo = filters.vista == TipoRelacionVista.GRUPO
+        val vistaFlags = resolverVistaFlags(filters.vista)
 
-        // Configurar paginación
-        val pageable = PageRequest.of(
-            filters.page,
-            filters.size,
-            Sort.by(Sort.Order.desc("fecha"), Sort.Order.desc("id"))
-        )
+        val pageable = PageRequest.of(filters.page, filters.size, sortHomePage(filters.orden))
 
         // Ejecutar consulta con todos los filtros normalizados
         val gastosPage = gastoRepository.buscarPorFiltros(
@@ -141,8 +142,9 @@ class GastoService(
             categorias = categorias,
             userId = userId,
             amigoId = filters.amigoID,
-            vistaPropia = vistaPropia,
-            vistaGrupo = vistaGrupo,
+            vistaTodos = vistaFlags.todos,
+            vistaDeuda = vistaFlags.deuda,
+            vistaAmigos = vistaFlags.amigos,
             pageable = pageable,
         )
 
@@ -197,6 +199,265 @@ class GastoService(
     private fun puedeCrearGasto(usuario: Usuario, grupo: Grupo): Boolean {
         // Por ahora devolvemos true, pero acá iría la lógica de roles (administrador)
         return true
+    }
+
+    private fun obtenerGrupoOLanzarExcepcion(grupoId: Long): Grupo =
+        grupoRepository.findById(grupoId)
+            .orElseThrow { BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO) }
+
+    private fun obtenerUsuarioOLanzarExcepcion(usuarioId: Long): Usuario =
+        usuarioRepository.findById(usuarioId)
+            .orElseThrow { BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO) }
+}
+*/
+
+package ar.edu.unsam.proyectosoftware.service
+
+import ar.edu.unsam.proyectosoftware.BusinessException
+import ar.edu.unsam.proyectosoftware.domain.Gasto
+import ar.edu.unsam.proyectosoftware.domain.Grupo
+import ar.edu.unsam.proyectosoftware.domain.Usuario
+import ar.edu.unsam.proyectosoftware.dto.CreacionGastoDTO
+import ar.edu.unsam.proyectosoftware.dto.FilterGastosCustom
+import ar.edu.unsam.proyectosoftware.dto.GastoDetalleDTO
+import ar.edu.unsam.proyectosoftware.dto.OrdenGasto
+import ar.edu.unsam.proyectosoftware.dto.PageResponse
+import ar.edu.unsam.proyectosoftware.dto.TipoRelacionVista
+import ar.edu.unsam.proyectosoftware.dto.toPageResponse
+import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
+import ar.edu.unsam.proyectosoftware.mapper.GastoMapper
+import ar.edu.unsam.proyectosoftware.repository.FraccionGastoRepository
+import ar.edu.unsam.proyectosoftware.repository.GastoRepository
+import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
+import ar.edu.unsam.proyectosoftware.repository.IntegranteGrupoRepository
+import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
+import org.springframework.security.core.Authentication
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+
+val MAX_CARACTERES_DESCRIPCION = 50
+val MAX_CARACTERES_NOMBRE_PRODUCTO = 20
+
+@Service
+class GastoService(
+    var fraccionGastoRepository: FraccionGastoRepository,
+    var gastoRepository: GastoRepository,
+    var integranteGrupoRepository: IntegranteGrupoRepository,
+    var grupoRepository: GrupoRepository,
+    var usuarioRepository: UsuarioRepository,
+    private val usuarioService: UsuarioService
+) {
+
+    private data class VistaFlags(
+        val todos: Boolean,
+        val deuda: Boolean,
+        val amigos: Boolean,
+    )
+
+    @Transactional
+    fun crearGasto(
+        auth: Authentication,
+        gastoDTO: CreacionGastoDTO
+    ): Gasto {
+        val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
+
+        val grupo = obtenerGrupoOLanzarExcepcion(gastoDTO.grupoID)
+        val pagador = obtenerUsuarioOLanzarExcepcion(gastoDTO.pagadorID)
+        val participantes = integranteGrupoRepository.findUsuariosByGrupoAndIds(grupo.id!!, gastoDTO.participantesIDs)
+
+        if (participantes.size != gastoDTO.participantesIDs.size) {
+            throw BusinessException(ErrorStrings.NINGUN_USUARIO_ENCONTRADO)
+        }
+
+        val gasto = GastoMapper.fromCreacionDTO(gastoDTO, grupo, pagador, participantes)
+
+        validarDatosBasicos(gasto)
+
+        if (!integranteGrupoRepository.existsByGrupoIdAndUsuarioId(grupo.id!!, usuarioLogueado.id!!)) {
+            throw BusinessException(ErrorStrings.USUARIO_SIN_PERMISO_GASTO)
+        }
+
+        if (!integranteGrupoRepository.existsByGrupoIdAndUsuarioId(grupo.id!!, gasto.pagador.id!!)) {
+            throw BusinessException(ErrorStrings.PAGADOR_NO_PERTENECE_AL_GRUPO)
+        }
+
+        if (!todosLosParticipantesPertenecenAlGrupo(gasto)) {
+            throw BusinessException(ErrorStrings.PARTICIPANTES_NO_PERTENECEN_AL_GRUPO)
+        }
+
+        if (!puedeCrearGasto(usuarioLogueado, gasto.grupo)) {
+            throw BusinessException(ErrorStrings.USUARIO_SIN_PERMISO_GASTO)
+        }
+
+        if (!participantesContienePagador(participantes, pagador)) {
+            throw BusinessException(ErrorStrings.USUARIO_SIN_PERMISO_GASTO)
+        }
+
+        val fracciones = gasto.repartirGasto()
+
+        gastoRepository.save(gasto)
+        fraccionGastoRepository.saveAll(fracciones)
+
+        return gasto
+    }
+
+    fun obtenerDeuda(auth: Authentication): Double {
+        val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
+        val userId = usuarioLogueado.id!!
+
+        obtenerUsuarioOLanzarExcepcion(userId)
+
+        return fraccionGastoRepository.findByDeudorId(userId)
+            .sumOf { it.saldoPendiente() }
+    }
+
+    @Transactional(readOnly = true)
+    fun getGastosByFilters(
+        auth: Authentication,
+        filters: FilterGastosCustom,
+    ): PageResponse<GastoDetalleDTO> {
+        val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
+        val userId = usuarioLogueado.id!!
+
+        obtenerUsuarioOLanzarExcepcion(userId)
+
+        if (filters.fechaInicio != null && filters.fechaFin != null && filters.fechaInicio > filters.fechaFin) {
+            throw BusinessException(ErrorStrings.INFORMACION_INVALIDA)
+        }
+
+        if (filters.rangoIni != null && filters.rangoFin != null && filters.rangoIni > filters.rangoFin) {
+            throw BusinessException(ErrorStrings.INFORMACION_INVALIDA)
+        }
+
+        if (filters.page < 0 || filters.size <= 0) {
+            throw BusinessException(ErrorStrings.INFORMACION_INVALIDA)
+        }
+
+        val searchPattern = filters.search
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+            ?.lowercase()
+            ?.let { "%$it%" }
+            ?: ""
+
+        val categorias = filters.categoria
+            ?.map { it.name }
+            ?.distinct()
+            ?: emptyList()
+
+        val filtrarCategorias = categorias.isNotEmpty()
+
+        val vistaFlags = resolverVistaFlags(filters.vista)
+
+        val sort = construirSort(filters.orden)
+
+
+        val pageable = PageRequest.of(
+            filters.page,
+            filters.size,
+            sort
+        )
+
+        val gastosPage = gastoRepository.buscarPorFiltros(
+            searchPattern = searchPattern,
+            fechaInicio = filters.fechaInicio,
+            fechaFin = filters.fechaFin,
+            rangoIni = filters.rangoIni,
+            rangoFin = filters.rangoFin,
+            filtrarCategorias = filtrarCategorias,
+            categorias = categorias,
+            userId = userId,
+            amigoId = filters.amigoID,
+            vistaTodos = vistaFlags.todos,
+            vistaDeuda = vistaFlags.deuda,
+            vistaAmigos = vistaFlags.amigos,
+            pageable = pageable,
+        )
+
+        return gastosPage.toPageResponse { GastoMapper.toViewDTO(it, userId) }
+    }
+
+    private fun validarDatosBasicos(gasto: Gasto) {
+        if (gasto.monto <= 0) {
+            throw BusinessException(ErrorStrings.MONTO_NEGATIVO)
+        }
+        if (gasto.monto != gasto.totalItems()) {
+            throw BusinessException(ErrorStrings.MONTO_TOTAL_NO_COINCIDE_CON_TOTAL_ITEMS)
+        }
+        if (gasto.descripcion.isBlank()) {
+            throw BusinessException(ErrorStrings.DESCRIPCION_VACIA)
+        }
+        if (gasto.descripcion.length > MAX_CARACTERES_DESCRIPCION) {
+            throw BusinessException(ErrorStrings.DESCRIPCION_LARGA(MAX_CARACTERES_DESCRIPCION))
+        }
+        if (gasto.items.any { it.nombre.length > MAX_CARACTERES_NOMBRE_PRODUCTO }) {
+            throw BusinessException(ErrorStrings.NOMBRE_PRODUCTO_LARGO(MAX_CARACTERES_NOMBRE_PRODUCTO))
+        }
+    }
+
+    private fun participantesContienePagador(
+        participantes: List<Usuario>,
+        pagador: Usuario
+    ): Boolean {
+        return participantes.contains(pagador)
+    }
+
+    private fun todosLosParticipantesPertenecenAlGrupo (
+        gasto: Gasto
+    ): Boolean {
+        val grupoId = gasto.grupo.id!!
+        val ids = gasto.participantes.mapNotNull { it.id }.toSet()
+
+        val pertenecen = integranteGrupoRepository
+            .findIdsQuePertenecen(grupoId, ids.toList())
+            .toSet()
+
+        val faltantes = ids - pertenecen
+
+        if (faltantes.isNotEmpty()) {
+            throw BusinessException("Usuarios no pertenecen al grupo: $faltantes")
+        }
+
+        return true
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    private fun puedeCrearGasto(usuario: Usuario, grupo: Grupo): Boolean {
+        return true
+    }
+
+    private fun resolverVistaFlags(vista: TipoRelacionVista?): VistaFlags = when (vista ?: TipoRelacionVista.TODOS) {
+        TipoRelacionVista.TODOS -> VistaFlags(todos = true, deuda = false, amigos = false)
+        TipoRelacionVista.DEUDA -> VistaFlags(todos = false, deuda = true, amigos = false)
+        TipoRelacionVista.AMIGOS -> VistaFlags(todos = false, deuda = false, amigos = true)
+    }
+
+    private fun construirSort(orden: OrdenGasto?): Sort {
+        return when (orden) {
+
+            OrdenGasto.FECHA_ASC ->
+                Sort.by(Sort.Direction.ASC, "fecha")
+
+            OrdenGasto.FECHA_DESC ->
+                Sort.by(Sort.Direction.DESC, "fecha")
+
+            OrdenGasto.NOMBRE_ASC ->
+                Sort.by(Sort.Direction.ASC, "descripcion")
+
+            OrdenGasto.NOMBRE_DESC ->
+                Sort.by(Sort.Direction.DESC, "descripcion")
+
+            OrdenGasto.CREADOR_ASC ->
+                Sort.by(Sort.Direction.ASC, "pagador.nombre")
+
+            OrdenGasto.CREADOR_DESC ->
+                Sort.by(Sort.Direction.DESC, "pagador.nombre")
+
+            null ->
+                Sort.by(Sort.Direction.DESC, "fecha") // default
+        }
     }
 
     private fun obtenerGrupoOLanzarExcepcion(grupoId: Long): Grupo =

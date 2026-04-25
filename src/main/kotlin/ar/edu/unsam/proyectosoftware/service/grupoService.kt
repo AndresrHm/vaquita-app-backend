@@ -306,6 +306,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
 
 @Service
+@Transactional
 class GrupoService(
     val grupoRepository: GrupoRepository,
     val integranteGrupoRepository: IntegranteGrupoRepository,

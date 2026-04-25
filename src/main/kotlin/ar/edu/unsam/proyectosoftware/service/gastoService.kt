@@ -241,6 +241,7 @@ val MAX_CARACTERES_DESCRIPCION = 50
 val MAX_CARACTERES_NOMBRE_PRODUCTO = 20
 
 @Service
+@Transactional
 class GastoService(
     var fraccionGastoRepository: FraccionGastoRepository,
     var gastoRepository: GastoRepository,

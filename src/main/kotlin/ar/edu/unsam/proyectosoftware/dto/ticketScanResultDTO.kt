@@ -4,19 +4,25 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 data class ReceiptScanResultDto(
     @JsonProperty("title")
-    val title: String,                          // requerido
+    val title: String,
+
+    @JsonProperty("description")
+    val description: String? = null,
 
     @JsonProperty("totalAmount")
-    val totalAmount: Double,                    // requerido
+    val totalAmount: Double,
+
+    @JsonProperty("currency")
+    val currency: String = "ARS",
 
     @JsonProperty("date")
-    val date: String? = null,                   // opcional, formato "YYYY-MM-DD"
+    val date: String,
 
     @JsonProperty("category")
-    val category: String? = null,               // opcional: food | transport | entertainment | other
+    val category: String,
 
     @JsonProperty("items")
-    val items: List<ReceiptItemDto> = emptyList() // opcional
+    val items: List<ReceiptItemDto>? = null
 )
 
 data class ReceiptItemDto(
@@ -24,7 +30,7 @@ data class ReceiptItemDto(
     val name: String,
 
     @JsonProperty("quantity")
-    val quantity: Int = 1,
+    val quantity: Int? = 1,
 
     @JsonProperty("price")
     val price: Double

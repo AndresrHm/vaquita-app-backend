@@ -1,4 +1,4 @@
-package ar.edu.unsam.proyectosoftware.config
+package ar.edu.unsam.proyectosoftware.security
 
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import io.jsonwebtoken.Jwts

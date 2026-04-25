@@ -1,4 +1,4 @@
-package ar.edu.unsam.proyectosoftware.config
+package ar.edu.unsam.proyectosoftware.security
 
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest

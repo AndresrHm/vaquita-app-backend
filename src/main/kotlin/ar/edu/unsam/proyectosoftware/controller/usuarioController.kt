@@ -2,6 +2,8 @@ package ar.edu.unsam.proyectosoftware.controller
 
 import ar.edu.unsam.proyectosoftware.domain.SolicitudAmistadFront
 import ar.edu.unsam.proyectosoftware.domain.Usuario
+import ar.edu.unsam.proyectosoftware.dto.CambioContrasenaDTO
+import ar.edu.unsam.proyectosoftware.dto.UsuarioEditarDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioLoginDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioLogueadoDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioNombreIdDTO
@@ -100,5 +102,27 @@ class UsuarioController(private val usuarioService: UsuarioService) {
         val authentication = auth ?: throw Exception("No autorizado: Token no encontrado")
         val result = usuarioService.responderSolicitudAmistad(authentication, idSolicitud, aceptar)
         return ResponseEntity.ok(result)
+    }
+
+    @PutMapping("/me")
+    fun actualizarMiPerfil(
+        auth: Authentication?,
+        @RequestBody dto: UsuarioEditarDTO
+    ): ResponseEntity<UsuarioLogueadoDTO> {
+        val authentication = auth ?: throw Exception("No autorizado: Token no encontrado")
+        val perfilActualizado = usuarioService.actualizarPerfil(authentication, dto)
+        return ResponseEntity.ok(perfilActualizado)
+    }
+
+    @PatchMapping("/me/contrasena")
+    fun cambiarContrasena(
+        auth: Authentication?,
+        @RequestBody dto: CambioContrasenaDTO
+    ): ResponseEntity<Map<String, String>> {
+        val authentication = auth ?: throw Exception("No autorizado")
+
+        usuarioService.cambiarContrasena(authentication, dto)
+
+        return ResponseEntity.ok(mapOf("message" to "Contraseña actualizada correctamente"))
     }
 }

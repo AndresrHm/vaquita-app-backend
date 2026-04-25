@@ -41,7 +41,9 @@ class SmartScanController(
     fun scanMock(@RequestParam("image") image: MultipartFile): ResponseEntity<ReceiptScanResultDto> {
         val mock = ReceiptScanResultDto(
             title = "BAR RESTAURANTE CONTAMOS CONTIGO",
+            description = "Almuerzo: menú del día con verdinas, pan, sidra y cafés",  // ← AGREGAR
             totalAmount = 27.6,
+            currency = "ARS",  // ← AGREGAR
             date = "2017-07-19",
             category = "food",
             items = listOf(

@@ -4,6 +4,8 @@ import ar.edu.unsam.proyectosoftware.security.JwtUtils
 import ar.edu.unsam.proyectosoftware.domain.SolicitudAmistad
 import ar.edu.unsam.proyectosoftware.domain.SolicitudAmistadFront
 import ar.edu.unsam.proyectosoftware.domain.Usuario
+import ar.edu.unsam.proyectosoftware.dto.CambioContrasenaDTO
+import ar.edu.unsam.proyectosoftware.dto.UsuarioEditarDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioLoginDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioLogueadoDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioNombreIdDTO
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
+@Transactional
 class UsuarioService(
     val usuarioRepository: UsuarioRepository,
     val grupoRepository: GrupoRepository,
@@ -61,6 +64,7 @@ class UsuarioService(
         return usuarioRepository.save(nuevoUsuario)
     }
 
+    @Transactional
     fun login(dataUser: UsuarioLoginDTO): UsuarioLogueadoDTO {
         val usuario = usuarioRepository.findByEmail(dataUser.email)
             .orElseThrow { Exception("Email o contraseña incorrectos") }
@@ -75,7 +79,8 @@ class UsuarioService(
             id = usuario.id!!,
             nombre = usuario.nombre,
             email = usuario.email,
-            token = token
+            token = token,
+            imagenUrl = usuario.imagenUrl
         )
     }
 
@@ -98,6 +103,62 @@ class UsuarioService(
             .orElseThrow { Exception(ErrorStrings.GRUPO_NO_ENCONTRADO) }
 
         return integranteGrupoRepository.findAllByGrupoId(grupoId)
+    }
+
+    @Transactional
+    fun actualizarPerfil(auth: Authentication, dto: UsuarioEditarDTO): UsuarioLogueadoDTO { // <-- 1. Cambiamos lo que devuelve
+        val usuario = obtenerUsuarioLogueado(auth)
+
+        val errores = mutableListOf<String>()
+
+        if (dto.nombre.isBlank()) errores.add("• El nombre no puede estar vacío")
+
+        if (dto.email.isBlank()) {
+            errores.add("• El email no puede estar vacío")
+        } else if (dto.email != usuario.email) {
+            if (usuarioRepository.findByEmail(dto.email).isPresent) {
+                errores.add("• El email ya está registrado por otro usuario")
+            }
+        }
+
+        if (errores.isNotEmpty()) throw Exception(errores.joinToString("\n"))
+
+        usuario.nombre = dto.nombre
+        usuario.email = dto.email
+        if (dto.imagenUrl != null) {
+            usuario.imagenUrl = dto.imagenUrl
+        }
+
+        val usuarioGuardado = usuarioRepository.save(usuario)
+
+        val nuevoToken = jwtUtils.generarToken(usuarioGuardado)
+
+        return UsuarioLogueadoDTO(
+            id = usuarioGuardado.id!!,
+            nombre = usuarioGuardado.nombre,
+            email = usuarioGuardado.email,
+            token = nuevoToken, // <--- Entregamos la credencial nueva
+            imagenUrl = usuarioGuardado.imagenUrl
+        )
+    }
+
+    @Transactional
+    fun cambiarContrasena(auth: Authentication, dto: CambioContrasenaDTO) {
+        val usuario = obtenerUsuarioLogueado(auth)
+
+        // 1. Validamos que la contraseña actual sea la correcta
+        if (!passwordEncoder.matches(dto.contrasenaActual, usuario.contrasena)) {
+            throw Exception("La contraseña actual es incorrecta")
+        }
+
+        // 2. Validaciones de la nueva contraseña
+        if (dto.contrasenaNueva.isBlank() || dto.contrasenaNueva.length < 6) {
+            throw Exception("La nueva contraseña debe tener al menos 6 caracteres")
+        }
+
+        // 3. Hasheamos la nueva y guardamos
+        usuario.contrasena = passwordEncoder.encode(dto.contrasenaNueva)
+        usuarioRepository.save(usuario)
     }
 
     @Transactional(readOnly = true)

@@ -16,9 +16,21 @@ data class UsuarioLogueadoDTO (
     val token: String,
     val nombre: String,
     val email: String,
+    val imagenUrl: String? = ""
 )
 
 data class UsuarioNombreIdDTO(
     val nombre: String,
     val id: Long
+)
+
+data class UsuarioEditarDTO(
+    val nombre: String,
+    val email: String,
+    val imagenUrl: String?
+)
+
+data class CambioContrasenaDTO(
+    val contrasenaActual: String,
+    val contrasenaNueva: String
 )

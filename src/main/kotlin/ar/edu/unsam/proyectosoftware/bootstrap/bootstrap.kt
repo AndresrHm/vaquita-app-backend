@@ -261,12 +261,15 @@ class BootstrapData(
         )
 
         // 3. Gastos
+        var diasAtras = 0L
+        fun nextFechaGasto(): LocalDate = LocalDate.now().minusDays(diasAtras++)
+
         listOf(
             PartesIguales(
                 "Algo para picar",
                 CategoriaGasto.COMIDA,
                 60000.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoAsado,
                 andresS,
                 grupoAsado.usuarios()
@@ -275,7 +278,7 @@ class BootstrapData(
                 "Compras para el asado",
                 CategoriaGasto.COMIDA,
                 15000.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoAsado,
                 juanA,
                 grupoAsado.usuarios(),
@@ -290,7 +293,7 @@ class BootstrapData(
                 "Bebidas previa",
                 CategoriaGasto.BEBIDA,
                 12000.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoAsado,
                 agustinH,
                 grupoAsado.usuarios(),
@@ -299,7 +302,7 @@ class BootstrapData(
                 "Panadería",
                 CategoriaGasto.COMIDA,
                 4500.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoAsado,
                 andresH,
                 grupoAsado.usuarios()
@@ -308,7 +311,7 @@ class BootstrapData(
                 "Verdulería",
                 CategoriaGasto.COMIDA,
                 5800.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoAsado,
                 andresS,
                 grupoAsado.usuarios()
@@ -323,7 +326,7 @@ class BootstrapData(
                 "Más Carne",
                 CategoriaGasto.COMIDA,
                 18000.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoAsado,
                 juanA,
                 grupoAsado.usuarios()
@@ -332,7 +335,7 @@ class BootstrapData(
                 "Hielo y Carbón extra",
                 CategoriaGasto.VARIOS,
                 4000.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoAsado,
                 agustinH,
                 grupoAsado.usuarios()
@@ -341,7 +344,7 @@ class BootstrapData(
                 "Picada",
                 CategoriaGasto.COMIDA,
                 9500.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoAsado,
                 andresH,
                 grupoAsado.usuarios()
@@ -350,7 +353,7 @@ class BootstrapData(
                 "Snacks",
                 CategoriaGasto.COMIDA,
                 3200.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoAsado,
                 andresS,
                 grupoAsado.usuarios()
@@ -359,7 +362,7 @@ class BootstrapData(
                 "Postre Helado",
                 CategoriaGasto.COMIDA,
                 8000.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoAsado,
                 juanA,
                 grupoAsado.usuarios()
@@ -368,7 +371,7 @@ class BootstrapData(
                 "Vino",
                 CategoriaGasto.BEBIDA,
                 11000.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoAsado,
                 agustinH,
                 grupoAsado.usuarios()
@@ -377,7 +380,7 @@ class BootstrapData(
                 "Aderezos y servilletas",
                 CategoriaGasto.VARIOS,
                 2500.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoAsado,
                 andresH,
                 grupoAsado.usuarios()
@@ -386,7 +389,7 @@ class BootstrapData(
                 "Achuras",
                 CategoriaGasto.COMIDA,
                 7000.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoAsado,
                 andresS,
                 grupoAsado.usuarios()
@@ -395,7 +398,7 @@ class BootstrapData(
                 "Cerveza extra",
                 CategoriaGasto.BEBIDA,
                 9000.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoAsado,
                 juanA,
                 grupoAsado.usuarios()
@@ -404,7 +407,7 @@ class BootstrapData(
                 "Postre Vigilante",
                 CategoriaGasto.COMIDA,
                 4000.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoAsado,
                 agustinH,
                 grupoAsado.usuarios()
@@ -413,7 +416,7 @@ class BootstrapData(
                 "Soda",
                 CategoriaGasto.BEBIDA,
                 2400.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoAsado,
                 andresH,
                 grupoAsado.usuarios()
@@ -422,7 +425,7 @@ class BootstrapData(
                 "Leña",
                 CategoriaGasto.VARIOS,
                 3000.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoAsado,
                 andresS,
                 grupoAsado.usuarios()
@@ -431,7 +434,7 @@ class BootstrapData(
                 "Provoleta",
                 CategoriaGasto.COMIDA,
                 5000.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoAsado,
                 juanA,
                 grupoAsado.usuarios()
@@ -440,7 +443,7 @@ class BootstrapData(
                 "Fernet de refuerzo",
                 CategoriaGasto.BEBIDA,
                 7500.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoAsado,
                 agustinH,
                 grupoAsado.usuarios()
@@ -449,7 +452,7 @@ class BootstrapData(
                 "Limones y Sal",
                 CategoriaGasto.VARIOS,
                 1800.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoAsado,
                 andresH,
                 grupoAsado.usuarios()
@@ -458,7 +461,7 @@ class BootstrapData(
                 "Gaseosas Dieta",
                 CategoriaGasto.BEBIDA,
                 4600.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoAsado,
                 andresS,
                 grupoAsado.usuarios()
@@ -467,7 +470,7 @@ class BootstrapData(
                 "Carne de Cerdo",
                 CategoriaGasto.COMIDA,
                 12000.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoAsado,
                 juanA,
                 grupoAsado.usuarios()
@@ -476,7 +479,7 @@ class BootstrapData(
                 "Chimichurri ingredientes",
                 CategoriaGasto.VARIOS,
                 2200.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoAsado,
                 agustinH,
                 grupoAsado.usuarios()
@@ -485,7 +488,7 @@ class BootstrapData(
                 "Vaso Descartable",
                 CategoriaGasto.VARIOS,
                 3500.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoAsado,
                 andresH,
                 grupoAsado.usuarios()
@@ -494,7 +497,7 @@ class BootstrapData(
                 "Compra supermercado",
                 CategoriaGasto.COMIDA,
                 32600.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoDepto,
                 andresS,
                 grupoDepto.usuarios()
@@ -503,7 +506,7 @@ class BootstrapData(
                 "Internet y cable",
                 CategoriaGasto.HOGAR,
                 18000.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoDepto,
                 giulianaM,
                 grupoDepto.usuarios()
@@ -512,7 +515,7 @@ class BootstrapData(
                 "Gas envasado",
                 CategoriaGasto.HOGAR,
                 9600.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoDepto,
                 juanM,
                 grupoDepto.usuarios()
@@ -521,7 +524,7 @@ class BootstrapData(
                 "Reserva de cancha",
                 CategoriaGasto.VARIOS,
                 24000.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoFutbol,
                 giulianaM,
                 grupoFutbol.usuarios()
@@ -530,7 +533,7 @@ class BootstrapData(
                 "Pelota nueva",
                 CategoriaGasto.VARIOS,
                 18500.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoFutbol,
                 andresH,
                 grupoFutbol.usuarios()
@@ -539,7 +542,7 @@ class BootstrapData(
                 "Tercer tiempo",
                 CategoriaGasto.BEBIDA,
                 14800.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoFutbol,
                 juanM,
                 grupoFutbol.usuarios()
@@ -548,7 +551,7 @@ class BootstrapData(
                 "Fotocopias final",
                 CategoriaGasto.OTROS,
                 7200.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoEstudio,
                 giulianaM,
                 grupoEstudio.usuarios()
@@ -557,7 +560,7 @@ class BootstrapData(
                 "Cafe de estudio",
                 CategoriaGasto.COMIDA,
                 5600.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoEstudio,
                 juanA,
                 grupoEstudio.usuarios()
@@ -566,7 +569,7 @@ class BootstrapData(
                 "Combustible",
                 CategoriaGasto.TRANSPORTE,
                 68000.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoViaje,
                 camilaR,
                 grupoViaje.usuarios()
@@ -575,7 +578,7 @@ class BootstrapData(
                 "Peajes",
                 CategoriaGasto.TRANSPORTE,
                 21500.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoViaje,
                 andresS,
                 grupoViaje.usuarios()
@@ -584,7 +587,7 @@ class BootstrapData(
                 "Snacks ruta",
                 CategoriaGasto.COMIDA,
                 12400.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoViaje,
                 sofiaL,
                 grupoViaje.usuarios()
@@ -593,7 +596,7 @@ class BootstrapData(
                 "Decoracion",
                 CategoriaGasto.VARIOS,
                 29500.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoCumple,
                 lucasP,
                 grupoCumple.usuarios()
@@ -602,7 +605,7 @@ class BootstrapData(
                 "Torta y velas",
                 CategoriaGasto.COMIDA,
                 36800.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoCumple,
                 agustinH,
                 grupoCumple.usuarios()
@@ -611,7 +614,7 @@ class BootstrapData(
                 "Bebidas",
                 CategoriaGasto.BEBIDA,
                 22600.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoCumple,
                 giulianaM,
                 grupoCumple.usuarios()
@@ -620,7 +623,7 @@ class BootstrapData(
                 "Cuota mensual",
                 CategoriaGasto.OTROS,
                 90000.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoGym,
                 valentinaN,
                 grupoGym.usuarios()
@@ -629,7 +632,7 @@ class BootstrapData(
                 "Proteinas",
                 CategoriaGasto.OTROS,
                 45500.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoGym,
                 matiasF,
                 grupoGym.usuarios()
@@ -638,7 +641,7 @@ class BootstrapData(
                 "Clase funcional",
                 CategoriaGasto.OTROS,
                 28000.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoGym,
                 sofiaL,
                 grupoGym.usuarios()
@@ -647,7 +650,7 @@ class BootstrapData(
                 "Suscripcion herramientas",
                 CategoriaGasto.OTROS,
                 36000.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoHackLab,
                 juanA,
                 grupoHackLab.usuarios()
@@ -656,7 +659,7 @@ class BootstrapData(
                 "Pizzas de deploy",
                 CategoriaGasto.COMIDA,
                 27500.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoHackLab,
                 camilaR,
                 grupoHackLab.usuarios()
@@ -665,7 +668,7 @@ class BootstrapData(
                 "Cafes y energia",
                 CategoriaGasto.BEBIDA,
                 12800.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoHackLab,
                 andresH,
                 grupoHackLab.usuarios()
@@ -674,7 +677,7 @@ class BootstrapData(
                 "Suscripciones streaming",
                 CategoriaGasto.ENTRETENIMIENTO,
                 24900.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoSeries,
                 camilaR,
                 grupoSeries.usuarios()
@@ -683,7 +686,7 @@ class BootstrapData(
                 "Picada maraton",
                 CategoriaGasto.COMIDA,
                 19800.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoSeries,
                 giulianaM,
                 grupoSeries.usuarios()
@@ -692,7 +695,7 @@ class BootstrapData(
                 "Gaseosas y jugos",
                 CategoriaGasto.BEBIDA,
                 14400.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoSeries,
                 valentinaN,
                 grupoSeries.usuarios()
@@ -701,7 +704,7 @@ class BootstrapData(
                 "Nafta salida del sabado",
                 CategoriaGasto.TRANSPORTE,
                 45200.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoFinde,
                 valentinaN,
                 grupoFinde.usuarios()
@@ -710,7 +713,7 @@ class BootstrapData(
                 "Asado del domingo",
                 CategoriaGasto.COMIDA,
                 53800.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoFinde,
                 juanM,
                 grupoFinde.usuarios()
@@ -719,7 +722,7 @@ class BootstrapData(
                 "Entradas recital",
                 CategoriaGasto.ENTRETENIMIENTO,
                 66000.0,
-                LocalDate.now(),
+                nextFechaGasto(),
                 grupoFinde,
                 lucasP,
                 grupoFinde.usuarios()

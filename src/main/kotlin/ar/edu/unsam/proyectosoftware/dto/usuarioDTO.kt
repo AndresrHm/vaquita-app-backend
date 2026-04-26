@@ -16,6 +16,7 @@ data class UsuarioLogueadoDTO (
     val token: String,
     val nombre: String,
     val email: String,
+    val imagenUrl: String? = ""
 )
 
 data class UsuarioNombreIdDTO(
@@ -28,4 +29,13 @@ data class UsuarioInfoDTO(
     val imagenUrl: String,
     val esAmigo: Boolean,
     val gruposCompartidos: List<GrupoNombreIdDTO>
+data class UsuarioEditarDTO(
+    val nombre: String,
+    val email: String,
+    val imagenUrl: String?
+)
+
+data class CambioContrasenaDTO(
+    val contrasenaActual: String,
+    val contrasenaNueva: String
 )

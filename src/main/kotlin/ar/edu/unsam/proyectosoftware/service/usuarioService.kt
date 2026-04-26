@@ -1,6 +1,6 @@
 package ar.edu.unsam.proyectosoftware.service
 
-import ar.edu.unsam.proyectosoftware.config.JwtUtils
+import ar.edu.unsam.proyectosoftware.security.JwtUtils
 import ar.edu.unsam.proyectosoftware.domain.SolicitudAmistad
 import ar.edu.unsam.proyectosoftware.domain.SolicitudAmistadFront
 import ar.edu.unsam.proyectosoftware.domain.Usuario

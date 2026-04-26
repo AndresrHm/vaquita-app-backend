@@ -168,6 +168,5 @@ class PartesIguales(
     override fun tipoGasto() = TipoGasto.PARTES_IGUALES
 
     private fun calcularMontoPorParticipante(): Double {
-        return monto / cantidadParticipantes()
-    }
+        return Math.round(monto / cantidadParticipantes() * 100) / 100.0    }
 }

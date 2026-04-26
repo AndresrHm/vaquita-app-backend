@@ -192,8 +192,8 @@ class GastoService(
             val loQueDebe =
                 fraccionGastoRepository.findByDeudorIdAndGastoAsociadoGrupoId(integrante.id!!, grupoId)
                     .sumOf { it.saldoPendiente() }
-            loQueLeDeben - loQueDebe
-        }.filter { it.value != 0.0 }.toMutableMap()
+            Math.round((loQueLeDeben - loQueDebe) * 100) / 100.0
+        }.filter { Math.abs(it.value) > 0.01 }.toMutableMap()
     }
 
     private fun simplificarDeudas(

@@ -128,7 +128,7 @@ class BootstrapData(
                 imagenUrl = "https://www.pcgamesn.com/wp-content/sites/pcgamesn/2019/06/minecraft-enchantments-enchanting-table.jpg",
                 fechaCreacion = LocalDate.now()
             ).apply {
-                listOf(giulianaM, juanA, andresS).forEach { it -> agregarIntegrante(it, RolIntegrante.MIEMBRO) }
+                listOf(giulianaM, juanA).forEach { it -> agregarIntegrante(it, RolIntegrante.MIEMBRO) }
                 agregarIntegrante(andresS, RolIntegrante.ADMIN)
             }
         )
@@ -408,7 +408,7 @@ class BootstrapData(
                 grupoDepto,
                 andresS,
                 grupoDepto.usuarios(),
-                mutableMapOf(giulianaM to 6000.0, agustinH to 8000.0)
+                mutableMapOf(giulianaM to 4000.0, agustinH to 8000.0)
             ),
             PartesExactas(
                 "Alquiler Cancha",

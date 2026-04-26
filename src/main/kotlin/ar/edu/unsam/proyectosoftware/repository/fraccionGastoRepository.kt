@@ -8,7 +8,9 @@ interface SaldoPendiente {
     val montoFraccion: Double
     val pagoParcial: Double
 
-    fun saldoPendiente() = montoFraccion - pagoParcial
+    fun saldoPendiente(): Double {
+        return Math.round((montoFraccion - pagoParcial) * 100) / 100.0
+    }
 }
 
 @Repository

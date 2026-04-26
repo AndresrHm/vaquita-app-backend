@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -39,15 +40,17 @@ class UsuarioController(
         return ResponseEntity.ok(usuario)
     }
 
-    @GetMapping("/{id}/info/{idBuscado}")
-    fun obtenerUsuarioInfo(@PathVariable id: Long, @PathVariable idBuscado: Long): ResponseEntity<UsuarioInfoDTO> {
-        val usuario = usuarioService.obtenerUsuario(id)
+    @GetMapping("/info/{idBuscado}")
+    fun obtenerUsuarioInfo(auth: Authentication?, @PathVariable idBuscado: Long): ResponseEntity<UsuarioInfoDTO> {
+        val authentication = auth ?: throw Exception("No se encontró el token o el usuario no está autenticado")
+        val usuario = usuarioService.obtenerUsuarioLogueado(authentication)
         val usuarioBuscado = usuarioService.obtenerUsuario(idBuscado)
         val gruposCompartidos = grupoService.obtenerGruposCompartidos(usuario.id!!, usuarioBuscado.id!!)
         val usuarioBuscadoInfo = UsuarioMapper.toInfoDTO(usuarioBuscado, usuario, gruposCompartidos)
         return ResponseEntity.ok(usuarioBuscadoInfo)
-    
-      @GetMapping("/me")
+    }
+
+    @GetMapping("/me")
     fun obtenerMiPerfil(auth: Authentication?): ResponseEntity<UsuarioNombreIdDTO> {
         val authentication = auth ?: throw Exception("No se encontró el token o el usuario no está autenticado")
         val usuario = usuarioService.obtenerUsuarioLogueado(authentication)

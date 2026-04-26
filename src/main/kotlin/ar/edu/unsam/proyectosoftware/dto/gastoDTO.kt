@@ -66,10 +66,23 @@ data class FilterGastosCustom(
     val search: String? = null,
     val rangoIni: Double? = null,
     val rangoFin: Double? = null,
+    val orden: OrdenGasto? = null,
     val page: Int = 0,
     val size: Int = 10,
 )
 
-enum class TipoRelacionVista {
-    PROPIA, GRUPO
+enum class OrdenGasto {
+    NOMBRE_ASC,
+    NOMBRE_DESC,
+    CREADOR_ASC,
+    CREADOR_DESC,
+    FECHA_ASC,
+    FECHA_DESC,
 }
+
+enum class TipoRelacionVista {
+    TODOS,
+    DEUDA,
+    AMIGOS,
+}
+

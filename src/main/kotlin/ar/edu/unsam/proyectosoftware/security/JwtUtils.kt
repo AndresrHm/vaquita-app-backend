@@ -1,4 +1,4 @@
-package ar.edu.unsam.proyectosoftware.config
+package ar.edu.unsam.proyectosoftware.security
 
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import io.jsonwebtoken.Jwts
@@ -23,5 +23,14 @@ class JwtUtils {
             .expiration(expiracion)
             .signWith(SECRET_KEY)
             .compact()
+    }
+
+    fun getEmailDesdeToken(token: String): String? {
+        return Jwts.parser()
+            .verifyWith(SECRET_KEY)
+            .build()
+            .parseSignedClaims(token)
+            .payload
+            .subject
     }
 }

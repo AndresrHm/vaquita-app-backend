@@ -1,14 +1,19 @@
 package ar.edu.unsam.proyectosoftware.controller
 
+import ar.edu.unsam.proyectosoftware.BusinessException
+import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 import ar.edu.unsam.proyectosoftware.service.GastoService
 import ar.edu.unsam.proyectosoftware.dto.CreacionGastoDTO
+import ar.edu.unsam.proyectosoftware.dto.OrdenGasto
+import ar.edu.unsam.proyectosoftware.dto.TipoRelacionVista
 import ar.edu.unsam.proyectosoftware.dto.GastoDetalleDTO
 import ar.edu.unsam.proyectosoftware.dto.PageResponse
 import ar.edu.unsam.proyectosoftware.domain.enums.CategoriaGasto
+import ar.edu.unsam.proyectosoftware.dto.FilterGastosCustom
 import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -21,19 +26,19 @@ class GastoController(
     val gastoService: GastoService,
 ) {
     @PostMapping
-    fun crearGasto(@RequestBody gastoDTO: CreacionGastoDTO): String {
-        val gasto = gastoService.crearGasto(gastoDTO)
+    fun crearGasto(auth: Authentication, @RequestBody gastoDTO: CreacionGastoDTO): String {
+        val gasto = gastoService.crearGasto(auth, gastoDTO)
         return "Gasto de $${gasto.monto} creado exitosamente en ${gasto.grupo.nombre}."
     }
 
-    @GetMapping("/{userId}")
-    fun obtenerDeuda(@PathVariable userId: Long): Double {
-        return gastoService.obtenerDeuda(userId)
+    @GetMapping("/me/deuda")
+    fun obtenerDeuda(auth: Authentication): Double {
+        return gastoService.obtenerDeuda(auth)
     }
 
     @GetMapping("/filtrar")
     fun obtenerGastosFiltrados(
-        @RequestParam userId: Long,
+        auth: Authentication,
         @RequestParam(required = false) vista: String?,
         @RequestParam(required = false) categoria: List<String>?,
         @RequestParam(required = false) fechaInicio: String?,
@@ -44,43 +49,35 @@ class GastoController(
         @RequestParam(required = false) rangoFin: Double?,
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "10") size: Int,
+        @RequestParam(required = false) orden: OrdenGasto?
     ): PageResponse<GastoDetalleDTO> {
-        // Convertir string de vista a enum
+
         val vistaEnum = vista?.let {
             try {
-                ar.edu.unsam.proyectosoftware.dto.TipoRelacionVista.valueOf(it.uppercase())
-            } catch (e: IllegalArgumentException) {
-                null
+                TipoRelacionVista.valueOf(it.trim().uppercase())
+            } catch (_: IllegalArgumentException) {
+                throw BusinessException(ErrorStrings.INFORMACION_INVALIDA)
             }
         }
 
-        // Convertir lista de categorías string a enum
         val categoriasEnum = categoria?.mapNotNull { catStr ->
             try {
-                CategoriaGasto.valueOf(catStr.uppercase())
-            } catch (e: IllegalArgumentException) {
-                null
+                CategoriaGasto.valueOf(catStr.trim().uppercase())
+            } catch (_: IllegalArgumentException) {
+                throw BusinessException(ErrorStrings.INFORMACION_INVALIDA)
             }
         }?.takeIf { it.isNotEmpty() }
 
-        // Convertir fechas string a LocalDate
         val fechaInicioLocal = fechaInicio?.let {
-            try {
-                java.time.LocalDate.parse(it)
-            } catch (e: Exception) {
-                null
-            }
+            try { java.time.LocalDate.parse(it) } catch (_: Exception) { null }
         }
         val fechaFinLocal = fechaFin?.let {
-            try {
-                java.time.LocalDate.parse(it)
-            } catch (e: Exception) {
-                null
-            }
+            try { java.time.LocalDate.parse(it) } catch (_: Exception) { null }
         }
 
-        // Construir FilterGastosCustom con valores convertidos
-        val filters = ar.edu.unsam.proyectosoftware.dto.FilterGastosCustom(
+
+
+        val filters = FilterGastosCustom(
             vista = vistaEnum,
             categoria = categoriasEnum,
             fechaInicio = fechaInicioLocal,
@@ -90,9 +87,10 @@ class GastoController(
             rangoIni = rangoIni,
             rangoFin = rangoFin,
             page = page,
-            size = size
+            size = size,
+            orden = orden,
         )
 
-        return gastoService.getGastosByFilters(userId, filters)
+        return gastoService.getGastosByFilters(auth, filters)
     }
 }

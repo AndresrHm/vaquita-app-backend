@@ -70,6 +70,11 @@ class GrupoService(
         return integranteGrupoRepository.findByIntegrantesIdAndActivadoTrue(usuarioLogueado.id!!)
     }
 
+    fun obtenerGruposCompartidos(usuarioId1: Long, usuarioId2: Long): List<GrupoNombreIdDTO> {
+        return grupoRepository.findGruposCompartidos(usuarioId1, usuarioId2)
+            .map { Grupo.toGrupoNombreIdDTO(it) }
+    }
+
     @Transactional
     fun crearGrupo(auth: Authentication, dto: GrupoCreacionDTO): Grupo {
         val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)

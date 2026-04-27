@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository
 interface SolicitudAmistadRepository : CrudRepository<SolicitudAmistad, Long> {
     fun findByIdReceptor(idReceptor: Long): List<SolicitudAmistad>
     fun findByIdEmisor(idEmisor: Long): List<SolicitudAmistad>
+    fun existsByIdEmisorAndIdReceptor(idEmisor: Long, idReceptor: Long): Boolean
+    fun deleteByIdEmisorAndIdReceptor(idEmisor: Long, idReceptor: Long)
 }

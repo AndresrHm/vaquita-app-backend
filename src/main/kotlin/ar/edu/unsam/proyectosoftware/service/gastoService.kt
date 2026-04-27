@@ -10,6 +10,7 @@ import ar.edu.unsam.proyectosoftware.dto.FilterGastosCustom
 import ar.edu.unsam.proyectosoftware.dto.OrdenGasto
 import ar.edu.unsam.proyectosoftware.dto.GastoDetalleDTO
 import ar.edu.unsam.proyectosoftware.dto.PageResponse
+import ar.edu.unsam.proyectosoftware.dto.PagoDTO
 import org.springframework.security.core.Authentication
 import ar.edu.unsam.proyectosoftware.dto.toPageResponse
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
@@ -177,6 +178,18 @@ class GastoService(
 
         // 2 - Algoritmo de liquidación
         return simplificarDeudas(deudores, acreedores)
+    }
+
+    @Transactional
+    fun realizarPagoPorGasto(auth: Authentication, pagoDTO: PagoDTO) {
+        val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
+        val gastoId = pagoDTO.gastoId
+        val fraccion = fraccionGastoRepository.findByDeudorIdAndGastoAsociadoId(usuarioLogueado.id!!, gastoId)
+            ?: throw BusinessException(ErrorStrings.FRACCION_NO_ENCONTRADA)
+
+        fraccion.pagar(pagoDTO.monto)
+
+        fraccionGastoRepository.save(fraccion)
     }
 
     private fun validarDatosBasicos(gasto: Gasto) {

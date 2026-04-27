@@ -90,7 +90,7 @@ class UsuarioService(
     }
 
     fun obtenerUsuario(usuarioID: Long): Usuario {
-        return usuarioRepository.findById(usuarioID)
+        return usuarioRepository.findByIdWithAmigos(usuarioID)
             .orElseThrow { Exception("Usuario inexistente") }
     }
 

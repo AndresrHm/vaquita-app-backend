@@ -1,4 +1,4 @@
-package ar.edu.unsam.proyectosoftware.services
+package ar.edu.unsam.proyectosoftware.service
 
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.CambioContrasenaDTO
@@ -7,7 +7,6 @@ import ar.edu.unsam.proyectosoftware.dto.UsuarioLoginDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioRegistradoDTO
 import ar.edu.unsam.proyectosoftware.repository.*
 import ar.edu.unsam.proyectosoftware.security.JwtUtils
-import ar.edu.unsam.proyectosoftware.service.UsuarioService
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK

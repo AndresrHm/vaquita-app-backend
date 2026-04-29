@@ -107,6 +107,12 @@ class UsuarioService(
             .orElseThrow { Exception("Usuario inexistente") }
     }
 
+    fun sonAmigos(idUsuario: Long, idAmigo: Long): Boolean =
+        usuarioRepository.existsByIdAndAmigosId(idUsuario, idAmigo)
+
+    fun tieneSolicitudPendiente(idEmisor: Long, idReceptor: Long): Boolean =
+        solicitudAmistadRepository.existsByIdEmisorAndIdReceptor(idEmisor, idReceptor)
+
     fun obtenerTodosLosUsuarios(): Iterable<Usuario> {
         return usuarioRepository.findAll()
     }
@@ -200,14 +206,41 @@ class UsuarioService(
 
         if (emisor.id == idReceptor) throw Exception("No podés enviarte una solicitud a vos mismo")
 
+        if (usuarioRepository.existsByIdAndAmigosId(emisor.id!!, idReceptor))
+            throw Exception("Este usuario ya es tu amigo")
+
+        if (solicitudAmistadRepository.existsByIdEmisorAndIdReceptor(idReceptor, emisor.id!!))
+            throw Exception("Este usuario ya te envió una solicitud de amistad")
+
+        if (solicitudAmistadRepository.existsByIdEmisorAndIdReceptor(emisor.id!!, idReceptor))
+            throw Exception("Ya le enviaste una solicitud de amistad a este usuario")
+
         val solicitud = SolicitudAmistad(emisor.id!!, idReceptor)
         solicitudAmistadRepository.save(solicitud)
         return idReceptor
     }
 
     @Transactional
+    fun eliminarAmigo(idUsuario: Long, idAmigo: Long) {
+        if (!usuarioRepository.existsByIdAndAmigosId(idUsuario, idAmigo))
+            throw Exception("Este usuario no es tu amigo")
+
+        val usuario = obtenerUsuario(idUsuario)
+        val amigo = obtenerUsuario(idAmigo)
+        usuario.eliminarAmigo(amigo)
+        amigo.eliminarAmigo(usuario)
+        usuarioRepository.save(usuario)
+        usuarioRepository.save(amigo)
+
+        // Clean up any stale pending requests between them
+        solicitudAmistadRepository.deleteByIdEmisorAndIdReceptor(idUsuario, idAmigo)
+        solicitudAmistadRepository.deleteByIdEmisorAndIdReceptor(idAmigo, idUsuario)
+    }
+
+
     fun responderSolicitudAmistad(auth: Authentication, idSolicitud: Long, aceptar: Boolean): Long? {
         val usuarioLogueado = obtenerUsuarioLogueado(auth)
+
 
         val solicitud = solicitudAmistadRepository.findById(idSolicitud)
             .orElseThrow { Exception("Solicitud inexistente") }
@@ -217,12 +250,18 @@ class UsuarioService(
         }
 
         if (aceptar) {
+            if (usuarioRepository.existsByIdAndAmigosId(usuarioLogueado.id!!, solicitud.idEmisor))
+                throw Exception("Ya son amigos")
+
             val emisor = obtenerUsuario(solicitud.idEmisor)
             usuarioLogueado.agregarAmigo(emisor)
             emisor.agregarAmigo(usuarioLogueado)
 
             usuarioRepository.save(usuarioLogueado)
             usuarioRepository.save(emisor)
+
+            // Clean up any reverse pending request between the two users
+            solicitudAmistadRepository.deleteByIdEmisorAndIdReceptor(usuarioLogueado.id!!, solicitud.idEmisor)
         }
 
         solicitudAmistadRepository.delete(solicitud)

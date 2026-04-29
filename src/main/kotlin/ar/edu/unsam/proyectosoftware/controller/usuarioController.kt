@@ -2,6 +2,7 @@ package ar.edu.unsam.proyectosoftware.controller
 
 import ar.edu.unsam.proyectosoftware.domain.SolicitudAmistadFront
 import ar.edu.unsam.proyectosoftware.domain.Usuario
+import ar.edu.unsam.proyectosoftware.dto.UsuarioInfoDTO
 import ar.edu.unsam.proyectosoftware.dto.CambioContrasenaDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioEditarDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioLoginDTO
@@ -9,9 +10,12 @@ import ar.edu.unsam.proyectosoftware.dto.UsuarioLogueadoDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioNombreIdDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioRegistradoDTO
 import ar.edu.unsam.proyectosoftware.service.UsuarioService
+import ar.edu.unsam.proyectosoftware.mapper.UsuarioMapper
+import ar.edu.unsam.proyectosoftware.service.GrupoService
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.CrossOrigin
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -25,12 +29,27 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/usuarios")
 @CrossOrigin(origins = ["http://localhost:5173"])
-class UsuarioController(private val usuarioService: UsuarioService) {
+class UsuarioController(
+    private val usuarioService: UsuarioService,
+    private val grupoService: GrupoService
+) {
 
     @GetMapping("/{id}")
     fun obtenerUsuario(@PathVariable id: Long): ResponseEntity<Usuario> {
         val usuario = usuarioService.obtenerUsuario(id)
         return ResponseEntity.ok(usuario)
+    }
+
+    @GetMapping("/info/{idBuscado}")
+    fun obtenerUsuarioInfo(auth: Authentication?, @PathVariable idBuscado: Long): ResponseEntity<UsuarioInfoDTO> {
+        val authentication = auth ?: throw Exception("No se encontró el token o el usuario no está autenticado")
+        val usuario = usuarioService.obtenerUsuarioLogueado(authentication)
+        val usuarioBuscado = usuarioService.obtenerUsuario(idBuscado)
+        val esAmigo = usuarioService.sonAmigos(idBuscado, usuario.id!!)
+        val solicitudPendiente = if (esAmigo) false else usuarioService.tieneSolicitudPendiente(usuario.id!!, idBuscado)
+        val gruposCompartidos = grupoService.obtenerGruposCompartidos(usuario.id!!, usuarioBuscado.id!!)
+        val usuarioBuscadoInfo = UsuarioMapper.toInfoDTO(usuarioBuscado, esAmigo, solicitudPendiente, gruposCompartidos)
+        return ResponseEntity.ok(usuarioBuscadoInfo)
     }
 
     @GetMapping("/me")
@@ -92,7 +111,16 @@ class UsuarioController(private val usuarioService: UsuarioService) {
         return ResponseEntity.ok(response)
     }
 
-    // 3. Responder solicitud (Es PatchMapping, el Front debe usar api.patch)
+
+    @DeleteMapping("/{idUsuario}/amigos/{idAmigo}")
+    fun eliminarAmigo(
+        @PathVariable idUsuario: Long,
+        @PathVariable idAmigo: Long
+    ): ResponseEntity<Void> {
+        usuarioService.eliminarAmigo(idUsuario, idAmigo)
+        return ResponseEntity.noContent().build()
+    }
+
     @PatchMapping("/me/solicitud/{idSolicitud}")
     fun responderSolicitudAmistad(
         auth: Authentication?,

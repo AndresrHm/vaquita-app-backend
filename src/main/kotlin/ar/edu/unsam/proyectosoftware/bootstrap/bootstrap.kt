@@ -1,7 +1,8 @@
 package ar.edu.unsam.proyectosoftware.bootstrap
 
-import ar.edu.unsam.proyectosoftware.domain.CategoriaGasto
+import ar.edu.unsam.proyectosoftware.domain.enums.CategoriaGasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo
+import ar.edu.unsam.proyectosoftware.domain.PartesExactas
 import ar.edu.unsam.proyectosoftware.domain.PartesIguales
 import ar.edu.unsam.proyectosoftware.domain.RolIntegrante
 import ar.edu.unsam.proyectosoftware.domain.Usuario
@@ -11,7 +12,6 @@ import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
 import ar.edu.unsam.proyectosoftware.service.ActividadService
 import org.springframework.boot.CommandLineRunner
@@ -30,93 +30,93 @@ class BootstrapData(
 
     @Bean
     fun initData() = CommandLineRunner {
+
         // 1. Usuarios
-        val juanA = Usuario().apply {
-            nombre = "Juan Alvarez"
-            email = "juan.alvarez@mail.com"
-            contrasena = passwordEncoder.encode("contrasena123")
-        }
-
-        val andresH = Usuario().apply {
-            nombre = "Andrés Hernández"
-            email = "andres.h@mail.com"
-            contrasena = passwordEncoder.encode("contrasena123")
-
-        }
-        val agustinH = Usuario().apply {
-            nombre = "Agustín Hoj"
-            email = "agustin.hoj@mail.com"
-            contrasena = passwordEncoder.encode("contrasena123")
-
-        }
-        val juanM = Usuario().apply {
-            nombre = "Juan Maidana"
-            email = "juan.m@mail.com"
-            contrasena = passwordEncoder.encode("contrasena123")
-        }
-        val giulianaM = Usuario().apply {
-            nombre = "Giuliana Massanet"
-            email = "giuli.m@mail.com"
-            contrasena = passwordEncoder.encode("contrasena123")
-        }
-        val andresS = Usuario().apply {
-            nombre = "Andrés Simonini"
-            email = "andres.s@mail.com"
-            contrasena = passwordEncoder.encode("contrasena123")
-        }
-        val camilaR = Usuario().apply {
-            nombre = "Camila Rojas"
-            email = "camila.rojas@mail.com"
-            contrasena = passwordEncoder.encode("contrasena123")
-        }
-        val lucasP = Usuario().apply {
-            nombre = "Lucas Pereyra"
-            email = "lucas.p@mail.com"
-            contrasena = passwordEncoder.encode("contrasena123")
-        }
-        val valentinaN = Usuario().apply {
-            nombre = "Valentina Nuñez"
-            email = "valentina.n@mail.com"
-            contrasena = passwordEncoder.encode("contrasena123")
-        }
-        val matiasF = Usuario().apply {
-            nombre = "Matías Ferreyra"
-            email = "matias.f@mail.com"
-            contrasena = passwordEncoder.encode("contrasena123")
-        }
-        val sofiaL = Usuario().apply {
-            nombre = "Sofía López"
-            email = "sofia.l@mail.com"
-            contrasena = passwordEncoder.encode("contrasena123")
-        }
-
-        juanA.amigos = mutableListOf(andresH, agustinH)
-        andresH.amigos = mutableListOf(agustinH, juanA, camilaR, matiasF)
-        agustinH.amigos = mutableListOf(andresH, juanA, giulianaM, valentinaN)
-        juanM.amigos = mutableListOf(giulianaM, matiasF, lucasP)
-        giulianaM.amigos = mutableListOf(juanM, agustinH, valentinaN, camilaR)
-        andresS.amigos = mutableListOf(sofiaL, camilaR, juanA)
-        camilaR.amigos = mutableListOf(andresS, andresH, giulianaM)
-        lucasP.amigos = mutableListOf(juanA, juanM, matiasF)
-        valentinaN.amigos = mutableListOf(agustinH, giulianaM, sofiaL)
-        matiasF.amigos = mutableListOf(juanM, lucasP, andresH)
-        sofiaL.amigos = mutableListOf(andresS, valentinaN, juanA)
-
-        val todosLosUsuarios = listOf(
-            juanA,
-            agustinH,
-            juanM,
-            andresH,
-            giulianaM,
-            andresS,
-            camilaR,
-            lucasP,
-            valentinaN,
-            matiasF,
-            sofiaL
+        val usuarios = listOf(
+            Usuario(
+                "Juan Alvarez",
+                "juan.alvarez@mail.com",
+                passwordEncoder.encode("contrasena123")
+            ),
+            Usuario(
+                "Andrés Hernández",
+                "andres.h@mail.com",
+                passwordEncoder.encode("contrasena123")
+            ),
+            Usuario(
+                "Agustín Hoj",
+                "agustin.hoj@mail.com",
+                passwordEncoder.encode("contrasena123")
+            ),
+            Usuario(
+                "Juan Maidana",
+                "juan.m@mail.com",
+                passwordEncoder.encode("contrasena123")
+            ),
+            Usuario(
+                "Giuliana Massanet",
+                "giuli.m@mail.com",
+                passwordEncoder.encode("contrasena123")
+            ),
+            Usuario(
+                "Andrés Simonini",
+                "andres.s@mail.com",
+                passwordEncoder.encode("contrasena123")
+            ),
+            Usuario(
+                "Camila Rojas",
+                "camila.rojas@mail.com",
+                passwordEncoder.encode("contrasena123")
+            ),
+            Usuario(
+                "Lucas Pereyra",
+                "lucas.p@mail.com",
+                passwordEncoder.encode("contrasena123")
+            ),
+            Usuario(
+                "Valentina Nuñez",
+                "valentina.n@mail.com",
+                passwordEncoder.encode("contrasena123")
+            ),
+            Usuario(
+                "Matías Ferreyra",
+                "matias.f@mail.com",
+                passwordEncoder.encode("contrasena123")
+            ),
+            Usuario(
+                "Sofía López",
+                "sofia.l@mail.com",
+                passwordEncoder.encode("contrasena123")
+            ),
         )
 
-        usuarioRepository.saveAll(todosLosUsuarios)
+        val juanA      = usuarios[0]
+        val andresH    = usuarios[1]
+        val agustinH   = usuarios[2]
+        val juanM      = usuarios[3]
+        val giulianaM  = usuarios[4]
+        val andresS    = usuarios[5]
+        val camilaR    = usuarios[6]
+        val lucasP     = usuarios[7]
+        val valentinaN = usuarios[8]
+        val matiasF    = usuarios[9]
+        val sofiaL     = usuarios[10]
+
+        juanA.apply      { amigos = mutableListOf(andresH, agustinH) }
+        andresH.apply    { amigos = mutableListOf(agustinH, juanA, camilaR, matiasF) }
+        agustinH.apply   { amigos = mutableListOf(andresH, juanA, giulianaM, valentinaN) }
+        juanM.apply      { amigos = mutableListOf(giulianaM, matiasF, lucasP) }
+        giulianaM.apply  { amigos = mutableListOf(juanM, agustinH, valentinaN, camilaR) }
+        andresS.apply    { amigos = mutableListOf(sofiaL, camilaR, juanA) }
+        camilaR.apply    { amigos = mutableListOf(andresS, andresH, giulianaM) }
+        lucasP.apply     { amigos = mutableListOf(juanA, juanM, matiasF) }
+        valentinaN.apply { amigos = mutableListOf(agustinH, giulianaM, sofiaL) }
+        matiasF.apply    { amigos = mutableListOf(juanM, lucasP, andresH) }
+        sofiaL.apply     { amigos = mutableListOf(andresS, valentinaN, juanA) }
+
+        usuarioRepository.saveAll(usuarios)
+
+        val todosLosUsuarios = usuarios
 
         // Registrar actividades de creación de cuenta
         todosLosUsuarios.forEach { usuario ->
@@ -131,150 +131,132 @@ class BootstrapData(
             )
         }
 
-        // 2. Grupos con .addAll()
-        val grupoAsado = Grupo(
-            nombre = "Asado UNSAM",
-            descripcion = "Asadito en el campus",
-            imagenUrl = "https://i.ytimg.com/vi/OWt0hpRwqSs/hqdefault.jpg",
-            fechaCreacion = LocalDate.now()
-        ).apply {
-            listOf(agustinH, juanM, andresH, giulianaM, andresS).forEach { it ->
-                agregarIntegrante(
-                    it,
-                    RolIntegrante.MIEMBRO
-                )
-            }
-            agregarIntegrante(juanA, RolIntegrante.ADMIN)
-        }
-
-        val grupoDepto = Grupo(
-            nombre = "Depto Palermo",
-            descripcion = "Gastos de convivencia",
-            imagenUrl = "https://definicion.de/wp-content/uploads/2009/02/departamento-1.jpg",
-            fechaCreacion = LocalDate.now()
-        ).apply {
-            listOf(agustinH, juanM, giulianaM).forEach { it ->
-                agregarIntegrante(
-                    it,
-                    RolIntegrante.MIEMBRO
-                )
-            }
-            agregarIntegrante(andresS, RolIntegrante.ADMIN)
-        }
-
-        val grupoFutbol = Grupo(
-            nombre = "Los Pibes FC",
-            descripcion = "Canchita los martes",
-            imagenUrl = "https://www.historiadeboca.com.ar/Fotos/Equipos/2000301.jpg",
-            fechaCreacion = LocalDate.now()
-        ).apply {
-            listOf(
-                juanM, andresH, juanA
-            ).forEach { it ->
-                agregarIntegrante(
-                    it,
-                    RolIntegrante.MIEMBRO
-                )
-            }
-            agregarIntegrante(giulianaM, RolIntegrante.ADMIN)
-        }
-
-        val grupoEstudio = Grupo(
-            nombre = "Final de Objetos",
-            descripcion = "Café y apuntes",
-            imagenUrl = "https://www.pcgamesn.com/wp-content/sites/pcgamesn/2019/06/minecraft-enchantments-enchanting-table.jpg",
-            fechaCreacion = LocalDate.now()
-        ).apply {
-            listOf(giulianaM, juanA, andresS).forEach { it -> agregarIntegrante(it, RolIntegrante.MIEMBRO) }
-            agregarIntegrante(andresS, RolIntegrante.ADMIN)
-        }
-
-        val grupoViaje = Grupo(
-            nombre = "Escapada Cordoba",
-            descripcion = "Organizacion de combustible y peajes",
-            imagenUrl = "https://media.istockphoto.com/id/1365317354/photo/group-of-friends-on-road-trip.jpg",
-            fechaCreacion = LocalDate.now()
-        ).apply {
-            listOf(juanA, andresS, valentinaN, sofiaL).forEach { it ->
-                agregarIntegrante(it, RolIntegrante.MIEMBRO)
-            }
-            agregarIntegrante(camilaR, RolIntegrante.ADMIN)
-        }
-
-        val grupoCumple = Grupo(
-            nombre = "Cumple de Matu",
-            descripcion = "Decoracion, comida y bebidas para el cumple",
-            imagenUrl = "https://cdn0.bodas.com.mx/article-vendor/2267/3_2/1280/jpg/portada-2_5_112267-166458303624924.jpeg",
-            fechaCreacion = LocalDate.now()
-        ).apply {
-            listOf(juanM, matiasF, agustinH, giulianaM).forEach { it ->
-                agregarIntegrante(it, RolIntegrante.MIEMBRO)
-            }
-            agregarIntegrante(lucasP, RolIntegrante.ADMIN)
-        }
-
-        val grupoGym = Grupo(
-            nombre = "Team 7AM",
-            descripcion = "Suplementos y clases grupales",
-            imagenUrl = "https://www.mensjournal.com/.image/t_share/MTk2MTM2NjA3NzQ5MzQxMzk3/men-working-out-in-gym.jpg",
-            fechaCreacion = LocalDate.now()
-        ).apply {
-            listOf(andresH, juanA, sofiaL, matiasF).forEach { it ->
-                agregarIntegrante(it, RolIntegrante.MIEMBRO)
-            }
-            agregarIntegrante(valentinaN, RolIntegrante.ADMIN)
-        }
-
-        val grupoHackLab = Grupo(
-            nombre = "HackLab Nocturno",
-            descripcion = "Juntadas para codear proyectos y aprender",
-            imagenUrl = "https://images.unsplash.com/photo-1515879218367-8466d910aaa4",
-            fechaCreacion = LocalDate.now()
-        ).apply {
-            todosLosUsuarios.filter { it != juanA }.forEach { usuario ->
-                agregarIntegrante(usuario, RolIntegrante.MIEMBRO)
-            }
-            agregarIntegrante(juanA, RolIntegrante.ADMIN)
-        }
-
-        val grupoSeries = Grupo(
-            nombre = "Maraton de Series",
-            descripcion = "Suscripciones y picada para maratones del finde",
-            imagenUrl = "https://images.unsplash.com/photo-1593784991095-a205069470b6",
-            fechaCreacion = LocalDate.now()
-        ).apply {
-            todosLosUsuarios.filter { it != camilaR }.forEach { usuario ->
-                agregarIntegrante(usuario, RolIntegrante.MIEMBRO)
-            }
-            agregarIntegrante(camilaR, RolIntegrante.ADMIN)
-        }
-
-        val grupoFinde = Grupo(
-            nombre = "Plan de Finde",
-            descripcion = "Salidas, transporte y gastos compartidos",
-            imagenUrl = "https://images.unsplash.com/photo-1529156069898-49953e39b3ac",
-            fechaCreacion = LocalDate.now()
-        ).apply {
-            todosLosUsuarios.filter { it != valentinaN }.forEach { usuario ->
-                agregarIntegrante(usuario, RolIntegrante.MIEMBRO)
-            }
-            agregarIntegrante(valentinaN, RolIntegrante.ADMIN)
-        }
-
-        grupoRepository.saveAll(
-            listOf(
-                grupoAsado,
-                grupoDepto,
-                grupoFutbol,
-                grupoEstudio,
-                grupoViaje,
-                grupoCumple,
-                grupoGym,
-                grupoHackLab,
-                grupoSeries,
-                grupoFinde
-            )
+        // 2. Grupos
+        val grupos = listOf(
+            Grupo(
+                nombre = "Asado UNSAM",
+                descripcion = "Asadito en el campus",
+                imagenUrl = "https://i.ytimg.com/vi/OWt0hpRwqSs/hqdefault.jpg",
+                fechaCreacion = LocalDate.now()
+            ).apply {
+                listOf(agustinH, juanM, andresH, giulianaM, andresS).forEach {
+                    agregarIntegrante(it, RolIntegrante.MIEMBRO)
+                }
+                agregarIntegrante(juanA, RolIntegrante.ADMIN)
+            },
+            Grupo(
+                nombre = "Depto Palermo",
+                descripcion = "Gastos de convivencia",
+                imagenUrl = "https://definicion.de/wp-content/uploads/2009/02/departamento-1.jpg",
+                fechaCreacion = LocalDate.now()
+            ).apply {
+                listOf(agustinH, juanM, giulianaM).forEach {
+                    agregarIntegrante(it, RolIntegrante.MIEMBRO)
+                }
+                agregarIntegrante(andresS, RolIntegrante.ADMIN)
+            },
+            Grupo(
+                nombre = "Los Pibes FC",
+                descripcion = "Canchita los martes",
+                imagenUrl = "https://www.historiadeboca.com.ar/Fotos/Equipos/2000301.jpg",
+                fechaCreacion = LocalDate.now()
+            ).apply {
+                listOf(juanM, andresH, juanA).forEach {
+                    agregarIntegrante(it, RolIntegrante.MIEMBRO)
+                }
+                agregarIntegrante(giulianaM, RolIntegrante.ADMIN)
+            },
+            Grupo(
+                nombre = "Final de Objetos",
+                descripcion = "Café y apuntes",
+                imagenUrl = "https://www.pcgamesn.com/wp-content/sites/pcgamesn/2019/06/minecraft-enchantments-enchanting-table.jpg",
+                fechaCreacion = LocalDate.now()
+            ).apply {
+                listOf(giulianaM, juanA).forEach {
+                    agregarIntegrante(it, RolIntegrante.MIEMBRO)
+                }
+                agregarIntegrante(andresS, RolIntegrante.ADMIN)
+            },
+            Grupo(
+                nombre = "Escapada Córdoba",
+                descripcion = "Organización de combustible y peajes",
+                imagenUrl = "https://media.istockphoto.com/id/1365317354/photo/group-of-friends-on-road-trip.jpg",
+                fechaCreacion = LocalDate.now()
+            ).apply {
+                listOf(juanA, andresS, valentinaN, sofiaL).forEach {
+                    agregarIntegrante(it, RolIntegrante.MIEMBRO)
+                }
+                agregarIntegrante(camilaR, RolIntegrante.ADMIN)
+            },
+            Grupo(
+                nombre = "Cumple de Matu",
+                descripcion = "Decoración, comida y bebidas para el cumple",
+                imagenUrl = "https://cdn0.bodas.com.mx/article-vendor/2267/3_2/1280/jpg/portada-2_5_112267-166458303624924.jpeg",
+                fechaCreacion = LocalDate.now()
+            ).apply {
+                listOf(juanM, matiasF, agustinH, giulianaM).forEach {
+                    agregarIntegrante(it, RolIntegrante.MIEMBRO)
+                }
+                agregarIntegrante(lucasP, RolIntegrante.ADMIN)
+            },
+            Grupo(
+                nombre = "Team 7AM",
+                descripcion = "Suplementos y clases grupales",
+                imagenUrl = "https://www.mensjournal.com/.image/t_share/MTk2MTM2NjA3NzQ5MzQxMzk3/men-working-out-in-gym.jpg",
+                fechaCreacion = LocalDate.now()
+            ).apply {
+                listOf(andresH, juanA, sofiaL, matiasF).forEach {
+                    agregarIntegrante(it, RolIntegrante.MIEMBRO)
+                }
+                agregarIntegrante(valentinaN, RolIntegrante.ADMIN)
+            },
+            Grupo(
+                nombre = "HackLab Nocturno",
+                descripcion = "Juntadas para codear proyectos y aprender",
+                imagenUrl = "https://images.unsplash.com/photo-1515879218367-8466d910aaa4",
+                fechaCreacion = LocalDate.now()
+            ).apply {
+                todosLosUsuarios.filter { it != juanA }.forEach {
+                    agregarIntegrante(it, RolIntegrante.MIEMBRO)
+                }
+                agregarIntegrante(juanA, RolIntegrante.ADMIN)
+            },
+            Grupo(
+                nombre = "Maratón de Series",
+                descripcion = "Suscripciones y picada para maratones del finde",
+                imagenUrl = "https://images.unsplash.com/photo-1593784991095-a205069470b6",
+                fechaCreacion = LocalDate.now()
+            ).apply {
+                todosLosUsuarios.filter { it != camilaR }.forEach {
+                    agregarIntegrante(it, RolIntegrante.MIEMBRO)
+                }
+                agregarIntegrante(camilaR, RolIntegrante.ADMIN)
+            },
+            Grupo(
+                nombre = "Plan de Finde",
+                descripcion = "Salidas, transporte y gastos compartidos",
+                imagenUrl = "https://images.unsplash.com/photo-1529156069898-49953e39b3ac",
+                fechaCreacion = LocalDate.now()
+            ).apply {
+                todosLosUsuarios.filter { it != valentinaN }.forEach {
+                    agregarIntegrante(it, RolIntegrante.MIEMBRO)
+                }
+                agregarIntegrante(valentinaN, RolIntegrante.ADMIN)
+            },
         )
+
+        grupoRepository.saveAll(grupos)
+
+        val grupoAsado   = grupos[0]
+        val grupoDepto   = grupos[1]
+        val grupoFutbol  = grupos[2]
+        val grupoEstudio = grupos[3]
+        val grupoViaje   = grupos[4]
+        val grupoCumple  = grupos[5]
+        val grupoGym     = grupos[6]
+        val grupoHackLab = grupos[7]
+        val grupoSeries  = grupos[8]
+        val grupoFinde   = grupos[9]
 
         // Registrar actividades de ingreso a grupos
         listOf(
@@ -304,475 +286,401 @@ class BootstrapData(
 
         // 3. Gastos
         var diasAtras = 0L
-        fun nextFechaGasto(): LocalDate = LocalDate.now().minusDays(diasAtras++)
+        fun nextFecha(): LocalDate = LocalDate.now().minusDays(diasAtras++)
 
         listOf(
+            // ── Asado UNSAM ──────────────────────────────────────────────
             PartesIguales(
-                "Algo para picar",
-                CategoriaGasto.COMIDA,
-                60000.0,
-                nextFechaGasto(),
-                grupoAsado,
-                andresS,
-                grupoAsado.usuarios()
+                "Algo para picar", CategoriaGasto.COMIDA, 60000.0, nextFecha(),
+                grupoAsado, andresS, grupoAsado.usuarios()
             ).apply { agregarItem("Picada completa", 1.0, 60000.0) },
+
             PartesIguales(
-                "Compras para el asado",
-                CategoriaGasto.COMIDA,
-                15000.0,
-                nextFechaGasto(),
-                grupoAsado,
-                juanA,
-                grupoAsado.usuarios(),
+                "Compras para el asado", CategoriaGasto.COMIDA, 15000.0, nextFecha(),
+                grupoAsado, juanA, grupoAsado.usuarios()
             ).apply {
-                agregarItem("Vacío", 2.5, 4000.0); agregarItem("Carbón", 1.0, 2000.0); agregarItem(
-                "Fernet",
-                1.0,
-                3000.0
-            )
+                agregarItem("Vacío", 2.5, 4000.0)
+                agregarItem("Carbón", 1.0, 2000.0)
+                agregarItem("Fernet", 1.0, 3000.0)
             },
+
             PartesIguales(
-                "Bebidas previa",
-                CategoriaGasto.BEBIDA,
-                12000.0,
-                nextFechaGasto(),
-                grupoAsado,
-                agustinH,
-                grupoAsado.usuarios(),
-            ).apply { agregarItem("Cerveza", 6.0, 1500.0); agregarItem("Gaseosa", 2.0, 1500.0) },
-            PartesIguales(
-                "Panadería",
-                CategoriaGasto.COMIDA,
-                4500.0,
-                nextFechaGasto(),
-                grupoAsado,
-                andresH,
-                grupoAsado.usuarios()
-            ).apply { agregarItem("Mignon", 2.0, 1500.0); agregarItem("Facturas", 1.0, 1500.0) },
-            PartesIguales(
-                "Verdulería",
-                CategoriaGasto.COMIDA,
-                5800.0,
-                nextFechaGasto(),
-                grupoAsado,
-                andresS,
-                grupoAsado.usuarios()
+                "Bebidas previa", CategoriaGasto.BEBIDA, 12000.0, nextFecha(),
+                grupoAsado, agustinH, grupoAsado.usuarios()
             ).apply {
-                agregarItem("Papa", 3.0, 1000.0); agregarItem("Tomate", 1.0, 2000.0); agregarItem(
-                "Lechuga",
-                1.0,
-                800.0
-            )
+                agregarItem("Cerveza", 6.0, 1500.0)
+                agregarItem("Gaseosa", 2.0, 1500.0)
             },
+
             PartesIguales(
-                "Más Carne",
-                CategoriaGasto.COMIDA,
-                18000.0,
-                nextFechaGasto(),
-                grupoAsado,
-                juanA,
-                grupoAsado.usuarios()
-            ).apply { agregarItem("Chorizos", 12.0, 1000.0); agregarItem("Morcilla", 6.0, 1000.0) },
+                "Panadería", CategoriaGasto.COMIDA, 4500.0, nextFecha(),
+                grupoAsado, andresH, grupoAsado.usuarios()
+            ).apply {
+                agregarItem("Mignon", 2.0, 1500.0)
+                agregarItem("Facturas", 1.0, 1500.0)
+            },
+
             PartesIguales(
-                "Hielo y Carbón extra",
-                CategoriaGasto.VARIOS,
-                4000.0,
-                nextFechaGasto(),
-                grupoAsado,
-                agustinH,
-                grupoAsado.usuarios()
-            ).apply { agregarItem("Hielo", 3.0, 1000.0); agregarItem("Carbón", 1.0, 1000.0) },
+                "Verdulería", CategoriaGasto.COMIDA, 5800.0, nextFecha(),
+                grupoAsado, andresS, grupoAsado.usuarios()
+            ).apply {
+                agregarItem("Papa", 3.0, 1000.0)
+                agregarItem("Tomate", 1.0, 2000.0)
+                agregarItem("Lechuga", 1.0, 800.0)
+            },
+
             PartesIguales(
-                "Picada",
-                CategoriaGasto.COMIDA,
-                9500.0,
-                nextFechaGasto(),
-                grupoAsado,
-                andresH,
-                grupoAsado.usuarios()
-            ).apply { agregarItem("Salame", 1.0, 4500.0); agregarItem("Queso", 1.0, 5000.0) },
+                "Más Carne", CategoriaGasto.COMIDA, 18000.0, nextFecha(),
+                grupoAsado, juanA, grupoAsado.usuarios()
+            ).apply {
+                agregarItem("Chorizos", 12.0, 1000.0)
+                agregarItem("Morcilla", 6.0, 1000.0)
+            },
+
             PartesIguales(
-                "Snacks",
-                CategoriaGasto.COMIDA,
-                3200.0,
-                nextFechaGasto(),
-                grupoAsado,
-                andresS,
-                grupoAsado.usuarios()
+                "Hielo y Carbón extra", CategoriaGasto.VARIOS, 4000.0, nextFecha(),
+                grupoAsado, agustinH, grupoAsado.usuarios()
+            ).apply {
+                agregarItem("Hielo", 3.0, 1000.0)
+                agregarItem("Carbón", 1.0, 1000.0)
+            },
+
+            PartesIguales(
+                "Picada", CategoriaGasto.COMIDA, 9500.0, nextFecha(),
+                grupoAsado, andresH, grupoAsado.usuarios()
+            ).apply {
+                agregarItem("Salame", 1.0, 4500.0)
+                agregarItem("Queso", 1.0, 5000.0)
+            },
+
+            PartesIguales(
+                "Snacks", CategoriaGasto.COMIDA, 3200.0, nextFecha(),
+                grupoAsado, andresS, grupoAsado.usuarios()
             ).apply { agregarItem("Papas fritas", 2.0, 1600.0) },
+
             PartesIguales(
-                "Postre Helado",
-                CategoriaGasto.COMIDA,
-                8000.0,
-                nextFechaGasto(),
-                grupoAsado,
-                juanA,
-                grupoAsado.usuarios()
+                "Postre Helado", CategoriaGasto.COMIDA, 8000.0, nextFecha(),
+                grupoAsado, juanA, grupoAsado.usuarios()
             ).apply { agregarItem("Bombón Suizo", 8.0, 1000.0) },
+
             PartesIguales(
-                "Vino",
-                CategoriaGasto.BEBIDA,
-                11000.0,
-                nextFechaGasto(),
-                grupoAsado,
-                agustinH,
-                grupoAsado.usuarios()
+                "Vino", CategoriaGasto.BEBIDA, 11000.0, nextFecha(),
+                grupoAsado, agustinH, grupoAsado.usuarios()
             ).apply { agregarItem("Malbec", 2.0, 5500.0) },
+
             PartesIguales(
-                "Aderezos y servilletas",
-                CategoriaGasto.VARIOS,
-                2500.0,
-                nextFechaGasto(),
-                grupoAsado,
-                andresH,
-                grupoAsado.usuarios()
-            ).apply { agregarItem("Mayonesa", 1.0, 1000.0); agregarItem("Servilletas", 2.0, 750.0) },
+                "Aderezos y servilletas", CategoriaGasto.VARIOS, 2500.0, nextFecha(),
+                grupoAsado, andresH, grupoAsado.usuarios()
+            ).apply {
+                agregarItem("Mayonesa", 1.0, 1000.0)
+                agregarItem("Servilletas", 2.0, 750.0)
+            },
+
             PartesIguales(
-                "Achuras",
-                CategoriaGasto.COMIDA,
-                7000.0,
-                nextFechaGasto(),
-                grupoAsado,
-                andresS,
-                grupoAsado.usuarios()
-            ).apply { agregarItem("Chinchulines", 1.0, 4000.0); agregarItem("Riñones", 1.0, 3000.0) },
+                "Achuras", CategoriaGasto.COMIDA, 7000.0, nextFecha(),
+                grupoAsado, andresS, grupoAsado.usuarios()
+            ).apply {
+                agregarItem("Chinchulines", 1.0, 4000.0)
+                agregarItem("Riñones", 1.0, 3000.0)
+            },
+
             PartesIguales(
-                "Cerveza extra",
-                CategoriaGasto.BEBIDA,
-                9000.0,
-                nextFechaGasto(),
-                grupoAsado,
-                juanA,
-                grupoAsado.usuarios()
+                "Cerveza extra", CategoriaGasto.BEBIDA, 9000.0, nextFecha(),
+                grupoAsado, juanA, grupoAsado.usuarios()
             ).apply { agregarItem("Latas", 6.0, 1500.0) },
+
             PartesIguales(
-                "Postre Vigilante",
-                CategoriaGasto.COMIDA,
-                4000.0,
-                nextFechaGasto(),
-                grupoAsado,
-                agustinH,
-                grupoAsado.usuarios()
-            ).apply { agregarItem("Dulce de membrillo", 1.0, 2000.0); agregarItem("Queso fresco", 1.0, 2000.0) },
+                "Postre Vigilante", CategoriaGasto.COMIDA, 4000.0, nextFecha(),
+                grupoAsado, agustinH, grupoAsado.usuarios()
+            ).apply {
+                agregarItem("Dulce de membrillo", 1.0, 2000.0)
+                agregarItem("Queso fresco", 1.0, 2000.0)
+            },
+
             PartesIguales(
-                "Soda",
-                CategoriaGasto.BEBIDA,
-                2400.0,
-                nextFechaGasto(),
-                grupoAsado,
-                andresH,
-                grupoAsado.usuarios()
+                "Soda", CategoriaGasto.BEBIDA, 2400.0, nextFecha(),
+                grupoAsado, andresH, grupoAsado.usuarios()
             ).apply { agregarItem("Sifón", 3.0, 800.0) },
+
             PartesIguales(
-                "Leña",
-                CategoriaGasto.VARIOS,
-                3000.0,
-                nextFechaGasto(),
-                grupoAsado,
-                andresS,
-                grupoAsado.usuarios()
+                "Leña", CategoriaGasto.VARIOS, 3000.0, nextFecha(),
+                grupoAsado, andresS, grupoAsado.usuarios()
             ).apply { agregarItem("Bolsa leña", 2.0, 1500.0) },
+
             PartesIguales(
-                "Provoleta",
-                CategoriaGasto.COMIDA,
-                5000.0,
-                nextFechaGasto(),
-                grupoAsado,
-                juanA,
-                grupoAsado.usuarios()
+                "Provoleta", CategoriaGasto.COMIDA, 5000.0, nextFecha(),
+                grupoAsado, juanA, grupoAsado.usuarios()
             ).apply { agregarItem("Provoleta unidad", 2.0, 2500.0) },
+
             PartesIguales(
-                "Fernet de refuerzo",
-                CategoriaGasto.BEBIDA,
-                7500.0,
-                nextFechaGasto(),
-                grupoAsado,
-                agustinH,
-                grupoAsado.usuarios()
+                "Fernet de refuerzo", CategoriaGasto.BEBIDA, 7500.0, nextFecha(),
+                grupoAsado, agustinH, grupoAsado.usuarios()
             ).apply { agregarItem("Fernet 750ml", 1.0, 7500.0) },
+
             PartesIguales(
-                "Limones y Sal",
-                CategoriaGasto.VARIOS,
-                1800.0,
-                nextFechaGasto(),
-                grupoAsado,
-                andresH,
-                grupoAsado.usuarios()
-            ).apply { agregarItem("Limón", 1.0, 1000.0); agregarItem("Sal gruesa", 1.0, 800.0) },
+                "Limones y Sal", CategoriaGasto.VARIOS, 1800.0, nextFecha(),
+                grupoAsado, andresH, grupoAsado.usuarios()
+            ).apply {
+                agregarItem("Limón", 1.0, 1000.0)
+                agregarItem("Sal gruesa", 1.0, 800.0)
+            },
+
             PartesIguales(
-                "Gaseosas Dieta",
-                CategoriaGasto.BEBIDA,
-                4600.0,
-                nextFechaGasto(),
-                grupoAsado,
-                andresS,
-                grupoAsado.usuarios()
+                "Gaseosas Dieta", CategoriaGasto.BEBIDA, 4600.0, nextFecha(),
+                grupoAsado, andresS, grupoAsado.usuarios()
             ).apply { agregarItem("Pepsi Black", 2.0, 2300.0) },
+
             PartesIguales(
-                "Carne de Cerdo",
-                CategoriaGasto.COMIDA,
-                12000.0,
-                nextFechaGasto(),
-                grupoAsado,
-                juanA,
-                grupoAsado.usuarios()
-            ).apply { agregarItem("Pechito", 1.5, 8000.0); agregarItem("Manta", 1.0, 4000.0) },
+                "Carne de Cerdo", CategoriaGasto.COMIDA, 12000.0, nextFecha(),
+                grupoAsado, juanA, grupoAsado.usuarios()
+            ).apply {
+                agregarItem("Pechito", 1.5, 8000.0)
+                agregarItem("Manta", 1.0, 4000.0)
+            },
+
             PartesIguales(
-                "Chimichurri ingredientes",
-                CategoriaGasto.VARIOS,
-                2200.0,
-                nextFechaGasto(),
-                grupoAsado,
-                agustinH,
-                grupoAsado.usuarios()
-            ).apply { agregarItem("Aji molido", 1.0, 1100.0); agregarItem("Aceite", 1.0, 1100.0) },
+                "Chimichurri ingredientes", CategoriaGasto.VARIOS, 2200.0, nextFecha(),
+                grupoAsado, agustinH, grupoAsado.usuarios()
+            ).apply {
+                agregarItem("Aji molido", 1.0, 1100.0)
+                agregarItem("Aceite", 1.0, 1100.0)
+            },
+
             PartesIguales(
-                "Vaso Descartable",
-                CategoriaGasto.VARIOS,
-                3500.0,
-                nextFechaGasto(),
-                grupoAsado,
-                andresH,
-                grupoAsado.usuarios()
+                "Vaso Descartable", CategoriaGasto.VARIOS, 3500.0, nextFecha(),
+                grupoAsado, andresH, grupoAsado.usuarios()
             ).apply { agregarItem("Paquete vasos", 1.0, 3500.0) },
+
+            PartesExactas(
+                "Regalo Cumpleaños", CategoriaGasto.VARIOS, 35000.0, nextFecha(),
+                grupoAsado, juanA, grupoAsado.usuarios(),
+                mutableMapOf(juanA to 20000.0, andresH to 10000.0, agustinH to 5000.0)
+            ),
+
+            PartesExactas(
+                "Bebidas Premium", CategoriaGasto.BEBIDA, 25000.0, nextFecha(),
+                grupoAsado, andresS, grupoAsado.usuarios(),
+                mutableMapOf(andresS to 20000.0, giulianaM to 5000.0)
+            ),
+
+            // ── Depto Palermo ─────────────────────────────────────────────
             PartesIguales(
-                "Compra supermercado",
-                CategoriaGasto.COMIDA,
-                32600.0,
-                nextFechaGasto(),
-                grupoDepto,
-                andresS,
-                grupoDepto.usuarios()
-            ).apply { agregarItem("Limpieza", 1.0, 10600.0); agregarItem("Comida semanal", 1.0, 22000.0) },
+                "Compra supermercado", CategoriaGasto.COMIDA, 32600.0, nextFecha(),
+                grupoDepto, andresS, grupoDepto.usuarios()
+            ).apply {
+                agregarItem("Limpieza", 1.0, 10600.0)
+                agregarItem("Comida semanal", 1.0, 22000.0)
+            },
+
             PartesIguales(
-                "Internet y cable",
-                CategoriaGasto.HOGAR,
-                18000.0,
-                nextFechaGasto(),
-                grupoDepto,
-                giulianaM,
-                grupoDepto.usuarios()
+                "Internet y cable", CategoriaGasto.HOGAR, 18000.0, nextFecha(),
+                grupoDepto, giulianaM, grupoDepto.usuarios()
             ).apply { agregarItem("Abono mensual", 1.0, 18000.0) },
+
             PartesIguales(
-                "Gas envasado",
-                CategoriaGasto.HOGAR,
-                9600.0,
-                nextFechaGasto(),
-                grupoDepto,
-                juanM,
-                grupoDepto.usuarios()
+                "Gas envasado", CategoriaGasto.HOGAR, 9600.0, nextFecha(),
+                grupoDepto, juanM, grupoDepto.usuarios()
             ).apply { agregarItem("Recarga garrafa", 2.0, 4800.0) },
+
+            PartesExactas(
+                "Internet Fibra", CategoriaGasto.HOGAR, 12000.0, nextFecha(),
+                grupoDepto, andresS, grupoDepto.usuarios(),
+                mutableMapOf(agustinH to 7500.0, juanM to 4500.0)
+            ),
+
+            PartesExactas(
+                "Limpieza Profunda", CategoriaGasto.VARIOS, 12000.0, nextFecha(),
+                grupoDepto, andresS, grupoDepto.usuarios(),
+                mutableMapOf(giulianaM to 4000.0, agustinH to 8000.0)
+            ),
+
+            // ── Los Pibes FC ──────────────────────────────────────────────
             PartesIguales(
-                "Reserva de cancha",
-                CategoriaGasto.VARIOS,
-                24000.0,
-                nextFechaGasto(),
-                grupoFutbol,
-                giulianaM,
-                grupoFutbol.usuarios()
+                "Reserva de cancha", CategoriaGasto.VARIOS, 24000.0, nextFecha(),
+                grupoFutbol, giulianaM, grupoFutbol.usuarios()
             ).apply { agregarItem("Alquiler cancha", 1.0, 24000.0) },
+
             PartesIguales(
-                "Pelota nueva",
-                CategoriaGasto.VARIOS,
-                18500.0,
-                nextFechaGasto(),
-                grupoFutbol,
-                andresH,
-                grupoFutbol.usuarios()
+                "Pelota nueva", CategoriaGasto.VARIOS, 18500.0, nextFecha(),
+                grupoFutbol, andresH, grupoFutbol.usuarios()
             ).apply { agregarItem("Pelota N5", 1.0, 18500.0) },
+
             PartesIguales(
-                "Tercer tiempo",
-                CategoriaGasto.BEBIDA,
-                14800.0,
-                nextFechaGasto(),
-                grupoFutbol,
-                juanM,
-                grupoFutbol.usuarios()
-            ).apply { agregarItem("Agua", 6.0, 800.0); agregarItem("Isotonica", 8.0, 1250.0) },
+                "Tercer tiempo", CategoriaGasto.BEBIDA, 14800.0, nextFecha(),
+                grupoFutbol, juanM, grupoFutbol.usuarios()
+            ).apply {
+                agregarItem("Agua", 6.0, 800.0)
+                agregarItem("Isotónica", 8.0, 1250.0)
+            },
+
+            PartesExactas(
+                "Alquiler Cancha", CategoriaGasto.VARIOS, 25000.0, nextFecha(),
+                grupoFutbol, juanM, grupoFutbol.usuarios(),
+                mutableMapOf(juanM to 12000.0, andresH to 13000.0)
+            ),
+
+            PartesExactas(
+                "Pelota Nueva", CategoriaGasto.VARIOS, 12000.0, nextFecha(),
+                grupoFutbol, juanA, grupoFutbol.usuarios(),
+                mutableMapOf(juanM to 5000.0, andresH to 3000.0, juanA to 4000.0)
+            ),
+
+            // ── Final de Objetos ──────────────────────────────────────────
             PartesIguales(
-                "Fotocopias final",
-                CategoriaGasto.OTROS,
-                7200.0,
-                nextFechaGasto(),
-                grupoEstudio,
-                giulianaM,
-                grupoEstudio.usuarios()
+                "Fotocopias final", CategoriaGasto.OTROS, 7200.0, nextFecha(),
+                grupoEstudio, giulianaM, grupoEstudio.usuarios()
             ).apply { agregarItem("Apuntes", 3.0, 2400.0) },
+
             PartesIguales(
-                "Cafe de estudio",
-                CategoriaGasto.COMIDA,
-                5600.0,
-                nextFechaGasto(),
-                grupoEstudio,
-                juanA,
-                grupoEstudio.usuarios()
+                "Cafe de estudio", CategoriaGasto.COMIDA, 5600.0, nextFecha(),
+                grupoEstudio, juanA, grupoEstudio.usuarios()
             ).apply { agregarItem("Cafe doble", 4.0, 1400.0) },
+
+            PartesExactas(
+                "Fotocopias TP", CategoriaGasto.OTROS, 5000.0, nextFecha(),
+                grupoEstudio, andresS, grupoEstudio.usuarios(),
+                mutableMapOf(giulianaM to 3000.0, juanA to 2000.0)
+            ),
+
+            PartesExactas(
+                "Café y medialunas", CategoriaGasto.COMIDA, 6000.0, nextFecha(),
+                grupoEstudio, giulianaM, grupoEstudio.usuarios(),
+                mutableMapOf(giulianaM to 3000.0, andresS to 3000.0)
+            ),
+
+            // ── Escapada Córdoba ──────────────────────────────────────────
             PartesIguales(
-                "Combustible",
-                CategoriaGasto.TRANSPORTE,
-                68000.0,
-                nextFechaGasto(),
-                grupoViaje,
-                camilaR,
-                grupoViaje.usuarios()
+                "Combustible", CategoriaGasto.TRANSPORTE, 68000.0, nextFecha(),
+                grupoViaje, camilaR, grupoViaje.usuarios()
             ).apply { agregarItem("Nafta super", 40.0, 1700.0) },
+
             PartesIguales(
-                "Peajes",
-                CategoriaGasto.TRANSPORTE,
-                21500.0,
-                nextFechaGasto(),
-                grupoViaje,
-                andresS,
-                grupoViaje.usuarios()
+                "Peajes", CategoriaGasto.TRANSPORTE, 21500.0, nextFecha(),
+                grupoViaje, andresS, grupoViaje.usuarios()
             ).apply { agregarItem("Cabinas", 5.0, 4300.0) },
+
             PartesIguales(
-                "Snacks ruta",
-                CategoriaGasto.COMIDA,
-                12400.0,
-                nextFechaGasto(),
-                grupoViaje,
-                sofiaL,
-                grupoViaje.usuarios()
-            ).apply { agregarItem("Galletitas", 4.0, 1100.0); agregarItem("Agua", 8.0, 1000.0) },
+                "Snacks ruta", CategoriaGasto.COMIDA, 12400.0, nextFecha(),
+                grupoViaje, sofiaL, grupoViaje.usuarios()
+            ).apply {
+                agregarItem("Galletitas", 4.0, 1100.0)
+                agregarItem("Agua", 8.0, 1000.0)
+            },
+
+            // ── Cumple de Matu ────────────────────────────────────────────
             PartesIguales(
-                "Decoracion",
-                CategoriaGasto.VARIOS,
-                29500.0,
-                nextFechaGasto(),
-                grupoCumple,
-                lucasP,
-                grupoCumple.usuarios()
-            ).apply { agregarItem("Globos", 5.0, 1900.0); agregarItem("Banderines", 3.0, 6700.0) },
+                "Decoracion", CategoriaGasto.VARIOS, 29500.0, nextFecha(),
+                grupoCumple, lucasP, grupoCumple.usuarios()
+            ).apply {
+                agregarItem("Globos", 5.0, 1900.0)
+                agregarItem("Banderines", 3.0, 6700.0)
+            },
+
             PartesIguales(
-                "Torta y velas",
-                CategoriaGasto.COMIDA,
-                36800.0,
-                nextFechaGasto(),
-                grupoCumple,
-                agustinH,
-                grupoCumple.usuarios()
-            ).apply { agregarItem("Torta", 1.0, 34000.0); agregarItem("Velas", 2.0, 1400.0) },
+                "Torta y velas", CategoriaGasto.COMIDA, 36800.0, nextFecha(),
+                grupoCumple, agustinH, grupoCumple.usuarios()
+            ).apply {
+                agregarItem("Torta", 1.0, 34000.0)
+                agregarItem("Velas", 2.0, 1400.0)
+            },
+
             PartesIguales(
-                "Bebidas",
-                CategoriaGasto.BEBIDA,
-                22600.0,
-                nextFechaGasto(),
-                grupoCumple,
-                giulianaM,
-                grupoCumple.usuarios()
-            ).apply { agregarItem("Gaseosa", 8.0, 1600.0); agregarItem("Jugo", 6.0, 1600.0) },
+                "Bebidas", CategoriaGasto.BEBIDA, 22600.0, nextFecha(),
+                grupoCumple, giulianaM, grupoCumple.usuarios()
+            ).apply {
+                agregarItem("Gaseosa", 8.0, 1600.0)
+                agregarItem("Jugo", 6.0, 1600.0)
+            },
+
+            // ── Team 7AM ──────────────────────────────────────────────────
             PartesIguales(
-                "Cuota mensual",
-                CategoriaGasto.OTROS,
-                90000.0,
-                nextFechaGasto(),
-                grupoGym,
-                valentinaN,
-                grupoGym.usuarios()
+                "Cuota mensual", CategoriaGasto.OTROS, 90000.0, nextFecha(),
+                grupoGym, valentinaN, grupoGym.usuarios()
             ).apply { agregarItem("Pase grupal", 5.0, 18000.0) },
+
             PartesIguales(
-                "Proteinas",
-                CategoriaGasto.OTROS,
-                45500.0,
-                nextFechaGasto(),
-                grupoGym,
-                matiasF,
-                grupoGym.usuarios()
-            ).apply { agregarItem("Whey", 2.0, 21000.0); agregarItem("Creatina", 1.0, 3500.0) },
+                "Proteinas", CategoriaGasto.OTROS, 45500.0, nextFecha(),
+                grupoGym, matiasF, grupoGym.usuarios()
+            ).apply {
+                agregarItem("Whey", 2.0, 21000.0)
+                agregarItem("Creatina", 1.0, 3500.0)
+            },
+
             PartesIguales(
-                "Clase funcional",
-                CategoriaGasto.OTROS,
-                28000.0,
-                nextFechaGasto(),
-                grupoGym,
-                sofiaL,
-                grupoGym.usuarios()
+                "Clase funcional", CategoriaGasto.OTROS, 28000.0, nextFecha(),
+                grupoGym, sofiaL, grupoGym.usuarios()
             ).apply { agregarItem("Pack 10 clases", 1.0, 28000.0) },
+
+            // ── HackLab Nocturno ──────────────────────────────────────────
             PartesIguales(
-                "Suscripcion herramientas",
-                CategoriaGasto.OTROS,
-                36000.0,
-                nextFechaGasto(),
-                grupoHackLab,
-                juanA,
-                grupoHackLab.usuarios()
-            ).apply { agregarItem("GitHub Team", 1.0, 22000.0); agregarItem("Figma", 1.0, 14000.0) },
+                "Suscripcion herramientas", CategoriaGasto.OTROS, 36000.0, nextFecha(),
+                grupoHackLab, juanA, grupoHackLab.usuarios()
+            ).apply {
+                agregarItem("GitHub Team", 1.0, 22000.0)
+                agregarItem("Figma", 1.0, 14000.0)
+            },
+
             PartesIguales(
-                "Pizzas de deploy",
-                CategoriaGasto.COMIDA,
-                27500.0,
-                nextFechaGasto(),
-                grupoHackLab,
-                camilaR,
-                grupoHackLab.usuarios()
-            ).apply { agregarItem("Muzzarella", 3.0, 6500.0); agregarItem("Fugazzeta", 1.0, 8000.0) },
+                "Pizzas de deploy", CategoriaGasto.COMIDA, 27500.0, nextFecha(),
+                grupoHackLab, camilaR, grupoHackLab.usuarios()
+            ).apply {
+                agregarItem("Muzzarella", 3.0, 6500.0)
+                agregarItem("Fugazzeta", 1.0, 8000.0)
+            },
+
             PartesIguales(
-                "Cafes y energia",
-                CategoriaGasto.BEBIDA,
-                12800.0,
-                nextFechaGasto(),
-                grupoHackLab,
-                andresH,
-                grupoHackLab.usuarios()
-            ).apply { agregarItem("Cafe", 8.0, 1000.0); agregarItem("Energizante", 3.0, 1600.0) },
+                "Cafes y energia", CategoriaGasto.BEBIDA, 12800.0, nextFecha(),
+                grupoHackLab, andresH, grupoHackLab.usuarios()
+            ).apply {
+                agregarItem("Cafe", 8.0, 1000.0)
+                agregarItem("Energizante", 3.0, 1600.0)
+            },
+
+            // ── Maratón de Series ─────────────────────────────────────────
             PartesIguales(
-                "Suscripciones streaming",
-                CategoriaGasto.ENTRETENIMIENTO,
-                24900.0,
-                nextFechaGasto(),
-                grupoSeries,
-                camilaR,
-                grupoSeries.usuarios()
+                "Suscripciones streaming", CategoriaGasto.ENTRETENIMIENTO, 24900.0, nextFecha(),
+                grupoSeries, camilaR, grupoSeries.usuarios()
             ).apply { agregarItem("Pack plataformas", 1.0, 24900.0) },
+
             PartesIguales(
-                "Picada maraton",
-                CategoriaGasto.COMIDA,
-                19800.0,
-                nextFechaGasto(),
-                grupoSeries,
-                giulianaM,
-                grupoSeries.usuarios()
-            ).apply { agregarItem("Snacks", 6.0, 1800.0); agregarItem("Sandwiches", 3.0, 3000.0) },
+                "Picada maraton", CategoriaGasto.COMIDA, 19800.0, nextFecha(),
+                grupoSeries, giulianaM, grupoSeries.usuarios()
+            ).apply {
+                agregarItem("Snacks", 6.0, 1800.0)
+                agregarItem("Sandwiches", 3.0, 3000.0)
+            },
+
             PartesIguales(
-                "Gaseosas y jugos",
-                CategoriaGasto.BEBIDA,
-                14400.0,
-                nextFechaGasto(),
-                grupoSeries,
-                valentinaN,
-                grupoSeries.usuarios()
-            ).apply { agregarItem("Gaseosa 2.25", 6.0, 1700.0); agregarItem("Jugo", 3.0, 1400.0) },
+                "Gaseosas y jugos", CategoriaGasto.BEBIDA, 14400.0, nextFecha(),
+                grupoSeries, valentinaN, grupoSeries.usuarios()
+            ).apply {
+                agregarItem("Gaseosa 2.25", 6.0, 1700.0)
+                agregarItem("Jugo", 3.0, 1400.0)
+            },
+
+            // ── Plan de Finde ─────────────────────────────────────────────
             PartesIguales(
-                "Nafta salida del sabado",
-                CategoriaGasto.TRANSPORTE,
-                45200.0,
-                nextFechaGasto(),
-                grupoFinde,
-                valentinaN,
-                grupoFinde.usuarios()
+                "Nafta salida del sabado", CategoriaGasto.TRANSPORTE, 45200.0, nextFecha(),
+                grupoFinde, valentinaN, grupoFinde.usuarios()
             ).apply { agregarItem("Carga YPF", 1.0, 45200.0) },
+
             PartesIguales(
-                "Asado del domingo",
-                CategoriaGasto.COMIDA,
-                53800.0,
-                nextFechaGasto(),
-                grupoFinde,
-                juanM,
-                grupoFinde.usuarios()
-            ).apply { agregarItem("Carne", 1.0, 37000.0); agregarItem("Carbon", 2.0, 4200.0); agregarItem("Ensaladas", 1.0, 8400.0) },
+                "Asado del domingo", CategoriaGasto.COMIDA, 53800.0, nextFecha(),
+                grupoFinde, juanM, grupoFinde.usuarios()
+            ).apply {
+                agregarItem("Carne", 1.0, 37000.0)
+                agregarItem("Carbon", 2.0, 4200.0)
+                agregarItem("Ensaladas", 1.0, 8400.0)
+            },
+
             PartesIguales(
-                "Entradas recital",
-                CategoriaGasto.ENTRETENIMIENTO,
-                66000.0,
-                nextFechaGasto(),
-                grupoFinde,
-                lucasP,
-                grupoFinde.usuarios()
-            ).apply { agregarItem("Tickets campo", 4.0, 16500.0) }
-        ).forEach { gasto ->
+                "Entradas recital", CategoriaGasto.ENTRETENIMIENTO, 66000.0, nextFecha(),
+                grupoFinde, lucasP, grupoFinde.usuarios()
+            ).apply { agregarItem("Tickets campo", 4.0, 16500.0) },
+
+            ).forEach { gasto ->
             val gastoGuardado = gastoRepository.save(gasto)
             val fracciones = gastoGuardado.repartirGasto()
-            // Lógica de filtrado de deudas propias
             val fraccionesExternas = fracciones.filter { it.deudor.id != it.acreedor.id }
             fraccionGastoRepository.saveAll(fraccionesExternas)
 
@@ -809,5 +717,4 @@ class BootstrapData(
             }
         }
     }
-
 }

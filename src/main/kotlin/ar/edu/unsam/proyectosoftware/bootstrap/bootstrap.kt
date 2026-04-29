@@ -6,12 +6,14 @@ import ar.edu.unsam.proyectosoftware.domain.PartesExactas
 import ar.edu.unsam.proyectosoftware.domain.PartesIguales
 import ar.edu.unsam.proyectosoftware.domain.RolIntegrante
 import ar.edu.unsam.proyectosoftware.domain.Usuario
+import ar.edu.unsam.proyectosoftware.dto.TipoActividad
 import ar.edu.unsam.proyectosoftware.repository.FraccionGastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
+import ar.edu.unsam.proyectosoftware.service.ActividadService
 import org.springframework.boot.CommandLineRunner
 import org.springframework.security.crypto.password.PasswordEncoder
 import java.time.LocalDate
@@ -22,7 +24,8 @@ class BootstrapData(
     val grupoRepository: GrupoRepository,
     val gastoRepository: GastoRepository,
     val fraccionGastoRepository: FraccionGastoRepository,
-    val passwordEncoder: PasswordEncoder
+    val passwordEncoder: PasswordEncoder,
+    val actividadService: ActividadService,
 ) {
 
     @Bean
@@ -114,6 +117,19 @@ class BootstrapData(
         usuarioRepository.saveAll(usuarios)
 
         val todosLosUsuarios = usuarios
+
+        // Registrar actividades de creación de cuenta
+        todosLosUsuarios.forEach { usuario ->
+            actividadService.registrarActividad(
+                usuario = usuario,
+                tipo = TipoActividad.CUENTA_CREADA,
+                descripcion = "Tu cuenta fue creada exitosamente.",
+                metadata = mapOf(
+                    "usuarioId" to usuario.id,
+                    "email" to usuario.email,
+                )
+            )
+        }
 
         // 2. Grupos
         val grupos = listOf(
@@ -241,6 +257,32 @@ class BootstrapData(
         val grupoHackLab = grupos[7]
         val grupoSeries  = grupos[8]
         val grupoFinde   = grupos[9]
+
+        // Registrar actividades de ingreso a grupos
+        listOf(
+            grupoAsado to listOf(agustinH, juanM, andresH, giulianaM, andresS, juanA),
+            grupoDepto to listOf(agustinH, juanM, giulianaM, andresS),
+            grupoFutbol to listOf(juanM, andresH, juanA, giulianaM),
+            grupoEstudio to listOf(giulianaM, juanA, andresS),
+            grupoViaje to listOf(juanA, andresS, valentinaN, sofiaL, camilaR),
+            grupoCumple to listOf(juanM, matiasF, agustinH, giulianaM, lucasP),
+            grupoGym to listOf(andresH, juanA, sofiaL, matiasF, valentinaN),
+            grupoHackLab to todosLosUsuarios,
+            grupoSeries to todosLosUsuarios.filter { it != camilaR }.plus(camilaR),
+            grupoFinde to todosLosUsuarios.filter { it != valentinaN }.plus(valentinaN),
+        ).forEach { (grupo, miembros) ->
+            miembros.forEach { usuario ->
+                actividadService.registrarActividad(
+                    usuario = usuario,
+                    tipo = TipoActividad.INGRESO_GRUPO,
+                    descripcion = "Te uniste al grupo ${grupo.nombre}.",
+                    metadata = mapOf(
+                        "grupoId" to grupo.id,
+                        "grupoNombre" to grupo.nombre,
+                    )
+                )
+            }
+        }
 
         // 3. Gastos
         var diasAtras = 0L
@@ -641,6 +683,38 @@ class BootstrapData(
             val fracciones = gastoGuardado.repartirGasto()
             val fraccionesExternas = fracciones.filter { it.deudor.id != it.acreedor.id }
             fraccionGastoRepository.saveAll(fraccionesExternas)
+
+            // Registrar actividades de deuda
+            // Actividad de deuda generada para el pagador
+            actividadService.registrarActividad(
+                usuario = gastoGuardado.pagador,
+                tipo = TipoActividad.DEUDA_GENERADA,
+                descripcion = "Pagaste ${gastoGuardado.descripcion} en ${gastoGuardado.grupo.nombre}",
+                metadata = mapOf(
+                    "gastoId" to gastoGuardado.id,
+                    "descripcion" to gastoGuardado.descripcion,
+                    "monto" to gastoGuardado.monto,
+                    "grupoId" to gastoGuardado.grupo.id,
+                    "grupoNombre" to gastoGuardado.grupo.nombre,
+                )
+            )
+
+            // Actividades de gasto deuda para cada deudor
+            fraccionesExternas.forEach { fraccion ->
+                actividadService.registrarActividad(
+                    usuario = fraccion.deudor,
+                    tipo = TipoActividad.GASTO_DEUDA,
+                    descripcion = "Debes pagar ${fraccion.montoFraccion} a ${fraccion.acreedor.nombre} por ${gastoGuardado.descripcion}",
+                    metadata = mapOf(
+                        "gastoId" to gastoGuardado.id,
+                        "descripcion" to gastoGuardado.descripcion,
+                        "monto" to fraccion.montoFraccion,
+                        "acreedor" to fraccion.acreedor.nombre,
+                        "grupoId" to gastoGuardado.grupo.id,
+                        "grupoNombre" to gastoGuardado.grupo.nombre,
+                    )
+                )
+            }
         }
     }
 }

@@ -9,6 +9,7 @@ import ar.edu.unsam.proyectosoftware.dto.GrupoContextoUsuarioDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoCreacionDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoNombreIdDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoSettingsDTO
+import ar.edu.unsam.proyectosoftware.dto.TipoActividad
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
@@ -31,7 +32,8 @@ class GrupoService(
     val integranteGrupoRepository: IntegranteGrupoRepository,
     val usuarioRepository: UsuarioRepository,
     val gastoRepository: GastoRepository,
-    private val usuarioService: UsuarioService
+    private val usuarioService: UsuarioService,
+    private val actividadService: ActividadService,
 ) {
     fun obtenerGrupos(auth: Authentication, page: Int, size: Int): Page<Grupo> {
         val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
@@ -81,7 +83,7 @@ class GrupoService(
         val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
 
         // Validación estricta para evitar crashes silenciosos
-        if (dto.nombre.isNullOrBlank()) {
+        if (dto.nombre.isBlank()) {
             throw BusinessException("El nombre del grupo es obligatorio")
         }
 
@@ -95,10 +97,36 @@ class GrupoService(
         grupo.agregarIntegrante(usuarioLogueado, RolIntegrante.ADMIN)
 
         // Aseguramos que la lista no sea nula y filtramos al creador por si el front lo mandó
-        val miembrosIds = dto.integrantesIds ?: emptyList()
-        agregarMiembrosAlGrupo(grupo, miembrosIds.filterNotNull().filter { it != usuarioLogueado.id })
+        val miembrosIds = dto.integrantesIds
+        val miembrosAgregados = agregarMiembrosAlGrupo(grupo, miembrosIds.filter { it != usuarioLogueado.id })
 
-        return grupoRepository.save(grupo)
+        val grupoGuardado = grupoRepository.save(grupo)
+
+        actividadService.registrarActividad(
+            usuario = usuarioLogueado,
+            tipo = TipoActividad.INGRESO_GRUPO,
+            descripcion = "Creaste el grupo ${grupoGuardado.nombre}.",
+            metadata = mapOf(
+                "grupoId" to grupoGuardado.id,
+                "grupoNombre" to grupoGuardado.nombre,
+            ),
+        )
+
+        miembrosAgregados.forEach { miembro ->
+            actividadService.registrarActividad(
+                usuario = miembro,
+                tipo = TipoActividad.INGRESO_GRUPO,
+                descripcion = "Te agregaron al grupo ${grupoGuardado.nombre}.",
+                metadata = mapOf(
+                    "grupoId" to grupoGuardado.id,
+                    "grupoNombre" to grupoGuardado.nombre,
+                    "actorId" to usuarioLogueado.id,
+                    "actorNombre" to usuarioLogueado.nombre,
+                ),
+            )
+        }
+
+        return grupoGuardado
     }
 
     @Transactional
@@ -111,8 +139,24 @@ class GrupoService(
             throw BusinessException(ErrorStrings.USUARIO_NO_ES_ADMIN)
         }
 
-        agregarMiembrosAlGrupo(grupo, usuariosAgregarIds)
-        return grupoRepository.save(grupo)
+        val miembrosAgregados = agregarMiembrosAlGrupo(grupo, usuariosAgregarIds)
+        val grupoGuardado = grupoRepository.save(grupo)
+
+        miembrosAgregados.forEach { miembro ->
+            actividadService.registrarActividad(
+                usuario = miembro,
+                tipo = TipoActividad.INGRESO_GRUPO,
+                descripcion = "Te agregaron al grupo ${grupoGuardado.nombre}.",
+                metadata = mapOf(
+                    "grupoId" to grupoGuardado.id,
+                    "grupoNombre" to grupoGuardado.nombre,
+                    "actorId" to usuarioLogueado.id,
+                    "actorNombre" to usuarioLogueado.nombre,
+                ),
+            )
+        }
+
+        return grupoGuardado
     }
 
     fun obtenerGrupoNombrePorId(id: Long): GrupoNombreIdDTO {
@@ -204,6 +248,17 @@ class GrupoService(
 
         integranteGrupoRepository.deleteByGrupoIdAndUsuarioId(grupoId, usuarioAEliminarId)
         grupoRepository.save(grupo)
+
+        actividadService.registrarActividad(
+            usuario = buscarUsuario(usuarioAEliminarId),
+            tipo = TipoActividad.EGRESO_GRUPO,
+            descripcion = "Fuiste removido del grupo ${grupo.nombre}.",
+            metadata = mapOf(
+                "grupoId" to grupo.id,
+                "grupoNombre" to grupo.nombre,
+                "actorId" to currentUserId,
+            ),
+        )
     }
 
     @Transactional
@@ -230,14 +285,19 @@ class GrupoService(
             ?: throw BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO)
     }
 
-    private fun agregarMiembrosAlGrupo(grupo: Grupo, usuariosAgregarIds: List<Long>) {
+    private fun agregarMiembrosAlGrupo(grupo: Grupo, usuariosAgregarIds: List<Long>): List<Usuario> {
+        val usuariosAgregados = mutableListOf<Usuario>()
+
         usuariosAgregarIds.distinct().forEach { id ->
             val usuario = buscarUsuario(id)
             if (grupo.integrantes.any { it.usuario.id == id }) {
                 throw BusinessException(ErrorStrings.USUARIO_YA_PERTENECE_AL_GRUPO)
             }
             grupo.agregarIntegrante(usuario, RolIntegrante.MIEMBRO)
+            usuariosAgregados.add(usuario)
         }
+
+        return usuariosAgregados
     }
 
     private fun tieneDeudas(grupoId: Long, usuarioId: Long): Boolean {

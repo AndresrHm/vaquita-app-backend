@@ -10,6 +10,7 @@ import ar.edu.unsam.proyectosoftware.dto.UsuarioLoginDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioLogueadoDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioNombreIdDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioRegistradoDTO
+import ar.edu.unsam.proyectosoftware.dto.TipoActividad
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.IntegranteGrupoRepository
@@ -28,7 +29,8 @@ class UsuarioService(
     val integranteGrupoRepository: IntegranteGrupoRepository,
     val solicitudAmistadRepository: SolicitudAmistadRepository,
     private val passwordEncoder: PasswordEncoder,
-    private val jwtUtils: JwtUtils
+    private val jwtUtils: JwtUtils,
+    private val actividadService: ActividadService,
 ) {
 
     @Transactional
@@ -60,8 +62,19 @@ class UsuarioService(
         val contrasenaHasheada = passwordEncoder.encode(dto.contrasena)
 
         val nuevoUsuario = Usuario(nombre = dto.nombre, email = dto.email, contrasena = contrasenaHasheada)
+        val usuarioCreado = usuarioRepository.save(nuevoUsuario)
 
-        return usuarioRepository.save(nuevoUsuario)
+        actividadService.registrarActividad(
+            usuario = usuarioCreado,
+            tipo = TipoActividad.CUENTA_CREADA,
+            descripcion = "Tu cuenta fue creada exitosamente.",
+            metadata = mapOf(
+                "usuarioId" to usuarioCreado.id,
+                "email" to usuarioCreado.email,
+            )
+        )
+
+        return usuarioCreado
     }
 
     @Transactional

@@ -70,6 +70,7 @@ class GrupoService(
         return integranteGrupoRepository.findByIntegrantesIdAndActivadoTrue(usuarioLogueado.id!!)
     }
 
+    @Transactional(readOnly = true)
     fun obtenerGruposCompartidos(usuarioId1: Long, usuarioId2: Long): List<GrupoNombreIdDTO> {
         return grupoRepository.findGruposCompartidos(usuarioId1, usuarioId2)
             .map { Grupo.toGrupoNombreIdDTO(it) }

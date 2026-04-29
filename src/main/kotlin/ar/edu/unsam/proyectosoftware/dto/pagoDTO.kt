@@ -4,3 +4,9 @@ class PagoDTO (
     val gastoId: Long,
     val monto: Double
 )
+
+class PagoDeudaGrupoDTO (
+    val acreedorId: Long,
+    val monto: Double,
+    val grupoId: Long
+)

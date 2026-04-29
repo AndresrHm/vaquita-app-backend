@@ -1,6 +1,7 @@
 package ar.edu.unsam.proyectosoftware.repository
 
 import ar.edu.unsam.proyectosoftware.domain.FraccionGasto
+import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.CrudRepository
 import org.springframework.stereotype.Repository
 
@@ -19,4 +20,13 @@ interface FraccionGastoRepository : CrudRepository<FraccionGasto, Long> {
     fun findByDeudorIdAndGastoAsociadoGrupoId(deudorId: Long, grupoId: Long): List<SaldoPendiente>
     fun findByDeudorIdAndGastoAsociadoId(deudorId: Long, gastoId: Long): FraccionGasto?
     fun findByDeudorId(id: Long): List<SaldoPendiente>
+    @Query("""
+    SELECT f FROM FraccionGasto f 
+    WHERE f.deudor.id = :deudorId 
+    AND f.acreedor.id = :acreedorId 
+    AND f.gastoAsociado.grupo.id = :grupoId 
+    AND f.pagoParcial < f.montoFraccion 
+    ORDER BY f.gastoAsociado.fecha ASC
+""")
+    fun findFraccionesPendientesEntre(deudorId: Long, acreedorId: Long, grupoId: Long): List<FraccionGasto>
 }

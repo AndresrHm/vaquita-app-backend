@@ -36,7 +36,7 @@ class GastoService(
     var integranteGrupoRepository: IntegranteGrupoRepository,
     var grupoRepository: GrupoRepository,
     var usuarioRepository: UsuarioRepository,
-    private val usuarioService: UsuarioService
+    var usuarioService: UsuarioService
 ) {
 
     @Transactional
@@ -190,6 +190,39 @@ class GastoService(
         fraccion.pagar(pagoDTO.monto)
 
         fraccionGastoRepository.save(fraccion)
+    }
+
+    @Transactional
+    fun realizarPagoSimplificado(auth: Authentication, grupoId: Long, acreedorId: Long, monto: Double) {
+        val deudor = usuarioService.obtenerUsuarioLogueado(auth)
+
+        // Buscar las fracciones reales que componen esa deuda
+        val fracciones = fraccionGastoRepository.findFraccionesPendientesEntre(
+            deudor.id!!, acreedorId, grupoId
+        )
+
+        val deudaTotal = fracciones.sumOf { it.saldoPendiente() }
+
+        if (monto > deudaTotal) {
+            throw BusinessException("El monto a pagar supera la deuda total con este usuario.")
+        }
+
+        var montoRestante = monto
+
+        // Pagar iterando las fracciones más antiguas primero
+        for (fraccion in fracciones) {
+            if (montoRestante <= 0) break
+
+            val saldo = fraccion.saldoPendiente()
+            val montoAPagar = minOf(montoRestante, saldo)
+
+            // Ir cancelando la deuda
+            fraccion.pagar(montoAPagar)
+            montoRestante -= montoAPagar
+        }
+
+        // Guardar todos los cambios
+        fraccionGastoRepository.saveAll(fracciones)
     }
 
     private fun validarDatosBasicos(gasto: Gasto) {

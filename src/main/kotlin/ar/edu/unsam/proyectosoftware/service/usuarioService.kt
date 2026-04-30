@@ -10,6 +10,7 @@ import ar.edu.unsam.proyectosoftware.dto.UsuarioLoginDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioLogueadoDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioNombreIdDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioRegistradoDTO
+import ar.edu.unsam.proyectosoftware.dto.TipoActividad
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.IntegranteGrupoRepository
@@ -28,7 +29,8 @@ class UsuarioService(
     val integranteGrupoRepository: IntegranteGrupoRepository,
     val solicitudAmistadRepository: SolicitudAmistadRepository,
     private val passwordEncoder: PasswordEncoder,
-    private val jwtUtils: JwtUtils
+    private val jwtUtils: JwtUtils,
+    private val actividadService: ActividadService,
 ) {
 
     @Transactional
@@ -60,8 +62,19 @@ class UsuarioService(
         val contrasenaHasheada = passwordEncoder.encode(dto.contrasena)
 
         val nuevoUsuario = Usuario(nombre = dto.nombre, email = dto.email, contrasena = contrasenaHasheada)
+        val usuarioCreado = usuarioRepository.save(nuevoUsuario)
 
-        return usuarioRepository.save(nuevoUsuario)
+        actividadService.registrarActividad(
+            usuario = usuarioCreado,
+            tipo = TipoActividad.CUENTA_CREADA,
+            descripcion = "Tu cuenta fue creada exitosamente.",
+            metadata = mapOf(
+                "usuarioId" to usuarioCreado.id,
+                "email" to usuarioCreado.email,
+            )
+        )
+
+        return usuarioCreado
     }
 
     @Transactional
@@ -93,6 +106,12 @@ class UsuarioService(
         return usuarioRepository.findById(usuarioID)
             .orElseThrow { Exception("Usuario inexistente") }
     }
+
+    fun sonAmigos(idUsuario: Long, idAmigo: Long): Boolean =
+        usuarioRepository.existsByIdAndAmigosId(idUsuario, idAmigo)
+
+    fun tieneSolicitudPendiente(idEmisor: Long, idReceptor: Long): Boolean =
+        solicitudAmistadRepository.existsByIdEmisorAndIdReceptor(idEmisor, idReceptor)
 
     fun obtenerTodosLosUsuarios(): Iterable<Usuario> {
         return usuarioRepository.findAll()
@@ -187,6 +206,15 @@ class UsuarioService(
 
         if (emisor.id == idReceptor) throw Exception("No podés enviarte una solicitud a vos mismo")
 
+        if (usuarioRepository.existsByIdAndAmigosId(emisor.id!!, idReceptor))
+            throw Exception("Este usuario ya es tu amigo")
+
+        if (solicitudAmistadRepository.existsByIdEmisorAndIdReceptor(idReceptor, emisor.id!!))
+            throw Exception("Este usuario ya te envió una solicitud de amistad")
+
+        if (solicitudAmistadRepository.existsByIdEmisorAndIdReceptor(emisor.id!!, idReceptor))
+            throw Exception("Ya le enviaste una solicitud de amistad a este usuario")
+
         val solicitud = SolicitudAmistad(emisor.id!!, idReceptor)
         solicitudAmistadRepository.save(solicitud)
         return idReceptor
@@ -194,12 +222,19 @@ class UsuarioService(
 
     @Transactional
     fun eliminarAmigo(idUsuario: Long, idAmigo: Long) {
+        if (!usuarioRepository.existsByIdAndAmigosId(idUsuario, idAmigo))
+            throw Exception("Este usuario no es tu amigo")
+
         val usuario = obtenerUsuario(idUsuario)
         val amigo = obtenerUsuario(idAmigo)
         usuario.eliminarAmigo(amigo)
         amigo.eliminarAmigo(usuario)
         usuarioRepository.save(usuario)
         usuarioRepository.save(amigo)
+
+        // Clean up any stale pending requests between them
+        solicitudAmistadRepository.deleteByIdEmisorAndIdReceptor(idUsuario, idAmigo)
+        solicitudAmistadRepository.deleteByIdEmisorAndIdReceptor(idAmigo, idUsuario)
     }
 
 
@@ -215,12 +250,18 @@ class UsuarioService(
         }
 
         if (aceptar) {
+            if (usuarioRepository.existsByIdAndAmigosId(usuarioLogueado.id!!, solicitud.idEmisor))
+                throw Exception("Ya son amigos")
+
             val emisor = obtenerUsuario(solicitud.idEmisor)
             usuarioLogueado.agregarAmigo(emisor)
             emisor.agregarAmigo(usuarioLogueado)
 
             usuarioRepository.save(usuarioLogueado)
             usuarioRepository.save(emisor)
+
+            // Clean up any reverse pending request between the two users
+            solicitudAmistadRepository.deleteByIdEmisorAndIdReceptor(usuarioLogueado.id!!, solicitud.idEmisor)
         }
 
         solicitudAmistadRepository.delete(solicitud)

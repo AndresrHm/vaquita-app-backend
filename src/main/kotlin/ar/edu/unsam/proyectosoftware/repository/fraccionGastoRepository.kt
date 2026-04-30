@@ -8,10 +8,14 @@ interface SaldoPendiente {
     val montoFraccion: Double
     val pagoParcial: Double
 
-    fun saldoPendiente() = montoFraccion - pagoParcial
+    fun saldoPendiente(): Double {
+        return Math.round((montoFraccion - pagoParcial) * 100) / 100.0
+    }
 }
 
 @Repository
 interface FraccionGastoRepository : CrudRepository<FraccionGasto, Long> {
+    fun findByAcreedorIdAndGastoAsociadoGrupoId(acreedorId: Long, grupoId: Long): List<SaldoPendiente>
+    fun findByDeudorIdAndGastoAsociadoGrupoId(deudorId: Long, grupoId: Long): List<SaldoPendiente>
     fun findByDeudorId(id: Long): List<SaldoPendiente>
 }

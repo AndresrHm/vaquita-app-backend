@@ -1,5 +1,5 @@
 package ar.edu.unsam.proyectosoftware.dto
-import ar.edu.unsam.proyectosoftware.domain.CategoriaGasto
+import ar.edu.unsam.proyectosoftware.domain.enums.CategoriaGasto
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 
 import ar.edu.unsam.proyectosoftware.domain.enums.TipoGasto
@@ -45,6 +45,7 @@ data class GastoItemDTO(
     val paymentType: String,
     val imageUrl: String
 )
+
 data class GastoDetalleDTO(
     val id: Long,
     val descripcion: String,
@@ -55,6 +56,7 @@ data class GastoDetalleDTO(
     val participantes: List<Usuario>,
     val tipoGasto: TipoGasto
 )
+
 data class FilterGastosCustom(
     val vista: TipoRelacionVista? = null,
     val categoria: List<CategoriaGasto>? = null,

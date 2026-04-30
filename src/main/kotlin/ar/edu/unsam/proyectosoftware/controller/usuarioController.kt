@@ -45,8 +45,10 @@ class UsuarioController(
         val authentication = auth ?: throw Exception("No se encontró el token o el usuario no está autenticado")
         val usuario = usuarioService.obtenerUsuarioLogueado(authentication)
         val usuarioBuscado = usuarioService.obtenerUsuario(idBuscado)
+        val esAmigo = usuarioService.sonAmigos(idBuscado, usuario.id!!)
+        val solicitudPendiente = if (esAmigo) false else usuarioService.tieneSolicitudPendiente(usuario.id!!, idBuscado)
         val gruposCompartidos = grupoService.obtenerGruposCompartidos(usuario.id!!, usuarioBuscado.id!!)
-        val usuarioBuscadoInfo = UsuarioMapper.toInfoDTO(usuarioBuscado, usuario, gruposCompartidos)
+        val usuarioBuscadoInfo = UsuarioMapper.toInfoDTO(usuarioBuscado, esAmigo, solicitudPendiente, gruposCompartidos)
         return ResponseEntity.ok(usuarioBuscadoInfo)
     }
 

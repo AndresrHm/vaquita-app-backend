@@ -26,4 +26,5 @@ data class FilterActividadDTO(
     val hasta: LocalDateTime? = null,
     val page: Int = 0,
     val size: Int = 6,
+    val search: String? = null,
 )

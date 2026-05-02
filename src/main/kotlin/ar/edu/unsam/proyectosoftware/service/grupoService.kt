@@ -17,6 +17,7 @@ import ar.edu.unsam.proyectosoftware.repository.IntegranteGrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.MiembroProjection
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
 import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
@@ -24,6 +25,22 @@ import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
+enum class TipoFiltroGrupo {
+    TODOS_LOS_GRUPOS,
+    SALDOS_PENDIENTES,
+    GRUPOS_A_LOS_QUE_DEBES,
+    GRUPOS_QUE_TE_DEBEN
+}
+
+fun String?.asTipoFiltroGrupo(): TipoFiltroGrupo {
+    return when (this?.lowercase()) {
+        "all" -> TipoFiltroGrupo.TODOS_LOS_GRUPOS
+        "pending" -> TipoFiltroGrupo.SALDOS_PENDIENTES
+        "you-owe" -> TipoFiltroGrupo.GRUPOS_A_LOS_QUE_DEBES
+        "owe-you" -> TipoFiltroGrupo.GRUPOS_QUE_TE_DEBEN
+        else -> TipoFiltroGrupo.TODOS_LOS_GRUPOS
+    }
+}
 
 @Service
 @Transactional
@@ -35,12 +52,51 @@ class GrupoService(
     private val usuarioService: UsuarioService,
     private val actividadService: ActividadService,
 ) {
-    fun obtenerGrupos(auth: Authentication, page: Int, size: Int): Page<Grupo> {
+    fun obtenerGrupos(auth: Authentication, page: Int, size: Int, search: String? = null, filter: String? = null): Page<Grupo> {
         val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
+        val tipoFiltro = filter.asTipoFiltroGrupo()
+
         // Blindaje contra el size = 0
         val safeSize = if (size <= 0) 8 else size
         val pageable = PageRequest.of(page, safeSize, Sort.by("fechaCreacion"))
-        return integranteGrupoRepository.findGruposByUsuario(usuarioLogueado.id!!, pageable)
+
+        // Obtener todos los grupos del usuario
+        val grupos = if (search?.isNotBlank() == true) {
+            integranteGrupoRepository.findGruposByUsuarioWithSearch(usuarioLogueado.id!!, search.trim(), PageRequest.of(0, Int.MAX_VALUE, Sort.by("fechaCreacion"))).content
+        } else {
+            integranteGrupoRepository.findGruposByUsuario(usuarioLogueado.id!!, PageRequest.of(0, Int.MAX_VALUE, Sort.by("fechaCreacion"))).content
+        }
+
+        // Aplicar filtro
+        val gruposFiltrados = grupos.filter { grupo ->
+            when (tipoFiltro) {
+                TipoFiltroGrupo.TODOS_LOS_GRUPOS -> true
+                TipoFiltroGrupo.SALDOS_PENDIENTES -> {
+                    // Grupos que tienen saldos pendientes (el usuario debe o le deben)
+                    gastoRepository.existeDeudaPendienteEnGrupo(grupo.id!!, usuarioLogueado.id!!) ||
+                    gastoRepository.existeDeudaPendienteHaciaUsuario(grupo.id!!, usuarioLogueado.id!!)
+                }
+                TipoFiltroGrupo.GRUPOS_A_LOS_QUE_DEBES -> {
+                    // Grupos donde el usuario le debe dinero a otros
+                    gastoRepository.existeDeudaPendienteEnGrupo(grupo.id!!, usuarioLogueado.id!!)
+                }
+                TipoFiltroGrupo.GRUPOS_QUE_TE_DEBEN -> {
+                    // Grupos donde otros le deben dinero al usuario
+                    gastoRepository.existeDeudaPendienteHaciaUsuario(grupo.id!!, usuarioLogueado.id!!)
+                }
+            }
+        }
+
+        // Paginar el resultado filtrado
+        val start = page * safeSize
+        val end = minOf(start + safeSize, gruposFiltrados.size)
+        val content = if (start < gruposFiltrados.size) gruposFiltrados.subList(start, end) else emptyList()
+
+        return org.springframework.data.domain.PageImpl(
+            content,
+            pageable,
+            gruposFiltrados.size.toLong()
+        )
     }
 
     fun obtenerDetalleGrupo(grupoId: Long, auth: Authentication): Grupo {

@@ -50,6 +50,7 @@ class ActividadService(
 			.and(ActividadSpecification.conTipo(filters.tipo))
 			.and(ActividadSpecification.desdeFecha(filters.desde))
 			.and(ActividadSpecification.hastaFecha(filters.hasta))
+			.and(ActividadSpecification.conSearch(filters.search))
 
 		val pagina = actividadRepository.findAll(spec, pageable)
 
@@ -84,4 +85,3 @@ class ActividadService(
 			.orElseThrow { BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO) }
 	}
 }
-

@@ -32,13 +32,18 @@ class ActividadController(
 		hasta: LocalDateTime?,
 		@RequestParam(defaultValue = "0") page: Int,
 		@RequestParam(defaultValue = "6") size: Int,
+		@RequestParam(required = false, name = "search") search: String?,
+		@RequestParam(required = false, name = "searchText") searchText: String?,
 	): PageResponse<ActividadDTO> {
+		// Soportamos ambos nombres de parámetro: `search` y `searchText` (legacy del frontend)
+		val finalSearch = (search ?: searchText)?.trim()
 		val filters = FilterActividadDTO(
 			tipo = tipo,
 			desde = desde,
 			hasta = hasta,
 			page = page,
 			size = size,
+			search = finalSearch,
 		)
 
 		return actividadService.obtenerActividadesDelUsuarioLogueado(auth, filters)

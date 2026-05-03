@@ -28,7 +28,7 @@ class GrupoController(
     fun obtenerGrupos(
         auth: Authentication?,
         @RequestParam page: Int = 0,
-        @RequestParam size: Int = 8
+        @RequestParam size: Int = 5
     ): PageResponse<GrupoDTO> {
         val authentication = auth ?: throw Exception("No autorizado: Token no encontrado")
         val resultPage = grupoService.obtenerGrupos(authentication, page, size)

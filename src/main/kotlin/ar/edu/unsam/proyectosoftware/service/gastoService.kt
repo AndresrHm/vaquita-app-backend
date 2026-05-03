@@ -2,9 +2,12 @@ package ar.edu.unsam.proyectosoftware.service
 
 import ar.edu.unsam.proyectosoftware.BusinessException
 import ar.edu.unsam.proyectosoftware.domain.Gasto
+import ar.edu.unsam.proyectosoftware.domain.FraccionGasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.BalanceDTO
+import ar.edu.unsam.proyectosoftware.dto.PagoDTO
+import ar.edu.unsam.proyectosoftware.dto.TipoActividad
 import ar.edu.unsam.proyectosoftware.dto.CreacionGastoDTO
 import ar.edu.unsam.proyectosoftware.dto.FilterGastosCustom
 import ar.edu.unsam.proyectosoftware.dto.OrdenGasto
@@ -35,7 +38,8 @@ class GastoService(
     var integranteGrupoRepository: IntegranteGrupoRepository,
     var grupoRepository: GrupoRepository,
     var usuarioRepository: UsuarioRepository,
-    private val usuarioService: UsuarioService
+    var usuarioService: UsuarioService,
+    var actividadService: ActividadService,
 ) {
 
     @Transactional
@@ -99,7 +103,7 @@ class GastoService(
             .sumOf { it.saldoPendiente() }
     }
 
-    @Transactional(readOnly = true) // Si no está el transactional, no reconoce los objetos
+    @Transactional(readOnly = true)
     fun getGastosByFilters(
         auth: Authentication,
         filters: FilterGastosCustom,
@@ -165,18 +169,64 @@ class GastoService(
         return gastosPage.toPageResponse { GastoMapper.toViewDTO(it, userId) }
     }
 
-    @Transactional(readOnly = true) // Si no está el transactional, no reconoce los objetos
-    fun obtenerBalancesSimplificados(grupoId: Long): List<BalanceDTO> {
-        val integrantes = integranteGrupoRepository.findAllByGrupoId(grupoId)
+    @Transactional(readOnly = true)
+    fun obtenerBalancesGrupo(grupoId: Long): List<BalanceDTO> {
+        val fracciones = fraccionGastoRepository.findAllByGastoAsociadoGrupoId(grupoId)
+            .filter { it.saldoPendiente() > 0.01 }
 
-        // 1 - Calcular el neto de cada uno en este grupo
-        val balancesNetos = obtenerBalancesNetos(integrantes, grupoId)
+        // Agrupamos por (Deudor, Acreedor) para tener el total bruto entre cada par
+        val balancesCruzados = mutableMapOf<Pair<Long, Long>, Double>()
+        val nombres = mutableMapOf<Long, String>()
 
-        val deudores = balancesNetos.filter { it.value < 0 }.toList().sortedBy { it.second }.toMutableList()
-        val acreedores = balancesNetos.filter { it.value > 0 }.toList().sortedByDescending { it.second }.toMutableList()
+        fracciones.forEach { fracc ->
+            val clave = fracc.deudor.id!! to fracc.acreedor.id!!
+            balancesCruzados[clave] = balancesCruzados.getOrDefault(clave, 0.0) + fracc.saldoPendiente()
+            nombres[fracc.deudor.id!!] = fracc.deudor.nombre
+            nombres[fracc.acreedor.id!!] = fracc.acreedor.nombre
+        }
 
-        // 2 - Algoritmo de liquidación
-        return simplificarDeudas(deudores, acreedores)
+        val resultados = mutableListOf<BalanceDTO>()
+        val procesados = mutableSetOf<Pair<Long, Long>>()
+
+        // Simplificamos deudas bilaterales: Si A debe a B y B debe a A, restamos.
+        balancesCruzados.keys.forEach { (u1, u2) ->
+            if (Pair(u1, u2) in procesados || Pair(u2, u1) in procesados) return@forEach
+
+            val deuda1a2 = balancesCruzados.getOrDefault(u1 to u2, 0.0)
+            val deuda2a1 = balancesCruzados.getOrDefault(u2 to u1, 0.0)
+
+            if (deuda1a2 > deuda2a1) {
+                resultados.add(BalanceDTO(u1, nombres[u1]!!, u2, nombres[u2]!!, Math.round((deuda1a2 - deuda2a1) * 100) / 100.0))
+            } else if (deuda2a1 > deuda1a2) {
+                resultados.add(BalanceDTO(u2, nombres[u2]!!, u1, nombres[u1]!!, Math.round((deuda2a1 - deuda1a2) * 100) / 100.0))
+            }
+
+            procesados.add(u1 to u2)
+        }
+
+        return resultados.filter { it.monto > 0.01 }
+    }
+
+    @Transactional
+    fun realizarPagoPorGasto(auth: Authentication, pagoDTO: PagoDTO) {
+        val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
+        val gastoId = pagoDTO.gastoId
+        val fraccion = fraccionGastoRepository.findByDeudorIdAndGastoAsociadoId(usuarioLogueado.id!!, gastoId)
+            ?: throw BusinessException(ErrorStrings.FRACCION_NO_ENCONTRADA)
+
+        fraccion.pagar(pagoDTO.monto)
+
+        fraccionGastoRepository.save(fraccion)
+    }
+
+    @Transactional
+    fun realizarPagoGlobalAUsuario(auth: Authentication, acreedorId: Long, montoEnviado: Double) {
+        procesarPagoSimplificado(auth, null, acreedorId, montoEnviado)
+    }
+
+    @Transactional
+    fun realizarPagoGrupoAUsuario(auth: Authentication, grupoId: Long, acreedorId: Long, montoEnviado: Double) {
+        procesarPagoSimplificado(auth, grupoId, acreedorId, montoEnviado)
     }
 
     private fun validarDatosBasicos(gasto: Gasto) {
@@ -195,53 +245,6 @@ class GastoService(
         if (gasto.items.any { it.nombre.length > MAX_CARACTERES_NOMBRE_PRODUCTO }) {
             throw BusinessException(ErrorStrings.NOMBRE_PRODUCTO_LARGO(MAX_CARACTERES_NOMBRE_PRODUCTO))
         }
-    }
-
-    private fun obtenerBalancesNetos(
-        integrantes: List<Usuario>,
-        grupoId: Long
-    ): Map<Usuario, Double> {
-        // AssociateWith crea un map con los valores de la
-        // primera lista como keys y los de la segunda como values
-        return integrantes.associateWith { integrante ->
-            val loQueLeDeben =
-                fraccionGastoRepository.findByAcreedorIdAndGastoAsociadoGrupoId(integrante.id!!, grupoId)
-                    .sumOf { it.saldoPendiente() }
-            val loQueDebe =
-                fraccionGastoRepository.findByDeudorIdAndGastoAsociadoGrupoId(integrante.id!!, grupoId)
-                    .sumOf { it.saldoPendiente() }
-            Math.round((loQueLeDeben - loQueDebe) * 100) / 100.0
-        }.filter { Math.abs(it.value) > 0.01 }.toMutableMap()
-    }
-
-    private fun simplificarDeudas(
-        deudores: MutableList<Pair<Usuario, Double>>,
-        acreedores: MutableList<Pair<Usuario, Double>>
-    ): List<BalanceDTO> {
-        val resultados = mutableListOf<BalanceDTO>()
-
-        var dIdx = 0
-        var aIdx = 0
-
-        while (dIdx < deudores.size && aIdx < acreedores.size) {
-            val (deudor, deudaTotal) = deudores[dIdx]
-            val (acreedor, creditoTotal) = acreedores[aIdx]
-
-            val montoATransferir = minOf(-deudaTotal, creditoTotal)
-
-            resultados.add(BalanceDTO(deudor.id!!, deudor.nombre, acreedor.id!!, acreedor.nombre, montoATransferir))
-
-            // Restamos lo transferido de los saldos temporales
-            deudores[dIdx] = deudor to (deudores[dIdx].second + montoATransferir)
-            acreedores[aIdx] = acreedor to (acreedores[aIdx].second - montoATransferir)
-
-            // Si el deudor ya no debe nada (o casi nada por redondeo), pasamos al siguiente
-            if (Math.abs(deudores[dIdx].second) < 0.01) dIdx++
-            // Si al acreedor ya no le deben nada, pasamos al siguiente
-            if (Math.abs(acreedores[aIdx].second) < 0.01) aIdx++
-        }
-
-        return resultados
     }
 
     // Métodos auxiliares
@@ -269,6 +272,36 @@ class GastoService(
         }
 
         return true
+    }
+
+    private fun procesarPagoSimplificado(auth: Authentication, grupoId: Long?, acreedorId: Long, montoEnviado: Double) {
+        val deudorId = usuarioService.obtenerUsuarioLogueado(auth).id!!
+
+        // 1. Buscamos deudas en ambas direcciones (Filtrado por grupo opcionalmente)
+        val deudasConmigo = fraccionGastoRepository.findFraccionesPendientesEntre(acreedorId, deudorId, grupoId)
+        val misDeudasConEl = fraccionGastoRepository.findFraccionesPendientesEntre(deudorId, acreedorId, grupoId)
+
+        // 2. Compensación: Saldamos lo que él me debía (crédito contable)
+        val creditoCompensacion = deudasConmigo.sumOf { it.saldoPendiente() }
+        deudasConmigo.forEach { it.pagar(it.saldoPendiente()) }
+
+        // 3. Pago Real: Aplicamos (Crédito + Efectivo) a mis deudas con él
+        aplicarPagoAFracciones(misDeudasConEl, creditoCompensacion + montoEnviado)
+
+        // 4. Persistencia
+        fraccionGastoRepository.saveAll(deudasConmigo + misDeudasConEl)
+    }
+
+    private fun aplicarPagoAFracciones(fracciones: List<FraccionGasto>, monto: Double): Double {
+        var restante = monto
+        for (f in fracciones) {
+            if (restante <= 0.0) break
+            val saldo = f.saldoPendiente()
+            val pago = minOf(restante, saldo)
+            f.pagar(pago)
+            restante -= pago
+        }
+        return restante
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -305,6 +338,37 @@ class GastoService(
 
             null ->
                 Sort.by(Sort.Direction.DESC, "fecha") // default
+        }
+    }
+
+    private fun registrarActividadesDeGasto(gasto: Gasto, fracciones: List<ar.edu.unsam.proyectosoftware.domain.FraccionGasto>) {
+        actividadService.registrarActividad(
+            usuario = gasto.pagador,
+            tipo = TipoActividad.DEUDA_GENERADA,
+            descripcion = "Registraste un gasto en ${gasto.grupo.nombre}.",
+            metadata = mapOf(
+                "gastoId" to gasto.id,
+                "grupoId" to gasto.grupo.id,
+                "grupoNombre" to gasto.grupo.nombre,
+                "montoTotal" to gasto.monto,
+                "deudores" to fracciones.map { it.deudor.id },
+            ),
+        )
+
+        fracciones.forEach { fraccion ->
+            actividadService.registrarActividad(
+                usuario = fraccion.deudor,
+                tipo = TipoActividad.GASTO_DEUDA,
+                descripcion = "Se registro una deuda en ${gasto.grupo.nombre}.",
+                metadata = mapOf(
+                    "gastoId" to gasto.id,
+                    "grupoId" to gasto.grupo.id,
+                    "grupoNombre" to gasto.grupo.nombre,
+                    "acreedorId" to fraccion.acreedor.id,
+                    "acreedorNombre" to fraccion.acreedor.nombre,
+                    "montoAdeudado" to fraccion.montoFraccion,
+                ),
+            )
         }
     }
 

@@ -38,6 +38,22 @@ class ActividadSpecification {
 				cb.lessThanOrEqualTo(root.get<LocalDateTime>("fecha"), hasta)
 			}
 		}
+
+		fun conSearch(search: String?): Specification<Actividad> = Specification { root, query, cb ->
+			if (search == null || search.isBlank()) {
+				cb.conjunction()
+			} else {
+				val pattern = "%${search.lowercase()}%"
+				val descripcionPath = root.get<String>("descripcion")
+				val metadataPath = root.get<String>("metadata")
+				val tipoAsString = root.get<Any>("tipo").`as`(String::class.java)
+				cb.or(
+					cb.like(cb.lower(descripcionPath), pattern),
+					cb.like(cb.lower(cb.coalesce(metadataPath, cb.literal(""))), pattern),
+					cb.like(cb.lower(tipoAsString), pattern),
+				)
+			}
+		}
 	}
 }
 

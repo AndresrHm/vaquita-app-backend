@@ -122,6 +122,22 @@ interface IntegranteGrupoRepository : CrudRepository<IntegranteGrupo, Long> {
         @Param("usuarioId") usuarioId: Long,
         pageable: Pageable
     ): Page<Grupo>
+
+    @Query(
+        """
+    SELECT g
+    FROM Grupo g
+    JOIN g.integrantes ig
+    WHERE ig.usuario.id = :usuarioId
+      AND g.activado = true
+      AND LOWER(g.nombre) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
+"""
+    )
+    fun findGruposByUsuarioWithSearch(
+        @Param("usuarioId") usuarioId: Long,
+        @Param("searchTerm") searchTerm: String,
+        pageable: Pageable
+    ): Page<Grupo>
 }
 
 data class MiembroProjection(

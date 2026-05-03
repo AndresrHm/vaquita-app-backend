@@ -5,13 +5,14 @@ import ar.edu.unsam.proyectosoftware.domain.SolicitudAmistad
 import ar.edu.unsam.proyectosoftware.domain.SolicitudAmistadFront
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.CambioContrasenaDTO
+import ar.edu.unsam.proyectosoftware.dto.UsuarioConBalanceDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioEditarDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioLoginDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioLogueadoDTO
-import ar.edu.unsam.proyectosoftware.dto.UsuarioNombreIdDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioRegistradoDTO
 import ar.edu.unsam.proyectosoftware.dto.TipoActividad
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
+import ar.edu.unsam.proyectosoftware.repository.FraccionGastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.IntegranteGrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.SolicitudAmistadRepository
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional
 class UsuarioService(
     val usuarioRepository: UsuarioRepository,
     val grupoRepository: GrupoRepository,
+    val fraccionGastoRepository: FraccionGastoRepository,
     val integranteGrupoRepository: IntegranteGrupoRepository,
     val solicitudAmistadRepository: SolicitudAmistadRepository,
     private val passwordEncoder: PasswordEncoder,
@@ -181,9 +183,32 @@ class UsuarioService(
     }
 
     @Transactional(readOnly = true)
-    fun obtenerAmigos(auth: Authentication): List<UsuarioNombreIdDTO> {
-        val usuario = obtenerUsuarioLogueado(auth)
-        return usuario.amigos.map { Usuario.toUsuarioNombreIdDTO(it) }
+    fun obtenerAmigos(auth: Authentication): List<UsuarioConBalanceDTO> {
+        val usuarioLogueado = obtenerUsuarioLogueado(auth)
+        val logueadoId = usuarioLogueado.id!!
+
+        return usuarioLogueado.amigos.map { amigo ->
+            val amigoId = amigo.id!!
+
+            // Calcular lo que yo le debo a él
+            val loQueDebo = fraccionGastoRepository
+                .findFraccionesPendientesEntre(logueadoId, amigoId, null)
+                .sumOf { it.saldoPendiente() }
+
+            // Calcular lo que él me debe a mí
+            val loQueMeDebe = fraccionGastoRepository
+                .findFraccionesPendientesEntre(amigoId, logueadoId, null)
+                .sumOf { it.saldoPendiente() }
+
+            // Balance neto: Positivo = Me debe /// Negativo = Le debo
+            val balanceNeto = Math.round((loQueDebo - loQueMeDebe) * 100) / 100.0
+
+            UsuarioConBalanceDTO(
+                id = amigoId,
+                nombre = amigo.nombre,
+                monto = balanceNeto
+            )
+        }
     }
 
     @Transactional(readOnly = true)

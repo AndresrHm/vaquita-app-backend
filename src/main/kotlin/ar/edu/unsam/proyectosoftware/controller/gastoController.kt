@@ -10,7 +10,10 @@ import ar.edu.unsam.proyectosoftware.dto.GastoDetalleDTO
 import ar.edu.unsam.proyectosoftware.dto.PageResponse
 import ar.edu.unsam.proyectosoftware.domain.enums.CategoriaGasto
 import ar.edu.unsam.proyectosoftware.dto.FilterGastosCustom
-import org.springframework.web.bind.annotation.CrossOrigin
+import ar.edu.unsam.proyectosoftware.dto.PagoDTO
+import ar.edu.unsam.proyectosoftware.dto.PagoGlobalDTO
+import ar.edu.unsam.proyectosoftware.service.UsuarioService
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.security.core.Authentication
@@ -21,9 +24,9 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("gasto")
-@CrossOrigin(origins = ["*"])
 class GastoController(
     val gastoService: GastoService,
+    val usuarioService: UsuarioService
 ) {
     @PostMapping
     fun crearGasto(auth: Authentication, @RequestBody gastoDTO: CreacionGastoDTO): String {
@@ -34,6 +37,25 @@ class GastoController(
     @GetMapping("/me/deuda")
     fun obtenerDeuda(auth: Authentication): Double {
         return gastoService.obtenerDeuda(auth)
+    }
+
+    @PostMapping("/pagar")
+    fun pagarGasto(
+        auth: Authentication,
+        @RequestBody pagoDTO: PagoDTO
+    ): ResponseEntity<String> {
+        gastoService.realizarPagoPorGasto(auth, pagoDTO)
+
+        return ResponseEntity.ok("Pago registrado correctamente")
+    }
+
+    @PostMapping("/pagar/global")
+    fun pagarDeudaGlobal(
+        auth: Authentication,
+        @RequestBody pagoDTO: PagoGlobalDTO
+    ): ResponseEntity<String> {
+        gastoService.realizarPagoGlobalAUsuario(auth, pagoDTO.acreedorId, pagoDTO.monto)
+        return ResponseEntity.ok("Pago global procesado y deudas simplificadas")
     }
 
     @GetMapping("/filtrar")
@@ -69,12 +91,19 @@ class GastoController(
         }?.takeIf { it.isNotEmpty() }
 
         val fechaInicioLocal = fechaInicio?.let {
-            try { java.time.LocalDate.parse(it) } catch (_: Exception) { null }
+            try {
+                java.time.LocalDate.parse(it)
+            } catch (_: Exception) {
+                null
+            }
         }
         val fechaFinLocal = fechaFin?.let {
-            try { java.time.LocalDate.parse(it) } catch (_: Exception) { null }
+            try {
+                java.time.LocalDate.parse(it)
+            } catch (_: Exception) {
+                null
+            }
         }
-
 
 
         val filters = FilterGastosCustom(

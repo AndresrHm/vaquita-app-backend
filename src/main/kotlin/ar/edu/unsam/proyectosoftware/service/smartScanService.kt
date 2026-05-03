@@ -13,10 +13,6 @@ import java.util.Base64
 // Enums
 // ============================================================================
 
-enum class CategoriaGasto {
-    COMIDA, BEBIDA, HOGAR, TRANSPORTE, SUPERMERCADO, ENTRETENIMIENTO, VARIOS, OTROS
-}
-
 enum class Moneda(val codigo: String, val simbolo: String) {
     ARS("ARS", "$"),
     USD("USD", "$"),

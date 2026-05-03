@@ -111,7 +111,7 @@ class GrupoController(
     fun obtenerBalancesGrupo(
         @PathVariable grupoId: Long
     ): ResponseEntity<List<BalanceDTO>?> {
-        val balances = gastoService.obtenerBalancesSimplificados(grupoId)
+        val balances = gastoService.obtenerBalancesGrupo(grupoId)
         return ResponseEntity.ok<List<BalanceDTO>?>(balances)
     }
 

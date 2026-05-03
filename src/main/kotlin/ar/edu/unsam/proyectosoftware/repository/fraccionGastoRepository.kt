@@ -29,4 +29,5 @@ interface FraccionGastoRepository : CrudRepository<FraccionGasto, Long> {
     ORDER BY f.gastoAsociado.fecha ASC
 """)
     fun findFraccionesPendientesEntre(deudorId: Long, acreedorId: Long, grupoId: Long): List<FraccionGasto>
+    fun findAllByGastoAsociadoGrupoId(grupoId: Long): List<FraccionGasto>
 }

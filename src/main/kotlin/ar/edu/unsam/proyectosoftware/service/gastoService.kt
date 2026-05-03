@@ -1,6 +1,7 @@
 package ar.edu.unsam.proyectosoftware.service
 
 import ar.edu.unsam.proyectosoftware.BusinessException
+import ar.edu.unsam.proyectosoftware.domain.FraccionGasto
 import ar.edu.unsam.proyectosoftware.domain.Gasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.Usuario
@@ -100,7 +101,7 @@ class GastoService(
             .sumOf { it.saldoPendiente() }
     }
 
-    @Transactional(readOnly = true) // Si no está el transactional, no reconoce los objetos
+    @Transactional(readOnly = true)
     fun getGastosByFilters(
         auth: Authentication,
         filters: FilterGastosCustom,
@@ -166,18 +167,42 @@ class GastoService(
         return gastosPage.toPageResponse { GastoMapper.toViewDTO(it, userId) }
     }
 
-    @Transactional(readOnly = true) // Si no está el transactional, no reconoce los objetos
-    fun obtenerBalancesSimplificados(grupoId: Long): List<BalanceDTO> {
-        val integrantes = integranteGrupoRepository.findAllByGrupoId(grupoId)
+    @Transactional(readOnly = true)
+    fun obtenerBalancesGrupo(grupoId: Long): List<BalanceDTO> {
+        val fracciones = fraccionGastoRepository.findAllByGastoAsociadoGrupoId(grupoId)
+            .filter { it.saldoPendiente() > 0.01 }
 
-        // 1 - Calcular el neto de cada uno en este grupo
-        val balancesNetos = obtenerBalancesNetos(integrantes, grupoId)
+        // Agrupamos por (Deudor, Acreedor) para tener el total bruto entre cada par
+        val balancesCruzados = mutableMapOf<Pair<Long, Long>, Double>()
+        val nombres = mutableMapOf<Long, String>()
 
-        val deudores = balancesNetos.filter { it.value < 0 }.toList().sortedBy { it.second }.toMutableList()
-        val acreedores = balancesNetos.filter { it.value > 0 }.toList().sortedByDescending { it.second }.toMutableList()
+        fracciones.forEach { fracc ->
+            val clave = fracc.deudor.id!! to fracc.acreedor.id!!
+            balancesCruzados[clave] = balancesCruzados.getOrDefault(clave, 0.0) + fracc.saldoPendiente()
+            nombres[fracc.deudor.id!!] = fracc.deudor.nombre
+            nombres[fracc.acreedor.id!!] = fracc.acreedor.nombre
+        }
 
-        // 2 - Algoritmo de liquidación
-        return simplificarDeudas(deudores, acreedores)
+        val resultados = mutableListOf<BalanceDTO>()
+        val procesados = mutableSetOf<Pair<Long, Long>>()
+
+        // Simplificamos deudas bilaterales: Si A debe a B y B debe a A, restamos.
+        balancesCruzados.keys.forEach { (u1, u2) ->
+            if (Pair(u1, u2) in procesados || Pair(u2, u1) in procesados) return@forEach
+
+            val deuda1a2 = balancesCruzados.getOrDefault(u1 to u2, 0.0)
+            val deuda2a1 = balancesCruzados.getOrDefault(u2 to u1, 0.0)
+
+            if (deuda1a2 > deuda2a1) {
+                resultados.add(BalanceDTO(u1, nombres[u1]!!, u2, nombres[u2]!!, Math.round((deuda1a2 - deuda2a1) * 100) / 100.0))
+            } else if (deuda2a1 > deuda1a2) {
+                resultados.add(BalanceDTO(u2, nombres[u2]!!, u1, nombres[u1]!!, Math.round((deuda2a1 - deuda1a2) * 100) / 100.0))
+            }
+
+            procesados.add(u1 to u2)
+        }
+
+        return resultados.filter { it.monto > 0.01 }
     }
 
     @Transactional
@@ -193,36 +218,30 @@ class GastoService(
     }
 
     @Transactional
-    fun realizarPagoGrupoAUsuario(auth: Authentication, grupoId: Long, acreedorId: Long, monto: Double) {
+    fun realizarPagoGrupoAUsuario(auth: Authentication, grupoId: Long, acreedorId: Long, montoEnviado: Double) {
         val deudor = usuarioService.obtenerUsuarioLogueado(auth)
+        val deudorId = deudor.id!!
 
-        // Buscar las fracciones reales que componen esa deuda
-        val fracciones = fraccionGastoRepository.findFraccionesPendientesEntre(
-            deudor.id!!, acreedorId, grupoId
-        )
+        // 1. Traer todas las fracciones pendientes en ambas direcciones
+        val fraccionesQueDebo = fraccionGastoRepository.findFraccionesPendientesEntre(deudorId, acreedorId, grupoId)
+        val fraccionesQueMeDeben = fraccionGastoRepository.findFraccionesPendientesEntre(acreedorId, deudorId, grupoId)
 
-        val deudaTotal = fracciones.sumOf { it.saldoPendiente() }
-
-        if (monto > deudaTotal) {
-            throw BusinessException(ErrorStrings.PAGO_MAYOR_A_DEUDA)
+        // 2. Compensación / Simplificación de deuda
+        var creditoPorCompensacion = 0.0
+        fraccionesQueMeDeben.forEach { fraccion ->
+            val valor = fraccion.saldoPendiente()
+            fraccion.pagar(valor)
+            creditoPorCompensacion += valor
         }
+        fraccionGastoRepository.saveAll(fraccionesQueMeDeben)
 
-        var montoRestante = monto
+        // 3. Aplicar el monto simplificado a fracciones pendientes
+        aplicarPagoAFracciones(fraccionesQueDebo, creditoPorCompensacion)
 
-        // Pagar iterando las fracciones más antiguas primero
-        for (fraccion in fracciones) {
-            if (montoRestante <= 0) break
+        // 4. Aplicar el pago recibido desde el front
+        aplicarPagoAFracciones(fraccionesQueDebo, montoEnviado)
 
-            val saldo = fraccion.saldoPendiente()
-            val montoAPagar = minOf(montoRestante, saldo)
-
-            // Ir cancelando la deuda
-            fraccion.pagar(montoAPagar)
-            montoRestante -= montoAPagar
-        }
-
-        // Guardar todos los cambios
-        fraccionGastoRepository.saveAll(fracciones)
+        fraccionGastoRepository.saveAll(fraccionesQueDebo)
     }
 
     private fun validarDatosBasicos(gasto: Gasto) {
@@ -241,53 +260,6 @@ class GastoService(
         if (gasto.items.any { it.nombre.length > MAX_CARACTERES_NOMBRE_PRODUCTO }) {
             throw BusinessException(ErrorStrings.NOMBRE_PRODUCTO_LARGO(MAX_CARACTERES_NOMBRE_PRODUCTO))
         }
-    }
-
-    private fun obtenerBalancesNetos(
-        integrantes: List<Usuario>,
-        grupoId: Long
-    ): Map<Usuario, Double> {
-        // AssociateWith crea un map con los valores de la
-        // primera lista como keys y los de la segunda como values
-        return integrantes.associateWith { integrante ->
-            val loQueLeDeben =
-                fraccionGastoRepository.findByAcreedorIdAndGastoAsociadoGrupoId(integrante.id!!, grupoId)
-                    .sumOf { it.saldoPendiente() }
-            val loQueDebe =
-                fraccionGastoRepository.findByDeudorIdAndGastoAsociadoGrupoId(integrante.id!!, grupoId)
-                    .sumOf { it.saldoPendiente() }
-            Math.round((loQueLeDeben - loQueDebe) * 100) / 100.0
-        }.filter { Math.abs(it.value) > 0.01 }.toMutableMap()
-    }
-
-    private fun simplificarDeudas(
-        deudores: MutableList<Pair<Usuario, Double>>,
-        acreedores: MutableList<Pair<Usuario, Double>>
-    ): List<BalanceDTO> {
-        val resultados = mutableListOf<BalanceDTO>()
-
-        var dIdx = 0
-        var aIdx = 0
-
-        while (dIdx < deudores.size && aIdx < acreedores.size) {
-            val (deudor, deudaTotal) = deudores[dIdx]
-            val (acreedor, creditoTotal) = acreedores[aIdx]
-
-            val montoATransferir = minOf(-deudaTotal, creditoTotal)
-
-            resultados.add(BalanceDTO(deudor.id!!, deudor.nombre, acreedor.id!!, acreedor.nombre, montoATransferir))
-
-            // Restamos lo transferido de los saldos temporales
-            deudores[dIdx] = deudor to (deudores[dIdx].second + montoATransferir)
-            acreedores[aIdx] = acreedor to (acreedores[aIdx].second - montoATransferir)
-
-            // Si el deudor ya no debe nada (o casi nada por redondeo), pasamos al siguiente
-            if (Math.abs(deudores[dIdx].second) < 0.01) dIdx++
-            // Si al acreedor ya no le deben nada, pasamos al siguiente
-            if (Math.abs(acreedores[aIdx].second) < 0.01) aIdx++
-        }
-
-        return resultados
     }
 
     // Métodos auxiliares
@@ -315,6 +287,18 @@ class GastoService(
         }
 
         return true
+    }
+
+    private fun aplicarPagoAFracciones(fracciones: List<FraccionGasto>, monto: Double): Double {
+        var restante = monto
+        for (f in fracciones) {
+            if (restante <= 0.0) break
+            val saldo = f.saldoPendiente()
+            val pago = minOf(restante, saldo)
+            f.pagar(pago)
+            restante -= pago
+        }
+        return restante
     }
 
     @Suppress("UNUSED_PARAMETER")

@@ -1,7 +1,7 @@
 package ar.edu.unsam.proyectosoftware.service
 
 import ar.edu.unsam.proyectosoftware.BusinessException
-import ar.edu.unsam.proyectosoftware.domain.CategoriaGasto
+import ar.edu.unsam.proyectosoftware.domain.enums.CategoriaGasto
 import ar.edu.unsam.proyectosoftware.domain.enums.TipoGasto
 import ar.edu.unsam.proyectosoftware.domain.Gasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo

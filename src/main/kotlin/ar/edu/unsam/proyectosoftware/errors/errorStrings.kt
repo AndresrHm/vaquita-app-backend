@@ -38,6 +38,7 @@ object ErrorStrings {
     const val NINGUN_USUARIO_ENCONTRADO = "Uno o más elementos no fueron encontrados"
 
     //Pagos
+    const val FRACCION_NO_ENCONTRADA = "No se ha encontrado la fracción a pagar."
     const val FRACCION_YA_SALDADA = "Esta deuda ya se encuentra cancelada"
     const val PAGO_MAYOR_A_DEUDA = "No se puede cancelar un monto mayor a la deuda"
     const val PAGO_NEGATIVO = "Debe pagar un monto positivo"

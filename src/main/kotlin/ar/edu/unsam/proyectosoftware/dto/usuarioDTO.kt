@@ -24,6 +24,12 @@ data class UsuarioNombreIdDTO(
     val id: Long
 )
 
+data class UsuarioConBalanceDTO(
+    val id: Long,
+    val nombre: String,
+    val monto: Double,
+)
+
 data class UsuarioInfoDTO(
     val nombre: String,
     val imagenUrl: String,

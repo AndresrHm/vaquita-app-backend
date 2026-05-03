@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 
 enum class TipoActividad {
     CUENTA_CREADA,
-    GASTO_DEUDA, // Los gastos son cuando tu le debes a otra persona
+    GASTO_DEUDA, // Los gastos son cuando tú le debes a otra persona
     GASTO_SALDADO,
     DEUDA_GENERADA, // Cuando otras personas te deben a ti
     DEUDA_SALDADA,

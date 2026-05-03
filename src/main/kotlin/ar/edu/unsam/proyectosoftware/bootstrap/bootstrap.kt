@@ -243,6 +243,15 @@ class BootstrapData(
                 }
                 agregarIntegrante(valentinaN, RolIntegrante.ADMIN)
             },
+            Grupo(
+                nombre = "Soy una bestia",
+                descripcion = "Club de fans de Miguel Merentiel",
+                imagenUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSUZWAPD0571F8H7JjkCcwcvQg6A8AKlFpnbxm1NZ674nX610rRGuX7P00-If0i_Fy-VOup5HtqV88JQieYFc4u6N490NigP-rBI-OKH9Qw&s=10",
+                fechaCreacion = LocalDate.now()
+            ).apply {
+                agregarIntegrante(juanA, RolIntegrante.ADMIN)
+                agregarIntegrante(andresH, RolIntegrante.MIEMBRO)
+            },
         )
 
         grupoRepository.saveAll(grupos)
@@ -257,6 +266,7 @@ class BootstrapData(
         val grupoHackLab = grupos[7]
         val grupoSeries  = grupos[8]
         val grupoFinde   = grupos[9]
+        val grupoBestia   = grupos[10]
 
         // Registrar actividades de ingreso a grupos
         listOf(
@@ -677,6 +687,16 @@ class BootstrapData(
                 "Entradas recital", CategoriaGasto.ENTRETENIMIENTO, 66000.0, nextFecha(),
                 grupoFinde, lucasP, grupoFinde.usuarios()
             ).apply { agregarItem("Tickets campo", 4.0, 16500.0) },
+
+            PartesIguales(
+                "Gorras de Merentiel", CategoriaGasto.VARIOS, 10000.0, nextFecha(),
+                grupoBestia, andresH, grupoBestia.usuarios()
+            ),
+
+            PartesIguales(
+                "Torta de cumpleaños", CategoriaGasto.COMIDA, 5000.0, nextFecha(),
+                grupoBestia, juanA, grupoBestia.usuarios()
+            ),
 
             ).forEach { gasto ->
             val gastoGuardado = gastoRepository.save(gasto)

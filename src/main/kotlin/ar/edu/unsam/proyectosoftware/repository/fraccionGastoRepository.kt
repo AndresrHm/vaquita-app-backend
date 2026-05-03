@@ -23,11 +23,13 @@ interface FraccionGastoRepository : CrudRepository<FraccionGasto, Long> {
     @Query("""
     SELECT f FROM FraccionGasto f 
     WHERE f.deudor.id = :deudorId 
-    AND f.acreedor.id = :acreedorId 
-    AND f.gastoAsociado.grupo.id = :grupoId 
-    AND f.pagoParcial < f.montoFraccion 
-    ORDER BY f.gastoAsociado.fecha ASC
+      AND f.acreedor.id = :acreedorId 
+      AND (:grupoId IS NULL OR f.gastoAsociado.grupo.id = :grupoId)
 """)
-    fun findFraccionesPendientesEntre(deudorId: Long, acreedorId: Long, grupoId: Long): List<FraccionGasto>
+    fun findFraccionesPendientesEntre(
+        deudorId: Long,
+        acreedorId: Long,
+        grupoId: Long?
+    ): List<FraccionGasto>
     fun findAllByGastoAsociadoGrupoId(grupoId: Long): List<FraccionGasto>
 }

@@ -11,6 +11,7 @@ import ar.edu.unsam.proyectosoftware.dto.PageResponse
 import ar.edu.unsam.proyectosoftware.domain.enums.CategoriaGasto
 import ar.edu.unsam.proyectosoftware.dto.FilterGastosCustom
 import ar.edu.unsam.proyectosoftware.dto.PagoDTO
+import ar.edu.unsam.proyectosoftware.dto.PagoGlobalDTO
 import ar.edu.unsam.proyectosoftware.service.UsuarioService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -46,6 +47,15 @@ class GastoController(
         gastoService.realizarPagoPorGasto(auth, pagoDTO)
 
         return ResponseEntity.ok("Pago registrado correctamente")
+    }
+
+    @PostMapping("/pagar/global")
+    fun pagarDeudaGlobal(
+        auth: Authentication,
+        @RequestBody pagoDTO: PagoGlobalDTO
+    ): ResponseEntity<String> {
+        gastoService.realizarPagoGlobalAUsuario(auth, pagoDTO.acreedorId, pagoDTO.monto)
+        return ResponseEntity.ok("Pago global procesado y deudas simplificadas")
     }
 
     @GetMapping("/filtrar")

@@ -218,30 +218,13 @@ class GastoService(
     }
 
     @Transactional
+    fun realizarPagoGlobalAUsuario(auth: Authentication, acreedorId: Long, montoEnviado: Double) {
+        procesarPagoSimplificado(auth, null, acreedorId, montoEnviado)
+    }
+
+    @Transactional
     fun realizarPagoGrupoAUsuario(auth: Authentication, grupoId: Long, acreedorId: Long, montoEnviado: Double) {
-        val deudor = usuarioService.obtenerUsuarioLogueado(auth)
-        val deudorId = deudor.id!!
-
-        // 1. Traer todas las fracciones pendientes en ambas direcciones
-        val fraccionesQueDebo = fraccionGastoRepository.findFraccionesPendientesEntre(deudorId, acreedorId, grupoId)
-        val fraccionesQueMeDeben = fraccionGastoRepository.findFraccionesPendientesEntre(acreedorId, deudorId, grupoId)
-
-        // 2. Compensación / Simplificación de deuda
-        var creditoPorCompensacion = 0.0
-        fraccionesQueMeDeben.forEach { fraccion ->
-            val valor = fraccion.saldoPendiente()
-            fraccion.pagar(valor)
-            creditoPorCompensacion += valor
-        }
-        fraccionGastoRepository.saveAll(fraccionesQueMeDeben)
-
-        // 3. Aplicar el monto simplificado a fracciones pendientes
-        aplicarPagoAFracciones(fraccionesQueDebo, creditoPorCompensacion)
-
-        // 4. Aplicar el pago recibido desde el front
-        aplicarPagoAFracciones(fraccionesQueDebo, montoEnviado)
-
-        fraccionGastoRepository.saveAll(fraccionesQueDebo)
+        procesarPagoSimplificado(auth, grupoId, acreedorId, montoEnviado)
     }
 
     private fun validarDatosBasicos(gasto: Gasto) {
@@ -287,6 +270,24 @@ class GastoService(
         }
 
         return true
+    }
+
+    private fun procesarPagoSimplificado(auth: Authentication, grupoId: Long?, acreedorId: Long, montoEnviado: Double) {
+        val deudorId = usuarioService.obtenerUsuarioLogueado(auth).id!!
+
+        // 1. Buscamos deudas en ambas direcciones (Filtrado por grupo opcionalmente)
+        val deudasConmigo = fraccionGastoRepository.findFraccionesPendientesEntre(acreedorId, deudorId, grupoId)
+        val misDeudasConEl = fraccionGastoRepository.findFraccionesPendientesEntre(deudorId, acreedorId, grupoId)
+
+        // 2. Compensación: Saldamos lo que él me debía (crédito contable)
+        val creditoCompensacion = deudasConmigo.sumOf { it.saldoPendiente() }
+        deudasConmigo.forEach { it.pagar(it.saldoPendiente()) }
+
+        // 3. Pago Real: Aplicamos (Crédito + Efectivo) a mis deudas con él
+        aplicarPagoAFracciones(misDeudasConEl, creditoCompensacion + montoEnviado)
+
+        // 4. Persistencia
+        fraccionGastoRepository.saveAll(deudasConmigo + misDeudasConEl)
     }
 
     private fun aplicarPagoAFracciones(fracciones: List<FraccionGasto>, monto: Double): Double {

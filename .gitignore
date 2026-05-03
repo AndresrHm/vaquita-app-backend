@@ -39,3 +39,6 @@ out/
 ### Pruebas Endpoint ###
 /requests
 *.http
+
+### Constantes secretas ###
+.env

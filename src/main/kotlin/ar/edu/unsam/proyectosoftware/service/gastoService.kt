@@ -193,7 +193,7 @@ class GastoService(
     }
 
     @Transactional
-    fun realizarPagoSimplificado(auth: Authentication, grupoId: Long, acreedorId: Long, monto: Double) {
+    fun realizarPagoGrupoAUsuario(auth: Authentication, grupoId: Long, acreedorId: Long, monto: Double) {
         val deudor = usuarioService.obtenerUsuarioLogueado(auth)
 
         // Buscar las fracciones reales que componen esa deuda
@@ -204,7 +204,7 @@ class GastoService(
         val deudaTotal = fracciones.sumOf { it.saldoPendiente() }
 
         if (monto > deudaTotal) {
-            throw BusinessException("El monto a pagar supera la deuda total con este usuario.")
+            throw BusinessException(ErrorStrings.PAGO_MAYOR_A_DEUDA)
         }
 
         var montoRestante = monto

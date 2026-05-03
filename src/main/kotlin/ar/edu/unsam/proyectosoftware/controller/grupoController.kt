@@ -115,12 +115,12 @@ class GrupoController(
         return ResponseEntity.ok<List<BalanceDTO>?>(balances)
     }
 
-    @PostMapping("/pagarDeudaGrupo")
-    fun pagarDeudaGrupo(
+    @PostMapping("/pagar/usuario")
+    fun pagarDeudaGrupoAUsuario(
         auth: Authentication,
         @RequestBody pagoDTO: PagoDeudaGrupoDTO
     ): ResponseEntity<String> {
-        gastoService.realizarPagoSimplificado(auth, pagoDTO.grupoId, pagoDTO.acreedorId, pagoDTO.monto)
+        gastoService.realizarPagoGrupoAUsuario(auth, pagoDTO.grupoId, pagoDTO.acreedorId, pagoDTO.monto)
         return ResponseEntity.ok("Deuda saldada correctamente")
     }
 

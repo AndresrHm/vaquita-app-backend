@@ -1,5 +1,6 @@
 package ar.edu.unsam.proyectosoftware.domain
 
+import ar.edu.unsam.proyectosoftware.dto.UsuarioInfoDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioNombreIdDTO
 import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.Column
@@ -45,6 +46,8 @@ class Usuario(
             amigos.remove(amigo)
         }
     }
+
+    fun esAmigo(amigo: Usuario) : Boolean = amigos.contains(amigo)
 
     companion object {
         fun toUsuarioNombreIdDTO(usuario: Usuario): UsuarioNombreIdDTO {

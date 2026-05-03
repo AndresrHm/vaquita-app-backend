@@ -1,17 +1,18 @@
 package ar.edu.unsam.proyectosoftware.service
 
 import ar.edu.unsam.proyectosoftware.BusinessException
-import ar.edu.unsam.proyectosoftware.domain.FraccionGasto
 import ar.edu.unsam.proyectosoftware.domain.Gasto
+import ar.edu.unsam.proyectosoftware.domain.FraccionGasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.BalanceDTO
+import ar.edu.unsam.proyectosoftware.dto.PagoDTO
+import ar.edu.unsam.proyectosoftware.dto.TipoActividad
 import ar.edu.unsam.proyectosoftware.dto.CreacionGastoDTO
 import ar.edu.unsam.proyectosoftware.dto.FilterGastosCustom
 import ar.edu.unsam.proyectosoftware.dto.OrdenGasto
 import ar.edu.unsam.proyectosoftware.dto.GastoDetalleDTO
 import ar.edu.unsam.proyectosoftware.dto.PageResponse
-import ar.edu.unsam.proyectosoftware.dto.PagoDTO
 import org.springframework.security.core.Authentication
 import ar.edu.unsam.proyectosoftware.dto.toPageResponse
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
@@ -37,7 +38,8 @@ class GastoService(
     var integranteGrupoRepository: IntegranteGrupoRepository,
     var grupoRepository: GrupoRepository,
     var usuarioRepository: UsuarioRepository,
-    var usuarioService: UsuarioService
+    var usuarioService: UsuarioService,
+    var actividadService: ActividadService,
 ) {
 
     @Transactional
@@ -336,6 +338,37 @@ class GastoService(
 
             null ->
                 Sort.by(Sort.Direction.DESC, "fecha") // default
+        }
+    }
+
+    private fun registrarActividadesDeGasto(gasto: Gasto, fracciones: List<ar.edu.unsam.proyectosoftware.domain.FraccionGasto>) {
+        actividadService.registrarActividad(
+            usuario = gasto.pagador,
+            tipo = TipoActividad.DEUDA_GENERADA,
+            descripcion = "Registraste un gasto en ${gasto.grupo.nombre}.",
+            metadata = mapOf(
+                "gastoId" to gasto.id,
+                "grupoId" to gasto.grupo.id,
+                "grupoNombre" to gasto.grupo.nombre,
+                "montoTotal" to gasto.monto,
+                "deudores" to fracciones.map { it.deudor.id },
+            ),
+        )
+
+        fracciones.forEach { fraccion ->
+            actividadService.registrarActividad(
+                usuario = fraccion.deudor,
+                tipo = TipoActividad.GASTO_DEUDA,
+                descripcion = "Se registro una deuda en ${gasto.grupo.nombre}.",
+                metadata = mapOf(
+                    "gastoId" to gasto.id,
+                    "grupoId" to gasto.grupo.id,
+                    "grupoNombre" to gasto.grupo.nombre,
+                    "acreedorId" to fraccion.acreedor.id,
+                    "acreedorNombre" to fraccion.acreedor.nombre,
+                    "montoAdeudado" to fraccion.montoFraccion,
+                ),
+            )
         }
     }
 

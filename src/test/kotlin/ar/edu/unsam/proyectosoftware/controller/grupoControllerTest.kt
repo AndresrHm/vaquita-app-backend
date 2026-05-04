@@ -40,6 +40,9 @@ class GrupoControllerTest {
     @MockkBean
     lateinit var jwtUtils: ar.edu.unsam.proyectosoftware.security.JwtUtils
 
+    @MockkBean
+    lateinit var gastoService: ar.edu.unsam.proyectosoftware.service.GastoService
+
     @Test
     fun `GET grupo por ID - debe devolver 200 OK y el JSON con el nombre del grupo`() {
         // Arrange

@@ -9,6 +9,7 @@ import ar.edu.unsam.proyectosoftware.dto.GastoDetalleDTO
 import ar.edu.unsam.proyectosoftware.dto.PageResponse
 import ar.edu.unsam.proyectosoftware.security.JwtUtils
 import ar.edu.unsam.proyectosoftware.service.GastoService
+import ar.edu.unsam.proyectosoftware.service.UsuarioService
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
@@ -38,7 +39,9 @@ class GastoControllerTest {
     @MockkBean
     lateinit var gastoService: GastoService
 
-    // El escáner de credenciales para que no explote Spring Security
+    @MockkBean
+    lateinit var usuarioService: UsuarioService
+
     @MockkBean
     lateinit var jwtUtils: JwtUtils
 

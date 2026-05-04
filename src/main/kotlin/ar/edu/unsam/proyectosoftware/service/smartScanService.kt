@@ -1,5 +1,6 @@
 package ar.edu.unsam.proyectosoftware.service
 
+import ar.edu.unsam.proyectosoftware.domain.enums.CategoriaGasto
 import ar.edu.unsam.proyectosoftware.dto.ReceiptItemDto
 import ar.edu.unsam.proyectosoftware.dto.ReceiptScanResultDto
 import com.fasterxml.jackson.databind.ObjectMapper

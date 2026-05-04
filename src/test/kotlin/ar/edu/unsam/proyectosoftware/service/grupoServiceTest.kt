@@ -26,6 +26,7 @@ class GrupoServiceTest {
     @MockK lateinit var usuarioRepository: UsuarioRepository
     @MockK lateinit var gastoRepository: GastoRepository
     @MockK lateinit var usuarioService: UsuarioService // Simulamos al otro empleado
+    @MockK(relaxed = true) lateinit var actividadService: ActividadService
 
     @InjectMockKs
     lateinit var grupoService: GrupoService

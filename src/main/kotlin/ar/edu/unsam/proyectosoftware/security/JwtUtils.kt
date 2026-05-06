@@ -1,36 +1,77 @@
 package ar.edu.unsam.proyectosoftware.security
 
 import ar.edu.unsam.proyectosoftware.domain.Usuario
+import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
+import io.jsonwebtoken.SignatureAlgorithm
+import io.jsonwebtoken.io.Decoders
 import io.jsonwebtoken.security.Keys
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.util.*
+import java.security.Key
+import java.util.Date
 
 @Component
 class JwtUtils {
-    // La clave debe ser secreta y tener al menos 32 caracteres
-    private val SECRET_KEY = Keys.hmacShaKeyFor("esta-es-una-clave-secreta-muy-larga-para-vaquita-2026".toByteArray())
 
-    fun generarToken(usuario: Usuario): String {
-        val ahora = Date()
-        val expiracion = Date(ahora.time + 1000 * 60 * 60 * 10) // Expira en 10 horas
+    // La clave secreta debería venir de tu application.properties / application.yml
+    @Value("\${jwt.secret:UnaClaveSecretaMuyLargaYSuperSeguraParaQueNoFalle1234567890}")
+    private lateinit var jwtSecret: String
+
+    // Tiempos de expiración (en milisegundos)
+    private val ACCESS_TOKEN_VALIDITY = 15 * 60 * 1000L // 15 minutos
+    private val REFRESH_TOKEN_VALIDITY = 7 * 24 * 60 * 60 * 1000L // 7 días
+
+    // VAQUITA-296: Generar Access Token (Corta duración)
+    fun generarAccessToken(usuario: Usuario): String {
+        return crearToken(usuario.email, ACCESS_TOKEN_VALIDITY)
+    }
+
+    // VAQUITA-297: Generar Refresh Token (Larga duración)
+    fun generarRefreshToken(usuario: Usuario): String {
+        return crearToken(usuario.email, REFRESH_TOKEN_VALIDITY)
+    }
+
+    private fun crearToken(subject: String, validezMilisegundos: Long): String {
+        val claims: Map<String, Any> = HashMap()
+        val fechaCreacion = Date(System.currentTimeMillis())
+        val fechaExpiracion = Date(System.currentTimeMillis() + validezMilisegundos)
 
         return Jwts.builder()
-            .subject(usuario.email)
-            .claim("nombre", usuario.nombre)
-            .claim("id", usuario.id)
-            .issuedAt(ahora)
-            .expiration(expiracion)
-            .signWith(SECRET_KEY)
+            .setClaims(claims)
+            .setSubject(subject)
+            .setIssuedAt(fechaCreacion)
+            .setExpiration(fechaExpiracion)
+            .signWith(obtenerFirmaKey(), SignatureAlgorithm.HS256)
             .compact()
     }
 
-    fun getEmailDesdeToken(token: String): String? {
+    // Extraer info del token
+    fun obtenerEmailDeToken(token: String): String {
+        return obtenerTodasLasClaims(token).subject
+    }
+
+    // Validación robusta
+    fun esTokenValido(token: String): Boolean {
+        return try {
+            val expiracion = obtenerTodasLasClaims(token).expiration
+            !expiracion.before(Date())
+        } catch (e: Exception) {
+            // Si el token está mal formado, expirado, o firmado con otra clave, cae acá
+            false
+        }
+    }
+
+    private fun obtenerTodasLasClaims(token: String): Claims {
         return Jwts.parser()
-            .verifyWith(SECRET_KEY)
+            .verifyWith(obtenerFirmaKey() as javax.crypto.SecretKey)
             .build()
             .parseSignedClaims(token)
             .payload
-            .subject
+    }
+
+    private fun obtenerFirmaKey(): Key {
+        val keyBytes = Decoders.BASE64.decode(jwtSecret)
+        return Keys.hmacShaKeyFor(keyBytes)
     }
 }

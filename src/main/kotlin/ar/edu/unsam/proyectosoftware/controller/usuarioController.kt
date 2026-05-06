@@ -1,5 +1,6 @@
 package ar.edu.unsam.proyectosoftware.controller
 
+import ar.edu.unsam.proyectosoftware.BusinessException
 import ar.edu.unsam.proyectosoftware.domain.SolicitudAmistadFront
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.UsuarioInfoDTO
@@ -91,6 +92,14 @@ class UsuarioController(
     fun loginUser(@RequestBody dataUser: UsuarioLoginDTO): ResponseEntity<UsuarioLogueadoDTO> {
         val respuesta = usuarioService.login(dataUser)
         return ResponseEntity.ok(respuesta)
+    }
+
+    @PostMapping("/refresh")
+    fun refrescarToken(@RequestBody peticion: Map<String, String>): UsuarioLogueadoDTO {
+        val token = peticion["refreshToken"]
+            ?: throw BusinessException("No se envió ningún refresh token")
+
+        return usuarioService.refrescarToken(token)
     }
 
     // 1. Obtener solicitudes propias

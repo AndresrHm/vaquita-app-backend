@@ -28,10 +28,12 @@ class GrupoController(
     fun obtenerGrupos(
         auth: Authentication?,
         @RequestParam page: Int = 0,
-        @RequestParam size: Int = 8
+        @RequestParam size: Int = 5,
+        @RequestParam search: String?,
+        @RequestParam filter: String?
     ): PageResponse<GrupoDTO> {
         val authentication = auth ?: throw Exception("No autorizado: Token no encontrado")
-        val resultPage = grupoService.obtenerGrupos(authentication, page, size)
+        val resultPage = grupoService.obtenerGrupos(authentication, page, size, search, filter)
         return resultPage.toPageResponse { GrupoMapper.toGrupoDTO(it) }
     }
 
@@ -111,8 +113,17 @@ class GrupoController(
     fun obtenerBalancesGrupo(
         @PathVariable grupoId: Long
     ): ResponseEntity<List<BalanceDTO>?> {
-        val balances = gastoService.obtenerBalancesSimplificados(grupoId)
+        val balances = gastoService.obtenerBalancesGrupo(grupoId)
         return ResponseEntity.ok<List<BalanceDTO>?>(balances)
+    }
+
+    @PostMapping("/pagar/usuario")
+    fun pagarDeudaGrupoAUsuario(
+        auth: Authentication,
+        @RequestBody pagoDTO: PagoDeudaGrupoDTO
+    ): ResponseEntity<String> {
+        gastoService.realizarPagoGrupoAUsuario(auth, pagoDTO.grupoId, pagoDTO.acreedorId, pagoDTO.monto)
+        return ResponseEntity.ok("Deuda saldada correctamente")
     }
 
     // --- Endpoints para GroupDetail ---

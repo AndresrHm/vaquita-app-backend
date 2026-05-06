@@ -4,6 +4,7 @@ import ar.edu.unsam.proyectosoftware.domain.SolicitudAmistadFront
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.UsuarioInfoDTO
 import ar.edu.unsam.proyectosoftware.dto.CambioContrasenaDTO
+import ar.edu.unsam.proyectosoftware.dto.UsuarioConBalanceDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioEditarDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioLoginDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioLogueadoDTO
@@ -74,7 +75,7 @@ class UsuarioController(
     }
 
     @GetMapping("/me/amigos")
-    fun obtenerMisAmigos(auth: Authentication?): ResponseEntity<List<UsuarioNombreIdDTO>> {
+    fun obtenerMisAmigos(auth: Authentication?): ResponseEntity<List<UsuarioConBalanceDTO>> {
         val authentication = auth ?: throw Exception("No se encontró el token o el usuario no está autenticado")
         val amigos = usuarioService.obtenerAmigos(authentication)
         return ResponseEntity.ok(amigos)

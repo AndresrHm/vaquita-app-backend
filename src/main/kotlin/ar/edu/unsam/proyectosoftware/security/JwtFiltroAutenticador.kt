@@ -28,6 +28,8 @@ class JwtAuthenticationFilter(private val jwtUtils: JwtUtils) : OncePerRequestFi
                 }
             } catch (e: Exception) {
                 println("Token inválido: ${e.message}")
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token inválido o expirado")
+                return // Corta la ejecución
             }
         }
         filterChain.doFilter(request, response)

@@ -6,12 +6,14 @@ import ar.edu.unsam.proyectosoftware.domain.PartesExactas
 import ar.edu.unsam.proyectosoftware.domain.PartesIguales
 import ar.edu.unsam.proyectosoftware.domain.RolIntegrante
 import ar.edu.unsam.proyectosoftware.domain.Usuario
+import ar.edu.unsam.proyectosoftware.dto.TipoActividad
 import ar.edu.unsam.proyectosoftware.repository.FraccionGastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
+import ar.edu.unsam.proyectosoftware.service.ActividadService
 import org.springframework.boot.CommandLineRunner
 import org.springframework.security.crypto.password.PasswordEncoder
 import java.time.LocalDate
@@ -22,7 +24,8 @@ class BootstrapData(
     val grupoRepository: GrupoRepository,
     val gastoRepository: GastoRepository,
     val fraccionGastoRepository: FraccionGastoRepository,
-    val passwordEncoder: PasswordEncoder
+    val passwordEncoder: PasswordEncoder,
+    val actividadService: ActividadService,
 ) {
 
     @Bean
@@ -114,6 +117,19 @@ class BootstrapData(
         usuarioRepository.saveAll(usuarios)
 
         val todosLosUsuarios = usuarios
+
+        // Registrar actividades de creación de cuenta
+        todosLosUsuarios.forEach { usuario ->
+            actividadService.registrarActividad(
+                usuario = usuario,
+                tipo = TipoActividad.CUENTA_CREADA,
+                descripcion = "Tu cuenta fue creada exitosamente.",
+                metadata = mapOf(
+                    "usuarioId" to usuario.id,
+                    "email" to usuario.email,
+                )
+            )
+        }
 
         // 2. Grupos
         val grupos = listOf(
@@ -227,9 +243,65 @@ class BootstrapData(
                 }
                 agregarIntegrante(valentinaN, RolIntegrante.ADMIN)
             },
+            Grupo(
+                nombre = "Soy una bestia",
+                descripcion = "Club de fans de Miguel Merentiel",
+                imagenUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSUZWAPD0571F8H7JjkCcwcvQg6A8AKlFpnbxm1NZ674nX610rRGuX7P00-If0i_Fy-VOup5HtqV88JQieYFc4u6N490NigP-rBI-OKH9Qw&s=10",
+                fechaCreacion = LocalDate.now()
+            ).apply {
+                agregarIntegrante(juanA, RolIntegrante.ADMIN)
+                agregarIntegrante(andresH, RolIntegrante.MIEMBRO)
+            },
         )
 
-        grupoRepository.saveAll(grupos)
+        val gruposFiltro = listOf(
+            Grupo(
+                nombre = "Filtro - Todos sin gastos",
+                descripcion = "Grupo de control para verificar el filtro all",
+                imagenUrl = "https://images.unsplash.com/photo-1529156069898-49953e39b3ac",
+                fechaCreacion = LocalDate.now()
+            ).apply {
+                listOf(juanA, andresH, agustinH).forEach {
+                    agregarIntegrante(it, RolIntegrante.MIEMBRO)
+                }
+                agregarIntegrante(giulianaM, RolIntegrante.ADMIN)
+            },
+            Grupo(
+                nombre = "Filtro - Juan debe",
+                descripcion = "Juan tiene saldo pendiente a favor de otros",
+                imagenUrl = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3",
+                fechaCreacion = LocalDate.now()
+            ).apply {
+                listOf(juanA, andresH, agustinH).forEach {
+                    agregarIntegrante(it, RolIntegrante.MIEMBRO)
+                }
+                agregarIntegrante(andresS, RolIntegrante.ADMIN)
+            },
+            Grupo(
+                nombre = "Filtro - A Juan le deben",
+                descripcion = "Otros usuarios le deben dinero a Juan",
+                imagenUrl = "https://images.unsplash.com/photo-1497366754035-f200968a6e72",
+                fechaCreacion = LocalDate.now()
+            ).apply {
+                listOf(juanA, andresH, agustinH).forEach {
+                    agregarIntegrante(it, RolIntegrante.MIEMBRO)
+                }
+                agregarIntegrante(camilaR, RolIntegrante.ADMIN)
+            },
+            Grupo(
+                nombre = "Filtro - Pendiente mixto",
+                descripcion = "Grupo con deudas en ambos sentidos para probar pending",
+                imagenUrl = "https://images.unsplash.com/photo-1515169067868-5387ec356754",
+                fechaCreacion = LocalDate.now()
+            ).apply {
+                listOf(juanA, andresH, agustinH).forEach {
+                    agregarIntegrante(it, RolIntegrante.MIEMBRO)
+                }
+                agregarIntegrante(lucasP, RolIntegrante.ADMIN)
+            },
+        )
+
+        grupoRepository.saveAll(grupos + gruposFiltro)
 
         val grupoAsado   = grupos[0]
         val grupoDepto   = grupos[1]
@@ -241,6 +313,41 @@ class BootstrapData(
         val grupoHackLab = grupos[7]
         val grupoSeries  = grupos[8]
         val grupoFinde   = grupos[9]
+        val grupoBestia   = grupos[10]
+        val grupoFiltroTodos = gruposFiltro[0]
+        val grupoFiltroJuanDebe = gruposFiltro[1]
+        val grupoFiltroJuanLeDeben = gruposFiltro[2]
+        val grupoFiltroPendienteMixto = gruposFiltro[3]
+
+        // Registrar actividades de ingreso a grupos
+        listOf(
+            grupoAsado to listOf(agustinH, juanM, andresH, giulianaM, andresS, juanA),
+            grupoDepto to listOf(agustinH, juanM, giulianaM, andresS),
+            grupoFutbol to listOf(juanM, andresH, juanA, giulianaM),
+            grupoEstudio to listOf(giulianaM, juanA, andresS),
+            grupoViaje to listOf(juanA, andresS, valentinaN, sofiaL, camilaR),
+            grupoCumple to listOf(juanM, matiasF, agustinH, giulianaM, lucasP),
+            grupoGym to listOf(andresH, juanA, sofiaL, matiasF, valentinaN),
+            grupoHackLab to todosLosUsuarios,
+            grupoSeries to todosLosUsuarios.filter { it != camilaR }.plus(camilaR),
+            grupoFinde to todosLosUsuarios.filter { it != valentinaN }.plus(valentinaN),
+            grupoFiltroTodos to listOf(juanA, andresH, agustinH, giulianaM),
+            grupoFiltroJuanDebe to listOf(juanA, andresH, agustinH),
+            grupoFiltroJuanLeDeben to listOf(juanA, andresH, agustinH),
+            grupoFiltroPendienteMixto to listOf(juanA, andresH, agustinH),
+        ).forEach { (grupo, miembros) ->
+            miembros.forEach { usuario ->
+                actividadService.registrarActividad(
+                    usuario = usuario,
+                    tipo = TipoActividad.INGRESO_GRUPO,
+                    descripcion = "Te uniste al grupo ${grupo.nombre}.",
+                    metadata = mapOf(
+                        "grupoId" to grupo.id,
+                        "grupoNombre" to grupo.nombre,
+                    )
+                )
+            }
+        }
 
         // 3. Gastos
         var diasAtras = 0L
@@ -636,11 +743,109 @@ class BootstrapData(
                 grupoFinde, lucasP, grupoFinde.usuarios()
             ).apply { agregarItem("Tickets campo", 4.0, 16500.0) },
 
+            PartesIguales(
+                "Gorras de Merentiel", CategoriaGasto.VARIOS, 10000.0, nextFecha(),
+                grupoBestia, andresH, grupoBestia.usuarios()
+            ),
+
+            PartesIguales(
+                "Torta de cumpleaños", CategoriaGasto.COMIDA, 5000.0, nextFecha(),
+                grupoBestia, juanA, grupoBestia.usuarios()
+            ),
+
             ).forEach { gasto ->
             val gastoGuardado = gastoRepository.save(gasto)
             val fracciones = gastoGuardado.repartirGasto()
             val fraccionesExternas = fracciones.filter { it.deudor.id != it.acreedor.id }
             fraccionGastoRepository.saveAll(fraccionesExternas)
+
+            // Registrar actividades de deuda
+            // Actividad de deuda generada para el pagador
+            actividadService.registrarActividad(
+                usuario = gastoGuardado.pagador,
+                tipo = TipoActividad.DEUDA_GENERADA,
+                descripcion = "Pagaste ${gastoGuardado.descripcion} en ${gastoGuardado.grupo.nombre}",
+                metadata = mapOf(
+                    "gastoId" to gastoGuardado.id,
+                    "descripcion" to gastoGuardado.descripcion,
+                    "monto" to gastoGuardado.monto,
+                    "grupoId" to gastoGuardado.grupo.id,
+                    "grupoNombre" to gastoGuardado.grupo.nombre,
+                )
+            )
+
+            // Actividades de gasto deuda para cada deudor
+            fraccionesExternas.forEach { fraccion ->
+                actividadService.registrarActividad(
+                    usuario = fraccion.deudor,
+                    tipo = TipoActividad.GASTO_DEUDA,
+                    descripcion = "Debes pagar ${fraccion.montoFraccion} a ${fraccion.acreedor.nombre} por ${gastoGuardado.descripcion}",
+                    metadata = mapOf(
+                        "gastoId" to gastoGuardado.id,
+                        "descripcion" to gastoGuardado.descripcion,
+                        "monto" to fraccion.montoFraccion,
+                        "acreedor" to fraccion.acreedor.nombre,
+                        "grupoId" to gastoGuardado.grupo.id,
+                        "grupoNombre" to gastoGuardado.grupo.nombre,
+                    )
+                )
+            }
+        }
+
+        listOf(
+            PartesIguales(
+                "Filtro - Juan debe", CategoriaGasto.COMIDA, 12000.0, nextFecha(),
+                grupoFiltroJuanDebe, andresH, grupoFiltroJuanDebe.usuarios()
+            ).apply { agregarItem("Cena compartida", 1.0, 12000.0) },
+
+            PartesIguales(
+                "Filtro - A Juan le deben", CategoriaGasto.VARIOS, 18000.0, nextFecha(),
+                grupoFiltroJuanLeDeben, juanA, grupoFiltroJuanLeDeben.usuarios()
+            ).apply { agregarItem("Compra grupal", 1.0, 18000.0) },
+
+            PartesIguales(
+                "Filtro - Mixto 1", CategoriaGasto.COMIDA, 9000.0, nextFecha(),
+                grupoFiltroPendienteMixto, agustinH, grupoFiltroPendienteMixto.usuarios()
+            ).apply { agregarItem("Picada", 1.0, 9000.0) },
+
+            PartesIguales(
+                "Filtro - Mixto 2", CategoriaGasto.BEBIDA, 6000.0, nextFecha(),
+                grupoFiltroPendienteMixto, juanA, grupoFiltroPendienteMixto.usuarios()
+            ).apply { agregarItem("Bebidas", 1.0, 6000.0) },
+        ).forEach { gasto ->
+            val gastoGuardado = gastoRepository.save(gasto)
+            val fracciones = gastoGuardado.repartirGasto()
+            val fraccionesExternas = fracciones.filter { it.deudor.id != it.acreedor.id }
+            fraccionGastoRepository.saveAll(fraccionesExternas)
+
+            actividadService.registrarActividad(
+                usuario = gastoGuardado.pagador,
+                tipo = TipoActividad.DEUDA_GENERADA,
+                descripcion = "Pagaste ${gastoGuardado.descripcion} en ${gastoGuardado.grupo.nombre}",
+                metadata = mapOf(
+                    "gastoId" to gastoGuardado.id,
+                    "descripcion" to gastoGuardado.descripcion,
+                    "monto" to gastoGuardado.monto,
+                    "grupoId" to gastoGuardado.grupo.id,
+                    "grupoNombre" to gastoGuardado.grupo.nombre,
+                )
+            )
+
+            fraccionesExternas.forEach { fraccion ->
+                actividadService.registrarActividad(
+                    usuario = fraccion.deudor,
+                    tipo = TipoActividad.GASTO_DEUDA,
+                    descripcion = "Debes pagar ${fraccion.montoFraccion} a ${fraccion.acreedor.nombre} por ${gastoGuardado.descripcion}",
+                    metadata = mapOf(
+                        "gastoId" to gastoGuardado.id,
+                        "descripcion" to gastoGuardado.descripcion,
+                        "monto" to fraccion.montoFraccion,
+                        "acreedor" to fraccion.acreedor.nombre,
+                        "grupoId" to gastoGuardado.grupo.id,
+                        "grupoNombre" to gastoGuardado.grupo.nombre,
+                    )
+                )
+            }
         }
     }
 }

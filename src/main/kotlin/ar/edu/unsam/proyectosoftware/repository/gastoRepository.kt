@@ -36,6 +36,20 @@ interface GastoRepository : CrudRepository<Gasto, Long> {
     )
     fun existeDeudaPendienteEnGrupo(grupoId: Long, usuarioId: Long): Boolean
 
+    /**
+     * Devuelve true si otros usuarios le deben dinero al usuario en el grupo indicado.
+     */
+    @Query(
+        """
+        SELECT CASE WHEN COUNT(fg) > 0 THEN true ELSE false END
+        FROM FraccionGasto fg
+        WHERE fg.gastoAsociado.grupo.id = :grupoId
+          AND fg.deudor.id != :usuarioId
+          AND (fg.montoFraccion - fg.pagoParcial) > 0
+          AND fg.gastoAsociado.pagador.id = :usuarioId
+        """
+    )
+    fun existeDeudaPendienteHaciaUsuario(grupoId: Long, usuarioId: Long): Boolean
 
     @EntityGraph(attributePaths = ["pagador", "participantes"])
     @Query(

@@ -32,6 +32,7 @@ class GastoServiceTest {
     @MockK lateinit var grupoRepository: GrupoRepository
     @MockK lateinit var usuarioRepository: UsuarioRepository
     @MockK lateinit var usuarioService: UsuarioService
+    @MockK(relaxed = true) lateinit var actividadService: ActividadService
 
     @InjectMockKs
     lateinit var gastoService: GastoService

@@ -30,6 +30,8 @@ class UsuarioServiceTest {
     @MockK lateinit var solicitudAmistadRepository: SolicitudAmistadRepository
     @MockK lateinit var passwordEncoder: PasswordEncoder
     @MockK lateinit var jwtUtils: JwtUtils
+    @MockK(relaxed = true) lateinit var actividadService: ActividadService
+    @MockK lateinit var fraccionGastoRepository: FraccionGastoRepository
 
     @InjectMockKs
     lateinit var usuarioService: UsuarioService
@@ -214,6 +216,7 @@ class UsuarioServiceTest {
         }
 
         every { usuarioRepository.findByEmail("giuli@mail.com") } returns Optional.of(usuarioMock)
+        every { fraccionGastoRepository.findFraccionesPendientesEntre(any(), any(), any()) } returns emptyList()
 
         // Act
         val resultado = usuarioService.obtenerAmigos(authMock)
@@ -236,6 +239,10 @@ class UsuarioServiceTest {
 
         // Simulamos que el repositorio guarda la solicitud sin problemas
         every { solicitudAmistadRepository.save(any()) } answers { firstArg() }
+        every { usuarioRepository.existsByIdAndAmigosId(any(), any()) } returns false
+
+        // ¡Acá está el machete que faltaba!
+        every { solicitudAmistadRepository.existsByIdEmisorAndIdReceptor(any(), any()) } returns false
 
         val idReceptor = 2L
 
@@ -284,13 +291,14 @@ class UsuarioServiceTest {
 
         every { usuarioRepository.save(any()) } answers { firstArg() }
         every { solicitudAmistadRepository.delete(any()) } returns Unit // Unit es el "void" de Kotlin
+        every { usuarioRepository.existsByIdAndAmigosId(any(), any()) } returns false
+        every { solicitudAmistadRepository.deleteByIdEmisorAndIdReceptor(any(), any()) } returns Unit
 
         // Act
         val resultado = usuarioService.responderSolicitudAmistad(authMock, 100L, aceptar = true)
 
         // Assert
         assertThat(resultado).isEqualTo(1L)
-        // Verificamos que se hicieron amigos mutuamente
         assertThat(usuarioLogueado.amigos).contains(emisorMock)
         assertThat(emisorMock.amigos).contains(usuarioLogueado)
     }

@@ -49,6 +49,7 @@ class UsuarioControllerTest {
             id = 1L,
             nombre = "Giuliana",
             email = "giuli@mail.com",
+            username = "giuliana",
             token = "token_simulado_super_seguro",
             imagenUrl = null
         )
@@ -69,7 +70,7 @@ class UsuarioControllerTest {
     @Test
     fun `POST register - debe devolver 200 OK y el JSON del usuario recien creado`() {
         // Arrange
-        val peticionRegistro = UsuarioRegistradoDTO("Giuliana Nueva", "giulinueva@mail.com", "secreta123")
+        val peticionRegistro = UsuarioRegistradoDTO("Giuliana Nueva", "giulinueva@mail.com", "secreta123", "giulinueva")
         val usuarioGuardado = Usuario(nombre = "Giuliana Nueva", email = "giulinueva@mail.com", contrasena = "hash").apply { id = 2L }
 
         every { usuarioService.registrarUsuario(any()) } returns usuarioGuardado
@@ -118,6 +119,7 @@ class UsuarioControllerTest {
             id = 1L,
             nombre = "Giuli Programadora",
             email = "giuli.dev@mail.com",
+            username = "giuli.dev",
             token = "token_renovado",
             imagenUrl = "foto_teclado.png"
         )

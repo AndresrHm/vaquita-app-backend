@@ -20,7 +20,10 @@ class Usuario(
 
     @Lob
     @Column(length = 10485760)
-    var imagenUrl: String = ""
+    var imagenUrl: String = "",
+
+    @Column(unique = true, nullable = false)
+    var username: String = ""
 ) {
     @Id
     @GeneratedValue
@@ -53,7 +56,8 @@ class Usuario(
         fun toUsuarioNombreIdDTO(usuario: Usuario): UsuarioNombreIdDTO {
             return UsuarioNombreIdDTO(
                 nombre = usuario.nombre,
-                id = usuario.id!!
+                id = usuario.id!!,
+                username = usuario.username
             )
         }
     }

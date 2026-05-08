@@ -161,7 +161,7 @@ class GrupoController(
     ): ResponseEntity<List<MiembroDTO>> {
         val miembros = grupoService.obtenerMiembrosConRol(grupoId)
         val response = miembros.map {
-            MiembroDTO(it.id, it.nombre, if (it.esAdmin) RolMiembro.ADMIN.descripcion else RolMiembro.MIEMBRO.descripcion, it.imagenUrl)
+            MiembroDTO(it.id, it.nombre, it.username, if (it.esAdmin) RolMiembro.ADMIN.descripcion else RolMiembro.MIEMBRO.descripcion, it.imagenUrl)
         }
         return ResponseEntity.ok(response)
     }

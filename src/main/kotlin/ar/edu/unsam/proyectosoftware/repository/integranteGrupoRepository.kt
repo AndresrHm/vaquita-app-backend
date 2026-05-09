@@ -66,7 +66,8 @@ interface IntegranteGrupoRepository : CrudRepository<IntegranteGrupo, Long> {
         u.id,
         u.nombre,
         u.imagenUrl,
-        (ig.rol = ar.edu.unsam.proyectosoftware.domain.RolIntegrante.ADMIN)
+        (ig.rol = ar.edu.unsam.proyectosoftware.domain.RolIntegrante.ADMIN),
+        false
     )
     FROM IntegranteGrupo ig
     JOIN ig.usuario u
@@ -144,5 +145,6 @@ data class MiembroProjection(
     val id: Long,
     val nombre: String,
     val imagenUrl: String,
-    val esAdmin: Boolean
+    val esAdmin: Boolean,
+    val esRata: Boolean
 )

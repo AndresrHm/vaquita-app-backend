@@ -53,6 +53,7 @@ data class MiembroDTO (
     val username: String,
     val rol: String,
     val imagenUrl: String,
+    val esRata: Boolean,
 )
 
 data class AgregarMiembrosDTO(

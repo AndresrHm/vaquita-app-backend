@@ -100,6 +100,7 @@ class BootstrapData(
                     agregarIntegrante(it, RolIntegrante.MIEMBRO)
                 }
                 agregarIntegrante(juanA, RolIntegrante.ADMIN)
+                modoRata = true
             },
             Grupo(
                 nombre = "Depto Palermo",

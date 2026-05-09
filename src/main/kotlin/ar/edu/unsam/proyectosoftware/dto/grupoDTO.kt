@@ -50,6 +50,7 @@ data class GrupoContextoUsuarioDTO (
 data class MiembroDTO (
     val id: Long,
     val nombre: String,
+    val username: String,
     val rol: String,
     val imagenUrl: String,
     val esRata: Boolean,

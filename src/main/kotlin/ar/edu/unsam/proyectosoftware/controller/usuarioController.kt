@@ -2,6 +2,9 @@ package ar.edu.unsam.proyectosoftware.controller
 
 import ar.edu.unsam.proyectosoftware.domain.SolicitudAmistadFront
 import ar.edu.unsam.proyectosoftware.domain.Usuario
+import ar.edu.unsam.proyectosoftware.dto.GastosPorAnioDTO
+import ar.edu.unsam.proyectosoftware.dto.GastosPorMesDTO
+import ar.edu.unsam.proyectosoftware.dto.UsuarioBusquedaDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioInfoDTO
 import ar.edu.unsam.proyectosoftware.dto.CambioContrasenaDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioConBalanceDTO
@@ -10,9 +13,12 @@ import ar.edu.unsam.proyectosoftware.dto.UsuarioLoginDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioLogueadoDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioNombreIdDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioRegistradoDTO
-import ar.edu.unsam.proyectosoftware.service.UsuarioService
+import ar.edu.unsam.proyectosoftware.mapper.GastoMapper
 import ar.edu.unsam.proyectosoftware.mapper.UsuarioMapper
 import ar.edu.unsam.proyectosoftware.service.GrupoService
+import ar.edu.unsam.proyectosoftware.service.UsuarioService
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.CrossOrigin
@@ -26,6 +32,8 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import java.time.format.TextStyle
+import java.util.Locale
 
 @RestController
 @RequestMapping("/usuarios")
@@ -34,6 +42,25 @@ class UsuarioController(
     private val usuarioService: UsuarioService,
     private val grupoService: GrupoService
 ) {
+
+    @GetMapping("/buscar")
+    fun buscarPorUsername(
+        auth: Authentication?,
+        @RequestParam q: String
+    ): ResponseEntity<List<UsuarioBusquedaDTO>> {
+        val authentication = auth ?: throw Exception("No autorizado: Token no encontrado")
+        val solicitante = usuarioService.obtenerUsuarioLogueado(authentication)
+        val resultados = usuarioService.buscarPorUsername(q, solicitante.id!!)
+        return ResponseEntity.ok(resultados)
+    }
+
+    @GetMapping("/{id}/qr")
+    fun obtenerQr(@PathVariable id: Long): ResponseEntity<ByteArray> {
+        val qrBytes = usuarioService.generarQrUsuario(id)
+        val headers = HttpHeaders()
+        headers.contentType = MediaType.IMAGE_PNG
+        return ResponseEntity.ok().headers(headers).body(qrBytes)
+    }
 
     @GetMapping("/{id}")
     fun obtenerUsuario(@PathVariable id: Long): ResponseEntity<Usuario> {
@@ -49,7 +76,26 @@ class UsuarioController(
         val esAmigo = usuarioService.sonAmigos(idBuscado, usuario.id!!)
         val solicitudPendiente = if (esAmigo) false else usuarioService.tieneSolicitudPendiente(usuario.id!!, idBuscado)
         val gruposCompartidos = grupoService.obtenerGruposCompartidos(usuario.id!!, usuarioBuscado.id!!)
-        val usuarioBuscadoInfo = UsuarioMapper.toInfoDTO(usuarioBuscado, esAmigo, solicitudPendiente, gruposCompartidos)
+        val locale = Locale.forLanguageTag("es-AR")
+        val gastosPendientes = usuarioService.obtenerGastosEntreUsuarios(usuario.id!!, usuarioBuscado.id!!)
+            .sortedByDescending { it.fecha }
+            .groupBy { it.fecha.year }
+            .toSortedMap(compareByDescending { it })
+            .map { (anio, gastosDelAnio) ->
+                GastosPorAnioDTO(
+                    year = anio,
+                    months = gastosDelAnio
+                        .groupBy { it.fecha.month }
+                        .toSortedMap(compareByDescending { it.value })
+                        .map { (mes, gastosDelMes) ->
+                            GastosPorMesDTO(
+                                month = mes.getDisplayName(TextStyle.FULL, locale),
+                                expenses = gastosDelMes.map { GastoMapper.toItemDTO(it, usuario.id!!) }
+                            )
+                        }
+                )
+            }
+        val usuarioBuscadoInfo = UsuarioMapper.toInfoDTO(usuarioBuscado, esAmigo, solicitudPendiente, gruposCompartidos, gastosPendientes)
         return ResponseEntity.ok(usuarioBuscadoInfo)
     }
 

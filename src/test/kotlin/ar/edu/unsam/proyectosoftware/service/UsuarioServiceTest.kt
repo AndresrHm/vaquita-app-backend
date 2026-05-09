@@ -85,10 +85,11 @@ class UsuarioServiceTest {
     @Test
     fun `registrarUsuario - camino feliz - guarda el usuario con contrasena encriptada`() {
         // Arrange
-        val registroDTO = UsuarioRegistradoDTO("Giuliana", "giuli.m@mail.com", "secreta123")
+        val registroDTO = UsuarioRegistradoDTO("Giuliana", "giuli.m@mail.com", "secreta123", "giuliana")
 
         // Simulamos que el email no existe en la base de datos
         every { usuarioRepository.findByEmail(registroDTO.email) } returns Optional.empty()
+        every { usuarioRepository.existsByUsername(registroDTO.username) } returns false
 
         // Simulamos la encriptación
         every { passwordEncoder.encode(registroDTO.contrasena) } returns "secreta123_hasheada"
@@ -109,11 +110,12 @@ class UsuarioServiceTest {
     @Test
     fun `registrarUsuario - camino triste - lanza excepcion si el email ya existe`() {
         // Arrange
-        val registroDTO = UsuarioRegistradoDTO("Giuliana", "giuli.m@mail.com", "secreta123")
+        val registroDTO = UsuarioRegistradoDTO("Giuliana", "giuli.m@mail.com", "secreta123", "giuliana")
         val usuarioExistente = Usuario(nombre = "Otra Persona", email = "giuli.m@mail.com", contrasena = "hash")
 
         // Simulamos que el repositorio SÍ encuentra a alguien con ese mail
         every { usuarioRepository.findByEmail(registroDTO.email) } returns Optional.of(usuarioExistente)
+        every { usuarioRepository.existsByUsername(registroDTO.username) } returns false
 
         // Act & Assert
         assertThatThrownBy {

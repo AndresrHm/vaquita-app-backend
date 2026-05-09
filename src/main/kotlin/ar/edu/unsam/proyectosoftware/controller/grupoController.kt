@@ -164,6 +164,7 @@ class GrupoController(
             MiembroDTO(
                 id = it.id,
                 nombre = it.nombre,
+                username = it.username,
                 rol = if (it.esAdmin) RolMiembro.ADMIN.descripcion else RolMiembro.MIEMBRO.descripcion,
                 imagenUrl = it.imagenUrl,
                 esRata = it.esRata,

@@ -32,62 +32,19 @@ class BootstrapData(
     fun initData() = CommandLineRunner {
 
         // 1. Usuarios
+        val pass = passwordEncoder.encode("contrasena123")
         val usuarios = listOf(
-            Usuario(
-                "Juan Alvarez",
-                "juan.alvarez@mail.com",
-                passwordEncoder.encode("contrasena123")
-            ),
-            Usuario(
-                "Andrés Hernández",
-                "andres.h@mail.com",
-                passwordEncoder.encode("contrasena123")
-            ),
-            Usuario(
-                "Agustín Hoj",
-                "agustin.hoj@mail.com",
-                passwordEncoder.encode("contrasena123")
-            ),
-            Usuario(
-                "Juan Maidana",
-                "juan.m@mail.com",
-                passwordEncoder.encode("contrasena123")
-            ),
-            Usuario(
-                "Giuliana Massanet",
-                "giuli.m@mail.com",
-                passwordEncoder.encode("contrasena123")
-            ),
-            Usuario(
-                "Andrés Simonini",
-                "andres.s@mail.com",
-                passwordEncoder.encode("contrasena123")
-            ),
-            Usuario(
-                "Camila Rojas",
-                "camila.rojas@mail.com",
-                passwordEncoder.encode("contrasena123")
-            ),
-            Usuario(
-                "Lucas Pereyra",
-                "lucas.p@mail.com",
-                passwordEncoder.encode("contrasena123")
-            ),
-            Usuario(
-                "Valentina Nuñez",
-                "valentina.n@mail.com",
-                passwordEncoder.encode("contrasena123")
-            ),
-            Usuario(
-                "Matías Ferreyra",
-                "matias.f@mail.com",
-                passwordEncoder.encode("contrasena123")
-            ),
-            Usuario(
-                "Sofía López",
-                "sofia.l@mail.com",
-                passwordEncoder.encode("contrasena123")
-            ),
+            Usuario("Juan Alvarez",    "juan.alvarez@mail.com", pass, "https://i.pravatar.cc/150?img=12", "juan.alvarez"),
+            Usuario("Andrés Hernández","andres.h@mail.com",     pass, "https://i.pravatar.cc/150?img=15", "andres.h"),
+            Usuario("Agustín Hoj",     "agustin.hoj@mail.com",  pass, "https://i.pravatar.cc/150?img=18", "agustin.hoj"),
+            Usuario("Juan Maidana",    "juan.m@mail.com",       pass, "https://i.pravatar.cc/150?img=21", "juan.maidana"),
+            Usuario("Giuliana Massanet","giuli.m@mail.com",     pass, "https://i.pravatar.cc/150?img=47", "giuli.m"),
+            Usuario("Andrés Simonini", "andres.s@mail.com",     pass, "https://i.pravatar.cc/150?img=33", "andres.s"),
+            Usuario("Camila Rojas",    "camila.rojas@mail.com", pass, "https://i.pravatar.cc/150?img=44", "camila.rojas"),
+            Usuario("Lucas Pereyra",   "lucas.p@mail.com",      pass, "https://i.pravatar.cc/150?img=56", "lucas.p"),
+            Usuario("Valentina Nuñez", "valentina.n@mail.com",  pass, "https://i.pravatar.cc/150?img=49", "valentina.n"),
+            Usuario("Matías Ferreyra", "matias.f@mail.com",     pass, "https://i.pravatar.cc/150?img=60", "matias.f"),
+            Usuario("Sofía López",     "sofia.l@mail.com",      pass, "https://i.pravatar.cc/150?img=53", "sofia.l"),
         )
 
         val juanA      = usuarios[0]

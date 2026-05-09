@@ -18,6 +18,13 @@ spring:
       hibernate:
         format_sql: true
 
+  storage:
+    bucket: receipts
+    endpoint: https://vaquita.supabase.co/storage/v1/s3
+    region: us-west-2
+    access-key: 78295927e77c727c83ae217b69fed3bb
+    secret-key: f47792e6f12b546fa9a10d1f41d93bab4fa449f510a782b2f312d1db9651ebe8
+
 # Para activar el Trace
 logging:
   level:

@@ -57,6 +57,10 @@ abstract class Gasto(
     @OneToMany(mappedBy = "gasto", cascade = [CascadeType.ALL], orphanRemoval = true)
     var items: MutableList<ItemGasto> = mutableListOf()
 
+    // Tickets almacenados
+    @OneToMany(mappedBy = "expense")
+    val attachments: MutableList<ExpenseAttachment> = mutableListOf()
+
     fun agregarItem(nombre: String, cantidad: Double, precio: Double) {
         items.add(ItemGasto(nombre, cantidad, precio, this))
     }

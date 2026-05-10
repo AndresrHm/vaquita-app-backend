@@ -117,6 +117,7 @@ class UsuarioService(
             email = usuario.email,
             accessToken = accessTokenGenerado,   // Acá va la pulsera de 15 minutos
             refreshToken = refreshTokenGenerado,
+            username = usuario.username,
             imagenUrl = usuario.imagenUrl
         )
     }
@@ -143,6 +144,7 @@ class UsuarioService(
             refreshToken = nuevoRefreshToken,
             nombre = usuario.nombre,
             email = usuario.email,
+            username = usuario.username,
             imagenUrl = usuario.imagenUrl ?: ""
         )
     }
@@ -220,6 +222,7 @@ class UsuarioService(
             email = usuarioGuardado.email,
             accessToken = nuevoAccessToken,
             refreshToken = nuevoRefreshToken,
+            username = usuario.username,
             imagenUrl = usuarioGuardado.imagenUrl
         )
     }

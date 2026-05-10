@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import java.util.UUID
 
 interface ExpenseAttachmentRepository :
-    JpaRepository<ExpenseAttachment, UUID> {
+    JpaRepository<ExpenseAttachment, Long> {
 
-    fun findAllByExpenseId(expenseId: UUID): List<ExpenseAttachment>
+    fun findAllByExpenseId(expenseId: Long): List<ExpenseAttachment>
 }

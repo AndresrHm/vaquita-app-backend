@@ -9,6 +9,7 @@ import ar.edu.unsam.proyectosoftware.repository.ExpenseAttachmentRepository
 import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class AttachmentService(
@@ -45,6 +46,7 @@ class AttachmentService(
     }
 
     // get
+    @Transactional(readOnly = true)
     fun findByExpense(expenseId: Long): List<ExpenseAttachment> {
         return attachmentRepository.findAllByExpenseId(expenseId)
     }

@@ -18,8 +18,7 @@ class Usuario(
     var email: String = "",
     var contrasena: String = "",
 
-    @Lob
-    @Column(length = 10485760)
+    @Column(columnDefinition = "TEXT")
     var imagenUrl: String = "",
 
     @Column(unique = true, nullable = false)
@@ -37,20 +36,20 @@ class Usuario(
     @ManyToMany(fetch = FetchType.LAZY)
     var amigos: MutableList<Usuario> = mutableListOf()
 
-    fun agregarAmigo(amigo: Usuario) : Boolean {
-        if (!amigos.contains(amigo)){
+    fun agregarAmigo(amigo: Usuario): Boolean {
+        if (!amigos.contains(amigo)) {
             return amigos.add(amigo)
         }
         return false
     }
 
     fun eliminarAmigo(amigo: Usuario) {
-        if (amigos.contains(amigo)){
+        if (amigos.contains(amigo)) {
             amigos.remove(amigo)
         }
     }
 
-    fun esAmigo(amigo: Usuario) : Boolean = amigos.contains(amigo)
+    fun esAmigo(amigo: Usuario): Boolean = amigos.contains(amigo)
 
     companion object {
         fun toUsuarioNombreIdDTO(usuario: Usuario): UsuarioNombreIdDTO {

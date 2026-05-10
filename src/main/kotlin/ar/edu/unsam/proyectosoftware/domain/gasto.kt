@@ -170,3 +170,61 @@ class PartesIguales(
     private fun calcularMontoPorParticipante(): Double {
         return Math.round(monto / cantidadParticipantes() * 100) / 100.0    }
 }
+
+@Entity
+@DiscriminatorValue("PERCENTAGE")
+class Porcentual(
+    descripcion: String,
+    categoria: CategoriaGasto,
+    monto: Double,
+    fecha: LocalDate,
+    grupo: Grupo,
+    pagador: Usuario,
+    participantes: List<Usuario>,
+    @ElementCollection
+    @CollectionTable(name = "gasto_porcentajes", joinColumns = [JoinColumn(name = "gasto_id")])
+    @MapKeyJoinColumn(name = "usuario_id")
+    @Column(name = "porcentaje_asignado")
+    val porcentajes: MutableMap<Usuario, Double> = mutableMapOf()
+) : Gasto(
+    descripcion,
+    categoria,
+    monto,
+    fecha,
+    grupo,
+    pagador,
+    participantes
+) {
+    override fun repartirGasto(): List<FraccionGasto> {
+        return porcentajes
+            .filter { (usuario, _) -> usuario.id != pagador.id }
+            .map { (usuario, porcentaje) ->
+                FraccionGasto(
+                    deudor = usuario,
+                    acreedor = pagador,
+                    gastoAsociado = this,
+                    montoFraccion = calcularMontoSegunPorcentaje(porcentaje),
+                    pagoParcial = 0.0
+                )
+            }
+    }
+
+    override fun validar() {
+        val sumaPorcentajes = porcentajes.values.sum()
+        // Margen de error por redondeo
+        if (Math.abs(sumaPorcentajes - 100.0) > 0.001) {
+            throw BusinessException(ErrorStrings.PORCENTAJE_NO_SUMA_100)
+        }
+
+        if (porcentajes.values.any { it < 0 }) {
+            throw BusinessException("Los porcentajes no pueden ser negativos")
+        }
+    }
+
+    override fun tipoGasto() = TipoGasto.PORCENTUAL
+
+    private fun calcularMontoSegunPorcentaje(porcentaje: Double): Double {
+        val resultadoBruto = (monto * porcentaje) / 100.0
+        return Math.round(resultadoBruto * 100) / 100.0
+    }
+}

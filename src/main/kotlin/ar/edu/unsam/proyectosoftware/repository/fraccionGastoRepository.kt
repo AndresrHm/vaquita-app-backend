@@ -32,4 +32,10 @@ interface FraccionGastoRepository : CrudRepository<FraccionGasto, Long> {
         grupoId: Long?
     ): List<FraccionGasto>
     fun findAllByGastoAsociadoGrupoId(grupoId: Long): List<FraccionGasto>
+
+    @Query("SELECT f FROM FraccionGasto f WHERE f.deudor.id = :deudorId AND f.montoFraccion > f.pagoParcial")
+    fun findGastosPendientesByDeudorId(deudorId: Long): List<FraccionGasto>
+
+    @Query("SELECT DISTINCT f FROM FraccionGasto f JOIN FETCH f.gastoAsociado g JOIN FETCH g.participantes WHERE f.deudor.id = :deudorId AND f.acreedor.id = :acreedorId AND f.montoFraccion > f.pagoParcial")
+    fun findGastosPendientesBetween(deudorId: Long, acreedorId: Long): List<FraccionGasto>
 }

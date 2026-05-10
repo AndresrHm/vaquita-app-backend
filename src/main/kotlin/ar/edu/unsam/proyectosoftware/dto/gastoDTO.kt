@@ -86,3 +86,12 @@ enum class TipoRelacionVista {
     AMIGOS,
 }
 
+data class GastoPendienteDTO(
+    val id: Long,
+    val descripcion: String,
+    val monto: Double,
+    val acreedorNombre: String,
+    val grupoNombre: String,
+    val fecha: LocalDate
+)
+

@@ -11,6 +11,7 @@ import ar.edu.unsam.proyectosoftware.dto.GrupoNombreIdDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoSettingsDTO
 import ar.edu.unsam.proyectosoftware.dto.TipoActividad
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
+import ar.edu.unsam.proyectosoftware.repository.FraccionGastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.IntegranteGrupoRepository
@@ -49,6 +50,7 @@ class GrupoService(
     val integranteGrupoRepository: IntegranteGrupoRepository,
     val usuarioRepository: UsuarioRepository,
     val gastoRepository: GastoRepository,
+    private val fraccionGastoRepository: FraccionGastoRepository,
     private val usuarioService: UsuarioService,
     private val actividadService: ActividadService,
 ) {
@@ -251,7 +253,21 @@ class GrupoService(
         if (!grupoRepository.existsById(grupoId)) {
             throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
         }
-        return integranteGrupoRepository.obtenerMiembrosConRol(grupoId)
+
+        val miembros = integranteGrupoRepository.obtenerMiembrosConRol(grupoId)
+        val deudaPorUsuario = fraccionGastoRepository
+            .findAllByGastoAsociadoGrupoId(grupoId)
+            .asSequence()
+            .map { it.deudor.id!! to it.saldoPendiente() }
+            .filter { (_, deuda) -> deuda > 0.0 }
+            .groupBy({ it.first }, { it.second })
+            .mapValues { (_, deudas) -> deudas.sum() }
+
+        val usuarioMasDeudorId = deudaPorUsuario.maxByOrNull { it.value }?.key
+
+        return miembros.map { miembro ->
+            miembro.copy(esRata = miembro.id == usuarioMasDeudorId)
+        }
     }
 
     @Transactional

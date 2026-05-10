@@ -5,7 +5,10 @@ import ar.edu.unsam.proyectosoftware.security.JwtUtils
 import ar.edu.unsam.proyectosoftware.domain.SolicitudAmistad
 import ar.edu.unsam.proyectosoftware.domain.SolicitudAmistadFront
 import ar.edu.unsam.proyectosoftware.domain.Usuario
+import ar.edu.unsam.proyectosoftware.domain.Gasto
 import ar.edu.unsam.proyectosoftware.dto.CambioContrasenaDTO
+import ar.edu.unsam.proyectosoftware.dto.GastoPendienteDTO
+import ar.edu.unsam.proyectosoftware.dto.UsuarioBusquedaDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioConBalanceDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioEditarDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioLoginDTO
@@ -13,15 +16,21 @@ import ar.edu.unsam.proyectosoftware.dto.UsuarioLogueadoDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioRegistradoDTO
 import ar.edu.unsam.proyectosoftware.dto.TipoActividad
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
+import ar.edu.unsam.proyectosoftware.mapper.UsuarioMapper
 import ar.edu.unsam.proyectosoftware.repository.FraccionGastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.IntegranteGrupoRepository
 import ar.edu.unsam.proyectosoftware.repository.SolicitudAmistadRepository
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
+import com.google.zxing.client.j2se.MatrixToImageWriter
+import com.google.zxing.qrcode.QRCodeWriter
 import org.springframework.security.core.Authentication
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.io.ByteArrayOutputStream
 
 @Service
 @Transactional
@@ -35,6 +44,8 @@ class UsuarioService(
     private val jwtUtils: JwtUtils,
     private val actividadService: ActividadService,
 ) {
+
+    private val usernameRegex = Regex("^[a-zA-Z0-9._]{3,20}$")
 
     @Transactional
     fun registrarUsuario(dto: UsuarioRegistradoDTO): Usuario {
@@ -57,6 +68,14 @@ class UsuarioService(
             errores.add("• La contraseña debe tener al menos 6 caracteres")
         }
 
+        if (dto.username.isBlank()) {
+            errores.add("• El nombre de usuario no puede estar vacío")
+        } else if (!usernameRegex.matches(dto.username)) {
+            errores.add("• El nombre de usuario solo puede contener letras, números, puntos y guiones bajos (3-20 caracteres)")
+        } else if (usuarioRepository.existsByUsername(dto.username)) {
+            errores.add("• El nombre de usuario ya está en uso")
+        }
+
         if (errores.isNotEmpty()) {
             val mensajeFinal = errores.joinToString("\n")
             throw Exception(mensajeFinal)
@@ -64,7 +83,7 @@ class UsuarioService(
 
         val contrasenaHasheada = passwordEncoder.encode(dto.contrasena)
 
-        val nuevoUsuario = Usuario(nombre = dto.nombre, email = dto.email, contrasena = contrasenaHasheada)
+        val nuevoUsuario = Usuario(nombre = dto.nombre, email = dto.email, contrasena = contrasenaHasheada, username = dto.username)
         val usuarioCreado = usuarioRepository.save(nuevoUsuario)
 
         actividadService.registrarActividad(
@@ -97,7 +116,7 @@ class UsuarioService(
             nombre = usuario.nombre,
             email = usuario.email,
             accessToken = accessTokenGenerado,   // Acá va la pulsera de 15 minutos
-            refreshToken = refreshTokenGenerado, // Acá va el DNI de 7 días
+            refreshToken = refreshTokenGenerado,
             imagenUrl = usuario.imagenUrl
         )
     }
@@ -171,12 +190,23 @@ class UsuarioService(
             }
         }
 
+        if (dto.username != null) {
+            if (!usernameRegex.matches(dto.username)) {
+                errores.add("• El nombre de usuario solo puede contener letras, números, puntos y guiones bajos (3-20 caracteres)")
+            } else if (dto.username != usuario.username && usuarioRepository.existsByUsername(dto.username)) {
+                errores.add("• El nombre de usuario ya está en uso")
+            }
+        }
+
         if (errores.isNotEmpty()) throw Exception(errores.joinToString("\n"))
 
         usuario.nombre = dto.nombre
         usuario.email = dto.email
         if (dto.imagenUrl != null) {
             usuario.imagenUrl = dto.imagenUrl
+        }
+        if (dto.username != null) {
+            usuario.username = dto.username
         }
 
         val usuarioGuardado = usuarioRepository.save(usuario)
@@ -237,6 +267,7 @@ class UsuarioService(
             UsuarioConBalanceDTO(
                 id = amigoId,
                 nombre = amigo.nombre,
+                username = amigo.username,
                 monto = balanceNeto
             )
         }
@@ -293,6 +324,47 @@ class UsuarioService(
         solicitudAmistadRepository.deleteByIdEmisorAndIdReceptor(idAmigo, idUsuario)
     }
 
+
+    @Transactional(readOnly = true)
+    fun obtenerGastosPendientes(deudorId: Long): List<GastoPendienteDTO> {
+        return fraccionGastoRepository.findGastosPendientesByDeudorId(deudorId).map { fraccion ->
+            GastoPendienteDTO(
+                id = fraccion.id!!,
+                descripcion = fraccion.gastoAsociado.descripcion,
+                monto = fraccion.saldoPendiente(),
+                acreedorNombre = fraccion.acreedor.nombre,
+                grupoNombre = fraccion.gastoAsociado.grupo.nombre,
+                fecha = fraccion.gastoAsociado.fecha
+            )
+        }
+    }
+
+    @Transactional(readOnly = true)
+    fun obtenerGastosEntreUsuarios(logueadoId: Long, otroId: Long): List<Gasto> {
+        val fraccionesQueDebo = fraccionGastoRepository.findGastosPendientesBetween(logueadoId, otroId)
+        val fraccionesQueMeDeben = fraccionGastoRepository.findGastosPendientesBetween(otroId, logueadoId)
+        return (fraccionesQueDebo + fraccionesQueMeDeben)
+            .map { it.gastoAsociado }
+            .distinctBy { it.id }
+    }
+
+    @Transactional(readOnly = true)
+    fun buscarPorUsername(query: String, solicitanteId: Long): List<UsuarioBusquedaDTO> {
+        return usuarioRepository.findByUsernameContainingIgnoreCase(query)
+            .filter { it.id != solicitanteId }
+            .map { UsuarioMapper.toBusquedaDTO(it) }
+    }
+
+    @Transactional(readOnly = true)
+    fun generarQrUsuario(userId: Long): ByteArray {
+        val usuario = obtenerUsuario(userId)
+        val contenido = "@${usuario.username}"
+        val hints = mapOf(EncodeHintType.CHARACTER_SET to "UTF-8", EncodeHintType.MARGIN to 1)
+        val bitMatrix = QRCodeWriter().encode(contenido, BarcodeFormat.QR_CODE, 300, 300, hints)
+        val outputStream = ByteArrayOutputStream()
+        MatrixToImageWriter.writeToStream(bitMatrix, "PNG", outputStream)
+        return outputStream.toByteArray()
+    }
 
     fun responderSolicitudAmistad(auth: Authentication, idSolicitud: Long, aceptar: Boolean): Long? {
         val usuarioLogueado = obtenerUsuarioLogueado(auth)

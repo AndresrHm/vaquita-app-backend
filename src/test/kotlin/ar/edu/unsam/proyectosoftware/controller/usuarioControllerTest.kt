@@ -105,7 +105,7 @@ class UsuarioControllerTest {
             email = "giuli.dev@mail.com",
             accessToken = "access_actualizado",
             refreshToken = "refresh_actualizado",
-            imagenUrl = "foto.png"
+            imagenUrl = "foto_teclado.png"
         )
 
         every { usuarioService.actualizarPerfil(any(), any()) } returns respuestaEsperada

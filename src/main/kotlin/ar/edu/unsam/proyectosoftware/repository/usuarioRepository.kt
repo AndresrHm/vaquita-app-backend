@@ -9,6 +9,8 @@ import java.util.Optional
 interface UsuarioRepository : CrudRepository<Usuario, Long> {
     fun findByEmail(email: String): Optional<Usuario>
     fun findByGrupos_Id(grupoId: Long): List<Usuario>
-
     fun existsByIdAndAmigosId(id: Long, amigoId: Long): Boolean
+    fun findByUsername(username: String): Optional<Usuario>
+    fun existsByUsername(username: String): Boolean
+    fun findByUsernameContainingIgnoreCase(query: String): List<Usuario>
 }

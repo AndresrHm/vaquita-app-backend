@@ -25,6 +25,7 @@ class GrupoServiceTest {
     @MockK lateinit var integranteGrupoRepository: IntegranteGrupoRepository
     @MockK lateinit var usuarioRepository: UsuarioRepository
     @MockK lateinit var gastoRepository: GastoRepository
+    @MockK lateinit var fraccionGastoRepository: FraccionGastoRepository
     @MockK lateinit var usuarioService: UsuarioService // Simulamos al otro empleado
     @MockK(relaxed = true) lateinit var actividadService: ActividadService
 
@@ -125,13 +126,8 @@ class GrupoServiceTest {
         val grupoMock = mockk<Grupo>(relaxed = true)
 
         // Simulamos la proyección que devuelve la query de tu repositorio
-        val projectionMiembroActual = mockk<MiembroProjection>()
-        every { projectionMiembroActual.id } returns 2L
-        every { projectionMiembroActual.esAdmin } returns false // <-- NO ES ADMIN
-
-        val projectionAEliminar = mockk<MiembroProjection>()
-        every { projectionAEliminar.id } returns 3L
-        every { projectionAEliminar.esAdmin } returns false
+        val projectionMiembroActual = MiembroProjection(id = 2L, nombre = "Comun", imagenUrl = "", esAdmin = false, esRata = false)
+        val projectionAEliminar = MiembroProjection(id = 3L, nombre = "AEliminar", imagenUrl = "", esAdmin = false, esRata = false)
 
         every { usuarioService.obtenerUsuarioLogueado(authMock) } returns usuarioMiembroNormal
         every { grupoRepository.findById(grupoId) } returns Optional.of(grupoMock)
@@ -155,9 +151,7 @@ class GrupoServiceTest {
         val grupoMock = mockk<Grupo>(relaxed = true)
 
         // Creamos la proyección de forma limpia, sin anidamientos raros
-        val projectionAdmin = mockk<MiembroProjection>()
-        every { projectionAdmin.id } returns usuarioLogueadoId
-        every { projectionAdmin.esAdmin } returns true
+        val projectionAdmin = MiembroProjection(id = usuarioLogueadoId, nombre = "Admin", imagenUrl = "", esAdmin = true, esRata = false)
 
         every { usuarioService.obtenerUsuarioLogueado(authMock) } returns usuarioLogueado
         every { grupoRepository.findById(grupoId) } returns Optional.of(grupoMock)

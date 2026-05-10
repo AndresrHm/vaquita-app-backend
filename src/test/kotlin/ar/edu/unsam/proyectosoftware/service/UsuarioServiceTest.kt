@@ -136,6 +136,7 @@ class UsuarioServiceTest {
         val registroDTO = UsuarioRegistradoDTO("Giuliana", "giuli.m@mail.com", "secreta123")
         val usuarioExistente = Usuario(nombre = "Otra Persona", email = "giuli.m@mail.com", contrasena = "hash")
         every { usuarioRepository.findByEmail(registroDTO.email) } returns Optional.of(usuarioExistente)
+        every { usuarioRepository.existsByUsername(registroDTO.username) } returns false
 
         assertThatThrownBy {
             usuarioService.registrarUsuario(registroDTO)

@@ -63,6 +63,10 @@ dependencies {
     // Jackson para serializar/deserializar JSON
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("com.fasterxml.jackson.core:jackson-databind")
+
+    // QR Code generation
+    implementation("com.google.zxing:core:3.5.3")
+    implementation("com.google.zxing:javase:3.5.3")
 }
 
 kotlin {

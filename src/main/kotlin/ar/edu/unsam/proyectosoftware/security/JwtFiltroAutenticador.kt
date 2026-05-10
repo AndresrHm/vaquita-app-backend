@@ -17,19 +17,26 @@ class JwtAuthenticationFilter(private val jwtUtils: JwtUtils) : OncePerRequestFi
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             val token = authHeader.substring(7)
             try {
-                val email = jwtUtils.getEmailDesdeToken(token)
-                if (email != null && SecurityContextHolder.getContext().authentication == null) {
-                    val authToken = UsernamePasswordAuthenticationToken(email, null, mutableListOf())
+                if (jwtUtils.esTokenValido(token)) {
 
-                    // ESTA LÍNEA ES NUEVA: Agrega los detalles de la petición (IP, etc)
-                    authToken.details = org.springframework.security.web.authentication.WebAuthenticationDetailsSource().buildDetails(request)
+                    val email = jwtUtils.obtenerEmailDeToken(token)
 
-                    SecurityContextHolder.getContext().authentication = authToken
+                    if (email != null && SecurityContextHolder.getContext().authentication == null) {
+                        val authToken = UsernamePasswordAuthenticationToken(email, null, mutableListOf())
+
+                        authToken.details = org.springframework.security.web.authentication.WebAuthenticationDetailsSource().buildDetails(request)
+
+                        SecurityContextHolder.getContext().authentication = authToken
+                    }
+                } else {
+                    println("El token provisto es inválido o ya expiró.")
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token inválido o expirado")
+                    return // Corta la ejecución para que no llegue al Controller
                 }
             } catch (e: Exception) {
-                println("Token inválido: ${e.message}")
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token inválido o expirado")
-                return // Corta la ejecución
+                println("Error procesando token: ${e.message}")
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Error al procesar el token")
+                return
             }
         }
         filterChain.doFilter(request, response)

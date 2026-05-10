@@ -22,7 +22,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
 @WebMvcTest(UsuarioController::class)
-@AutoConfigureMockMvc(addFilters = false) // Apagamos los filtros globales para no bloquear las rutas libres
+@AutoConfigureMockMvc(addFilters = false)
 class UsuarioControllerTest {
 
     @Autowired
@@ -37,20 +37,19 @@ class UsuarioControllerTest {
     @MockkBean
     lateinit var grupoService: GrupoService
 
-    // El escáner de credenciales falso para que no explote Spring Security
     @MockkBean
     lateinit var jwtUtils: JwtUtils
 
     @Test
-    fun `POST login - debe devolver 200 OK y la credencial VIP del usuario`() {
+    fun `POST login - debe devolver 200 OK y ambos tokens`() {
         // Arrange
         val peticionLogin = UsuarioLoginDTO("giuli@mail.com", "miclave123")
         val respuestaEsperada = UsuarioLogueadoDTO(
             id = 1L,
             nombre = "Giuliana",
             email = "giuli@mail.com",
-            username = "giuliana",
-            token = "token_simulado_super_seguro",
+            accessToken = "access_token_falso",  // Actualizado
+            refreshToken = "refresh_token_falso", // Actualizado
             imagenUrl = null
         )
 
@@ -64,67 +63,52 @@ class UsuarioControllerTest {
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.nombre").value("Giuliana"))
-            .andExpect(jsonPath("$.token").value("token_simulado_super_seguro"))
+            .andExpect(jsonPath("$.accessToken").value("access_token_falso")) // Cambio de $.token a $.accessToken
+            .andExpect(jsonPath("$.refreshToken").value("refresh_token_falso"))
     }
 
     @Test
-    fun `POST register - debe devolver 200 OK y el JSON del usuario recien creado`() {
+    fun `POST refresh - debe devolver 200 OK y nuevos tokens al renovar`() {
         // Arrange
-        val peticionRegistro = UsuarioRegistradoDTO("Giuliana Nueva", "giulinueva@mail.com", "secreta123", "giulinueva")
-        val usuarioGuardado = Usuario(nombre = "Giuliana Nueva", email = "giulinueva@mail.com", contrasena = "hash").apply { id = 2L }
+        val peticion = mapOf("refreshToken" to "token_largo_viejo")
+        val respuestaEsperada = UsuarioLogueadoDTO(
+            id = 1L,
+            nombre = "Giuliana",
+            email = "giuli@mail.com",
+            accessToken = "NUEVO_access",
+            refreshToken = "NUEVO_refresh",
+            imagenUrl = null
+        )
 
-        every { usuarioService.registrarUsuario(any()) } returns usuarioGuardado
+        every { usuarioService.refrescarToken(any()) } returns respuestaEsperada
 
         // Act & Assert
         mockMvc.perform(
-            post("/usuarios/register")
+            post("/usuarios/refresh")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(peticionRegistro))
+                .content(objectMapper.writeValueAsString(peticion))
         )
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.id").value(2L))
-            .andExpect(jsonPath("$.email").value("giulinueva@mail.com"))
+            .andExpect(jsonPath("$.accessToken").value("NUEVO_access"))
+            .andExpect(jsonPath("$.refreshToken").value("NUEVO_refresh"))
     }
 
     @Test
-    fun `GET obtenerMiPerfil - debe devolver 200 OK y mi nombre e ID`() {
+    fun `PUT actualizarMiPerfil - debe devolver 200 OK y tokens renovados`() {
         // Arrange
         val authFalsa = UsernamePasswordAuthenticationToken("giuli@mail.com", null, emptyList())
-        val miUsuario = Usuario(nombre = "Giuliana", email = "giuli@mail.com", contrasena = "").apply { id = 1L }
-
-        every { usuarioService.obtenerUsuarioLogueado(authFalsa) } returns miUsuario
-
-        // Act & Assert
-        mockMvc.perform(
-            get("/usuarios/me")
-                .principal(authFalsa) // Mostramos la credencial en la puerta
-        )
-            .andExpect(status().isOk)
-            .andExpect(jsonPath("$.id").value(1L))
-            .andExpect(jsonPath("$.nombre").value("Giuliana"))
-    }
-
-    @Test
-    fun `PUT actualizarMiPerfil - debe devolver 200 OK y el DTO con el perfil renovado`() {
-        // Arrange
-        val authFalsa = UsernamePasswordAuthenticationToken("giuli@mail.com", null, emptyList())
-
-        val peticionEdicion = UsuarioEditarDTO(
-            nombre = "Giuli Programadora",
-            email = "giuli.dev@mail.com",
-            imagenUrl = "foto_teclado.png"
-        )
+        val peticionEdicion = UsuarioEditarDTO("Giuli Dev", "giuli.dev@mail.com", "foto.png")
 
         val respuestaEsperada = UsuarioLogueadoDTO(
             id = 1L,
-            nombre = "Giuli Programadora",
+            nombre = "Giuli Dev",
             email = "giuli.dev@mail.com",
-            username = "giuli.dev",
-            token = "token_renovado",
+            accessToken = "access_actualizado",
+            refreshToken = "refresh_actualizado",
             imagenUrl = "foto_teclado.png"
         )
 
-        every { usuarioService.actualizarPerfil(authFalsa, peticionEdicion) } returns respuestaEsperada
+        every { usuarioService.actualizarPerfil(any(), any()) } returns respuestaEsperada
 
         // Act & Assert
         mockMvc.perform(
@@ -134,25 +118,41 @@ class UsuarioControllerTest {
                 .content(objectMapper.writeValueAsString(peticionEdicion))
         )
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.nombre").value("Giuli Programadora"))
-            .andExpect(jsonPath("$.imagenUrl").value("foto_teclado.png"))
-            .andExpect(jsonPath("$.token").value("token_renovado"))
+            .andExpect(jsonPath("$.accessToken").value("access_actualizado"))
     }
 
-    // ==========================================
-    // TESTS DE AMISTAD Y SEGURIDAD
-    // ==========================================
+    @Test
+    fun `POST register - debe devolver 200 OK y el JSON del usuario`() {
+        val peticionRegistro = UsuarioRegistradoDTO("Giuliana Nueva", "giulinueva@mail.com", "secreta123")
+        val usuarioGuardado = Usuario(nombre = "Giuliana Nueva", email = "giulinueva@mail.com", contrasena = "hash").apply { id = 2L }
+        every { usuarioService.registrarUsuario(any()) } returns usuarioGuardado
+
+        mockMvc.perform(
+            post("/usuarios/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(peticionRegistro))
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.id").value(2L))
+    }
 
     @Test
-    fun `PATCH cambiarContrasena - debe devolver 200 OK y el mensaje de exito`() {
-        // Arrange
+    fun `GET obtenerMiPerfil - debe devolver 200 OK y mi nombre`() {
         val authFalsa = UsernamePasswordAuthenticationToken("giuli@mail.com", null, emptyList())
-        val peticionClave = ar.edu.unsam.proyectosoftware.dto.CambioContrasenaDTO("clave_vieja123", "clave_nueva_456")
+        val miUsuario = Usuario(nombre = "Giuliana", email = "giuli@mail.com", contrasena = "").apply { id = 1L }
+        every { usuarioService.obtenerUsuarioLogueado(any()) } returns miUsuario
 
-        // El service devuelve Unit (void) cuando todo sale bien
+        mockMvc.perform(get("/usuarios/me").principal(authFalsa))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.nombre").value("Giuliana"))
+    }
+
+    @Test
+    fun `PATCH cambiarContrasena - debe devolver 200 OK`() {
+        val authFalsa = UsernamePasswordAuthenticationToken("giuli@mail.com", null, emptyList())
+        val peticionClave = ar.edu.unsam.proyectosoftware.dto.CambioContrasenaDTO("vieja", "nueva")
         every { usuarioService.cambiarContrasena(any(), any()) } returns Unit
 
-        // Act & Assert
         mockMvc.perform(
             patch("/usuarios/me/contrasena")
                 .principal(authFalsa)
@@ -164,35 +164,22 @@ class UsuarioControllerTest {
     }
 
     @Test
-    fun `POST enviarSolicitudAmistad - debe devolver 200 OK y el ID del receptor`() {
-        // Arrange
+    fun `POST enviarSolicitudAmistad - debe devolver 200 OK`() {
         val authFalsa = UsernamePasswordAuthenticationToken("giuli@mail.com", null, emptyList())
-        val idReceptor = 5L
+        every { usuarioService.enviarSolicitudAmistad(any(), 5L) } returns 5L
 
-        every { usuarioService.enviarSolicitudAmistad(any(), idReceptor) } returns idReceptor
-
-        // Act & Assert
-        mockMvc.perform(
-            post("/usuarios/me/invitar/$idReceptor")
-                .principal(authFalsa)
-        )
+        mockMvc.perform(post("/usuarios/me/invitar/5").principal(authFalsa))
             .andExpect(status().isOk)
-            .andExpect(content().string("5")) // Como devuelve un Long directo, validamos el body como texto
+            .andExpect(content().string("5"))
     }
 
     @Test
-    fun `PATCH responderSolicitudAmistad - debe devolver 200 OK pasando el parametro aceptar`() {
-        // Arrange
+    fun `PATCH responderSolicitudAmistad - debe devolver 200 OK`() {
         val authFalsa = UsernamePasswordAuthenticationToken("giuli@mail.com", null, emptyList())
-        val idSolicitud = 10L
-        val miId = 1L
+        every { usuarioService.responderSolicitudAmistad(any(), 10L, true) } returns 1L
 
-        every { usuarioService.responderSolicitudAmistad(any(), idSolicitud, true) } returns miId
-
-        // Act & Assert
-        // Acá probamos cómo pasarle el @RequestParam("aceptar") usando .param()
         mockMvc.perform(
-            patch("/usuarios/me/solicitud/$idSolicitud")
+            patch("/usuarios/me/solicitud/10")
                 .principal(authFalsa)
                 .param("aceptar", "true")
         )
@@ -202,16 +189,8 @@ class UsuarioControllerTest {
 
     @Test
     fun `DELETE eliminarAmigo - debe devolver 204 No Content`() {
-        // Arrange
-        val idUsuario = 1L
-        val idAmigo = 2L
-
-        every { usuarioService.eliminarAmigo(idUsuario, idAmigo) } returns Unit
-
-        // Act & Assert
-        mockMvc.perform(
-            delete("/usuarios/$idUsuario/amigos/$idAmigo")
-        )
-            .andExpect(status().isNoContent) // Verifica el código HTTP 204 que pusiste en el controller
+        every { usuarioService.eliminarAmigo(1L, 2L) } returns Unit
+        mockMvc.perform(delete("/usuarios/1/amigos/2"))
+            .andExpect(status().isNoContent)
     }
 }

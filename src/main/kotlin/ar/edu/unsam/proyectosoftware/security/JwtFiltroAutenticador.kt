@@ -14,6 +14,12 @@ class JwtAuthenticationFilter(private val jwtUtils: JwtUtils) : OncePerRequestFi
     override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, filterChain: FilterChain) {
         val authHeader = request.getHeader("Authorization")
 
+        // TEMPORAL
+        if (request.servletPath.startsWith("/api/")) {
+            filterChain.doFilter(request, response)
+            return
+        }
+
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             val token = authHeader.substring(7)
             try {

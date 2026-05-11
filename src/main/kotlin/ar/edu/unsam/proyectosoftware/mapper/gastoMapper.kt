@@ -1,6 +1,7 @@
 package ar.edu.unsam.proyectosoftware.mapper
 
 import ar.edu.unsam.proyectosoftware.BusinessException
+import ar.edu.unsam.proyectosoftware.domain.Aleatorio
 import ar.edu.unsam.proyectosoftware.domain.Gasto
 import ar.edu.unsam.proyectosoftware.dto.GastoDetalleDTO
 import ar.edu.unsam.proyectosoftware.domain.Grupo
@@ -71,6 +72,11 @@ object GastoMapper {
                     porcentajes = mapaPorcentajes
                 )
             }
+
+            TipoGasto.ALEATORIO -> Aleatorio(
+                dto.descripcion, dto.categoria, dto.monto, dto.fecha, grupo, pagador, participantes
+            )
+
             else -> throw BusinessException(ErrorStrings.TIPO_GASTO_INEXISTENTE)
         }
 

@@ -1,11 +1,13 @@
 package ar.edu.unsam.proyectosoftware.mapper
 
 import ar.edu.unsam.proyectosoftware.BusinessException
+import ar.edu.unsam.proyectosoftware.domain.Aleatorio
 import ar.edu.unsam.proyectosoftware.domain.Gasto
 import ar.edu.unsam.proyectosoftware.dto.GastoDetalleDTO
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.PartesExactas
 import ar.edu.unsam.proyectosoftware.domain.PartesIguales
+import ar.edu.unsam.proyectosoftware.domain.Porcentual
 import ar.edu.unsam.proyectosoftware.domain.enums.TipoGasto
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.CreacionGastoDTO
@@ -53,7 +55,29 @@ object GastoMapper {
                     asignacionesExactas = mapaAsignaciones
                 )
             }
-            else -> throw BusinessException("Tipo de gasto no soportado")
+
+            TipoGasto.PORCENTUAL -> {
+                val mapaPorcentajes = participantes.associateWith { usuario ->
+                    dto.asignacionesExactas?.get(usuario.id) ?: 0.0
+                }.toMutableMap()
+
+                Porcentual(
+                    descripcion = dto.descripcion,
+                    categoria = dto.categoria,
+                    monto = dto.monto,
+                    fecha = dto.fecha,
+                    grupo = grupo,
+                    pagador = pagador,
+                    participantes = participantes,
+                    porcentajes = mapaPorcentajes
+                )
+            }
+
+            TipoGasto.ALEATORIO -> Aleatorio(
+                dto.descripcion, dto.categoria, dto.monto, dto.fecha, grupo, pagador, participantes
+            )
+
+            else -> throw BusinessException(ErrorStrings.TIPO_GASTO_INEXISTENTE)
         }
 
         // 2. Cargamos los items (común a todos)

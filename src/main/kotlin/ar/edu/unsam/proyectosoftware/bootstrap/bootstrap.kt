@@ -721,7 +721,7 @@ class BootstrapData(
             // Actividad de deuda generada para el pagador
             actividadService.registrarActividad(
                 usuario = gastoGuardado.pagador,
-                tipo = TipoActividad.DEUDA_GENERADA,
+                tipo = TipoActividad.MIS_PAGOS,
                 descripcion = "Pagaste ${gastoGuardado.descripcion} en ${gastoGuardado.grupo.nombre}",
                 metadata = mapOf(
                     "gastoId" to gastoGuardado.id,
@@ -736,7 +736,7 @@ class BootstrapData(
             fraccionesExternas.forEach { fraccion ->
                 actividadService.registrarActividad(
                     usuario = fraccion.deudor,
-                    tipo = TipoActividad.GASTO_DEUDA,
+                    tipo = TipoActividad.MIS_DEUDAS,
                     descripcion = "Debes pagar ${fraccion.montoFraccion} a ${fraccion.acreedor.nombre} por ${gastoGuardado.descripcion}",
                     metadata = mapOf(
                         "gastoId" to gastoGuardado.id,
@@ -778,7 +778,7 @@ class BootstrapData(
 
             actividadService.registrarActividad(
                 usuario = gastoGuardado.pagador,
-                tipo = TipoActividad.DEUDA_GENERADA,
+                tipo = TipoActividad.MIS_PAGOS,
                 descripcion = "Pagaste ${gastoGuardado.descripcion} en ${gastoGuardado.grupo.nombre}",
                 metadata = mapOf(
                     "gastoId" to gastoGuardado.id,
@@ -792,7 +792,7 @@ class BootstrapData(
             fraccionesExternas.forEach { fraccion ->
                 actividadService.registrarActividad(
                     usuario = fraccion.deudor,
-                    tipo = TipoActividad.GASTO_DEUDA,
+                    tipo = TipoActividad.MIS_DEUDAS,
                     descripcion = "Debes pagar ${fraccion.montoFraccion} a ${fraccion.acreedor.nombre} por ${gastoGuardado.descripcion}",
                     metadata = mapOf(
                         "gastoId" to gastoGuardado.id,

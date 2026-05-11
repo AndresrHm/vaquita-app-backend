@@ -344,7 +344,7 @@ class GastoService(
     private fun registrarActividadesDeGasto(gasto: Gasto, fracciones: List<ar.edu.unsam.proyectosoftware.domain.FraccionGasto>) {
         actividadService.registrarActividad(
             usuario = gasto.pagador,
-            tipo = TipoActividad.DEUDA_GENERADA,
+            tipo = TipoActividad.MIS_PAGOS,
             descripcion = "Registraste un gasto en ${gasto.grupo.nombre}.",
             metadata = mapOf(
                 "gastoId" to gasto.id,
@@ -358,7 +358,7 @@ class GastoService(
         fracciones.forEach { fraccion ->
             actividadService.registrarActividad(
                 usuario = fraccion.deudor,
-                tipo = TipoActividad.GASTO_DEUDA,
+                tipo = TipoActividad.MIS_DEUDAS,
                 descripcion = "Se registro una deuda en ${gasto.grupo.nombre}.",
                 metadata = mapOf(
                     "gastoId" to gasto.id,

@@ -3,13 +3,13 @@ package ar.edu.unsam.proyectosoftware.dto
 import java.time.LocalDateTime
 
 enum class TipoActividad {
-    CUENTA_CREADA,
-    GASTO_DEUDA, // Los gastos son cuando tú le debes a otra persona
-    GASTO_SALDADO,
-    DEUDA_GENERADA, // Cuando otras personas te deben a ti
-    DEUDA_SALDADA,
+    MIS_DEUDAS, // Los gastos son cuando tú le debes a otra persona
+    MIS_DEUDAS_SALDADAS,
+    MIS_PAGOS, // Cuando otras personas te deben a ti
+    COBROS_RECIBIDOS,
     INGRESO_GRUPO,
     EGRESO_GRUPO,
+    CUENTA_CREADA,
 }
 
 data class ActividadDTO(

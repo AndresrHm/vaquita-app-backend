@@ -4,6 +4,7 @@ import ar.edu.unsam.proyectosoftware.domain.enums.CategoriaGasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.PartesExactas
 import ar.edu.unsam.proyectosoftware.domain.PartesIguales
+import ar.edu.unsam.proyectosoftware.domain.Porcentual
 import ar.edu.unsam.proyectosoftware.domain.RolIntegrante
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.TipoActividad
@@ -210,6 +211,16 @@ class BootstrapData(
                 agregarIntegrante(juanA, RolIntegrante.ADMIN)
                 agregarIntegrante(andresH, RolIntegrante.MIEMBRO)
             },
+            Grupo(
+                nombre = "Merentielistas de verdad",
+                descripcion = "Merentiel está gagá",
+                imagenUrl = "https://pbs.twimg.com/media/HGS_zikaQAA2NdL?format=jpg&name=small",
+                fechaCreacion = LocalDate.now()
+            ).apply {
+                agregarIntegrante(juanA, RolIntegrante.ADMIN)
+                agregarIntegrante(lucasP, RolIntegrante.MIEMBRO)
+                agregarIntegrante(matiasF, RolIntegrante.MIEMBRO)
+            },
         )
 
         val gruposFiltro = listOf(
@@ -272,6 +283,7 @@ class BootstrapData(
         val grupoSeries  = grupos[8]
         val grupoFinde   = grupos[9]
         val grupoBestia   = grupos[10]
+        val grupoAntiBestia   = grupos[11]
         val grupoFiltroTodos = gruposFiltro[0]
         val grupoFiltroJuanDebe = gruposFiltro[1]
         val grupoFiltroJuanLeDeben = gruposFiltro[2]
@@ -701,6 +713,7 @@ class BootstrapData(
                 grupoFinde, lucasP, grupoFinde.usuarios()
             ).apply { agregarItem("Tickets campo", 4.0, 16500.0) },
 
+            // ── Merentiel ─────────────────────────────────────────────
             PartesIguales(
                 "Gorras de Merentiel", CategoriaGasto.VARIOS, 10000.0, nextFecha(),
                 grupoBestia, andresH, grupoBestia.usuarios()
@@ -710,6 +723,19 @@ class BootstrapData(
                 "Torta de cumpleaños", CategoriaGasto.COMIDA, 5000.0, nextFecha(),
                 grupoBestia, juanA, grupoBestia.usuarios()
             ),
+
+            // ── Merentieln't ─────────────────────────────────────────────
+            Porcentual(
+                "Torta de velorio", CategoriaGasto.COMIDA, 10000.0, nextFecha(),
+                grupoAntiBestia, juanA, grupoBestia.usuarios(),
+                mutableMapOf(juanA to 10.0, lucasP to 50.0, matiasF to 40.0)
+            ),
+
+            Porcentual(
+                "Gorras de luto", CategoriaGasto.COMIDA, 6000.0, nextFecha(),
+                grupoAntiBestia, juanA, grupoBestia.usuarios(),
+                mutableMapOf(juanA to 60.0, lucasP to 20.0, matiasF to 20.0)
+            )
 
             ).forEach { gasto ->
             val gastoGuardado = gastoRepository.save(gasto)

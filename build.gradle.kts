@@ -70,6 +70,7 @@ dependencies {
     // QR Code generation
     implementation("com.google.zxing:core:3.5.3")
     implementation("com.google.zxing:javase:3.5.3")
+    testImplementation(kotlin("test"))
 }
 
 kotlin {

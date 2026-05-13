@@ -1,5 +1,6 @@
 package ar.edu.unsam.proyectosoftware.service
 
+import ar.edu.unsam.proyectosoftware.BusinessException
 import ar.edu.unsam.proyectosoftware.security.JwtUtils
 import ar.edu.unsam.proyectosoftware.domain.SolicitudAmistad
 import ar.edu.unsam.proyectosoftware.domain.SolicitudAmistadFront
@@ -107,15 +108,44 @@ class UsuarioService(
             throw Exception("Email o contraseña incorrectos")
         }
 
-        val token = jwtUtils.generarToken(usuario)
+        val accessTokenGenerado = jwtUtils.generarAccessToken(usuario)
+        val refreshTokenGenerado = jwtUtils.generarRefreshToken(usuario)
 
         return UsuarioLogueadoDTO(
             id = usuario.id!!,
             nombre = usuario.nombre,
             email = usuario.email,
+            accessToken = accessTokenGenerado,   // Acá va la pulsera de 15 minutos
+            refreshToken = refreshTokenGenerado,
             username = usuario.username,
-            token = token,
             imagenUrl = usuario.imagenUrl
+        )
+    }
+
+    fun refrescarToken(refreshToken: String): UsuarioLogueadoDTO {
+        // 1. Validamos que el refresh token no esté trucho ni vencido (esos 7 días)
+        if (!jwtUtils.esTokenValido(refreshToken)) {
+            throw BusinessException("Refresh token inválido o expirado. Por favor, iniciá sesión nuevamente.")
+        }
+
+        // 2. Sacamos de adentro del token a quién le pertenece
+        val email = jwtUtils.obtenerEmailDeToken(refreshToken)
+        val usuario = usuarioRepository.findByEmail(email)
+            .orElseThrow { BusinessException("Usuario no encontrado") }
+
+        // 3. Le fabricamos un combo de llaves nuevitas
+        val nuevoAccessToken = jwtUtils.generarAccessToken(usuario)
+        val nuevoRefreshToken = jwtUtils.generarRefreshToken(usuario) // Rotamos también este por seguridad
+
+        // 4. Se lo devolvemos empaquetado en tu DTO
+        return UsuarioLogueadoDTO(
+            id = usuario.id!!,
+            accessToken = nuevoAccessToken,
+            refreshToken = nuevoRefreshToken,
+            nombre = usuario.nombre,
+            email = usuario.email,
+            username = usuario.username,
+            imagenUrl = usuario.imagenUrl ?: ""
         )
     }
 
@@ -183,14 +213,16 @@ class UsuarioService(
 
         val usuarioGuardado = usuarioRepository.save(usuario)
 
-        val nuevoToken = jwtUtils.generarToken(usuarioGuardado)
+        val nuevoAccessToken = jwtUtils.generarAccessToken(usuarioGuardado)
+        val nuevoRefreshToken = jwtUtils.generarRefreshToken(usuarioGuardado)
 
         return UsuarioLogueadoDTO(
             id = usuarioGuardado.id!!,
             nombre = usuarioGuardado.nombre,
             email = usuarioGuardado.email,
-            username = usuarioGuardado.username,
-            token = nuevoToken,
+            accessToken = nuevoAccessToken,
+            refreshToken = nuevoRefreshToken,
+            username = usuario.username,
             imagenUrl = usuarioGuardado.imagenUrl
         )
     }

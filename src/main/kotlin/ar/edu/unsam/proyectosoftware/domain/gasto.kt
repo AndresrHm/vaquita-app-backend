@@ -75,6 +75,10 @@ abstract class Gasto(
     abstract fun repartirGasto(): List<FraccionGasto>
     abstract fun validar()
     abstract fun tipoGasto(): TipoGasto
+
+    protected fun redondear(valor: Double): Double {
+        return Math.round(valor * 100.0) / 100.0
+    }
 }
 
 @Entity
@@ -172,5 +176,113 @@ class PartesIguales(
     override fun tipoGasto() = TipoGasto.PARTES_IGUALES
 
     private fun calcularMontoPorParticipante(): Double {
-        return Math.round(monto / cantidadParticipantes() * 100) / 100.0    }
+        return Math.round(monto / cantidadParticipantes() * 100) / 100.0
+    }
+}
+
+@Entity
+@DiscriminatorValue("PERCENTAGE")
+class Porcentual(
+    descripcion: String,
+    categoria: CategoriaGasto,
+    monto: Double,
+    fecha: LocalDate,
+    grupo: Grupo,
+    pagador: Usuario,
+    participantes: List<Usuario>,
+    @ElementCollection
+    @CollectionTable(name = "gasto_porcentajes", joinColumns = [JoinColumn(name = "gasto_id")])
+    @MapKeyJoinColumn(name = "usuario_id")
+    @Column(name = "porcentaje_asignado")
+    val porcentajes: MutableMap<Usuario, Double> = mutableMapOf()
+) : Gasto(
+    descripcion,
+    categoria,
+    monto,
+    fecha,
+    grupo,
+    pagador,
+    participantes
+) {
+    override fun repartirGasto(): List<FraccionGasto> {
+        return porcentajes
+            .filter { (usuario, _) -> usuario.id != pagador.id }
+            .map { (usuario, porcentaje) ->
+                FraccionGasto(
+                    deudor = usuario,
+                    acreedor = pagador,
+                    gastoAsociado = this,
+                    montoFraccion = calcularMontoSegunPorcentaje(porcentaje),
+                    pagoParcial = 0.0
+                )
+            }
+    }
+
+    override fun validar() {
+        val sumaPorcentajes = porcentajes.values.sum()
+        // Margen de error por redondeo
+        if (Math.abs(sumaPorcentajes - 100.0) > 0.001) {
+            throw BusinessException(ErrorStrings.PORCENTAJE_NO_SUMA_100)
+        }
+
+        if (porcentajes.values.any { it < 0 }) {
+            throw BusinessException("Los porcentajes no pueden ser negativos")
+        }
+    }
+
+    override fun tipoGasto() = TipoGasto.PORCENTUAL
+
+    private fun calcularMontoSegunPorcentaje(porcentaje: Double): Double {
+        val resultadoBruto = (monto * porcentaje) / 100.0
+        return Math.round(resultadoBruto * 100) / 100.0
+    }
+}
+
+@Entity
+@DiscriminatorValue("RANDOM")
+class Aleatorio(
+    descripcion: String,
+    categoria: CategoriaGasto,
+    monto: Double,
+    fecha: LocalDate,
+    grupo: Grupo,
+    pagador: Usuario,
+    participantes: List<Usuario>
+) : Gasto(descripcion, categoria, monto, fecha, grupo, pagador, participantes) {
+
+    override fun repartirGasto(): List<FraccionGasto> {
+        val n = participantes.size
+
+        // Generamos N-1 puntos de corte aleatorios entre 0 y el monto total
+        val cortes = List(n - 1) { (0..monto.toInt()).random().toDouble() }.sorted()
+
+        // Calculamos las diferencias entre cortes para obtener las partes
+        val montosAsignados = mutableListOf<Double>()
+        var anterior = 0.0
+        for (corte in cortes) {
+            montosAsignados.add(redondear(corte - anterior))
+            anterior = corte
+        }
+        montosAsignados.add(redondear(monto - anterior))
+
+        // Mezclamos los montos para que no siempre el primero reciba lo mismo
+        val montosMezclados = montosAsignados.shuffled()
+
+        // Mapeamos a los participantes (saltando al pagador)
+        return participantes.zip(montosMezclados)
+            .filter { (usuario, _) -> usuario.id != pagador.id }
+            .map { (usuario, montoFraccion) ->
+                FraccionGasto(
+                    deudor = usuario,
+                    acreedor = pagador,
+                    gastoAsociado = this,
+                    montoFraccion = montoFraccion,
+                    pagoParcial = 0.0
+                )
+            }
+    }
+
+    override fun validar(){}
+
+    override fun tipoGasto() = TipoGasto.ALEATORIO
 }

@@ -38,6 +38,9 @@ dependencies {
     implementation("org.postgresql:postgresql")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
+    // supabase
+    implementation("software.amazon.awssdk:s3:2.25.0")
+
     providedRuntime("org.springframework.boot:spring-boot-starter-tomcat")
 
     // testing

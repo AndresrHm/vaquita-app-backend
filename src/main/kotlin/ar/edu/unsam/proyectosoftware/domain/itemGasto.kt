@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import kotlin.math.roundToInt
 
 @Entity
 class ItemGasto(
@@ -20,5 +21,11 @@ class ItemGasto(
     @GeneratedValue
     var id: Long? = null
 
-    fun total(): Double = cantidad * precioUnitario
+    fun total(): Double {
+
+        val precioEnCentavos =
+            (precioUnitario * 100).roundToInt()
+
+        return (precioEnCentavos * cantidad) / 100.0
+    }
 }

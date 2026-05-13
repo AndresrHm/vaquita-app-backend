@@ -9,6 +9,7 @@ import ar.edu.unsam.proyectosoftware.dto.TipoRelacionVista
 import ar.edu.unsam.proyectosoftware.dto.GastoDetalleDTO
 import ar.edu.unsam.proyectosoftware.dto.PageResponse
 import ar.edu.unsam.proyectosoftware.domain.enums.CategoriaGasto
+import ar.edu.unsam.proyectosoftware.dto.ActionResponse
 import ar.edu.unsam.proyectosoftware.dto.FilterGastosCustom
 import ar.edu.unsam.proyectosoftware.dto.PagoDTO
 import ar.edu.unsam.proyectosoftware.dto.PagoGlobalDTO
@@ -29,9 +30,13 @@ class GastoController(
     val usuarioService: UsuarioService
 ) {
     @PostMapping
-    fun crearGasto(auth: Authentication, @RequestBody gastoDTO: CreacionGastoDTO): String {
+    fun crearGasto(auth: Authentication, @RequestBody gastoDTO: CreacionGastoDTO): ActionResponse {
         val gasto = gastoService.crearGasto(auth, gastoDTO)
-        return "Gasto de $${gasto.monto} creado exitosamente en ${gasto.grupo.nombre}."
+
+        return ActionResponse(
+            id = gasto.id!!,
+            message = "Gasto de $${gasto.monto} creado exitosamente en ${gasto.grupo.nombre}."
+        )
     }
 
     @GetMapping("/me/deuda")

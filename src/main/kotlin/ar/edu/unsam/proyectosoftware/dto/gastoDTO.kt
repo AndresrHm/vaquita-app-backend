@@ -95,3 +95,7 @@ data class GastoPendienteDTO(
     val fecha: LocalDate
 )
 
+data class ActionResponse(
+    val id: Long,
+    val message: String,
+)

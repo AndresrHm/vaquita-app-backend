@@ -25,6 +25,7 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.MapKeyJoinColumn
 import jakarta.persistence.OneToMany
 import java.time.LocalDate
+import kotlin.math.roundToInt
 
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
@@ -66,7 +67,12 @@ abstract class Gasto(
     }
 
     fun totalItems(): Double {
-        return items.sumOf { it.total() }
+
+        val totalEnCentavos = items.sumOf {
+            (it.total() * 100).roundToInt()
+        }
+
+        return totalEnCentavos / 100.0
     }
 
     fun cantidadParticipantes(): Int =

@@ -42,7 +42,7 @@ data class UsuarioInfoDTO(
     val esAmigo: Boolean,
     val solicitudPendiente: Boolean,
     val gruposCompartidos: List<GrupoNombreIdDTO>,
-    val gastosPendientes: List<GastosPorAnioDTO>
+    val balances: List<BalanceConGrupoDTO>
 )
 
 data class UsuarioEditarDTO(

@@ -1,6 +1,7 @@
 package ar.edu.unsam.proyectosoftware.bootstrap
 
 import ar.edu.unsam.proyectosoftware.domain.Aleatorio
+import ar.edu.unsam.proyectosoftware.domain.ExpenseAttachment
 import ar.edu.unsam.proyectosoftware.domain.enums.CategoriaGasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.PartesExactas
@@ -12,13 +13,22 @@ import ar.edu.unsam.proyectosoftware.dto.TipoActividad
 import ar.edu.unsam.proyectosoftware.repository.FraccionGastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
+import ar.edu.unsam.proyectosoftware.repository.ExpenseAttachmentRepository
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
 import ar.edu.unsam.proyectosoftware.service.ActividadService
+import ar.edu.unsam.proyectosoftware.service.StorageService
 import org.springframework.boot.CommandLineRunner
 import org.springframework.security.crypto.password.PasswordEncoder
+import java.awt.BasicStroke
+import java.awt.Color
+import java.awt.Font
+import java.awt.RenderingHints
+import java.awt.image.BufferedImage
+import java.io.ByteArrayOutputStream
 import java.time.LocalDate
+import javax.imageio.ImageIO
 
 @Configuration
 class BootstrapData(
@@ -26,8 +36,10 @@ class BootstrapData(
     val grupoRepository: GrupoRepository,
     val gastoRepository: GastoRepository,
     val fraccionGastoRepository: FraccionGastoRepository,
+    val expenseAttachmentRepository: ExpenseAttachmentRepository,
     val passwordEncoder: PasswordEncoder,
     val actividadService: ActividadService,
+    val storageService: StorageService,
 ) {
 
     @Bean
@@ -338,6 +350,85 @@ class BootstrapData(
         // 3. Gastos
         var diasAtras = 0L
         fun nextFecha(): LocalDate = LocalDate.now().minusDays(diasAtras++)
+        val descripcionesConTicket = setOf(
+            "Compras para el asado",
+            "Internet y cable",
+            "Combustible",
+            "Suscripciones streaming",
+            "Fichas ruleta",
+            "Filtro - A Juan le deben"
+        )
+
+        fun crearTicketEjemplo(
+            gastoGuardado: ar.edu.unsam.proyectosoftware.domain.Gasto,
+            numeroTicket: Int,
+            cantidadTickets: Int,
+        ): ByteArray {
+            val imagen = BufferedImage(900, 420, BufferedImage.TYPE_INT_RGB)
+            val g2 = imagen.createGraphics()
+
+            try {
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+                g2.color = Color(0xF7, 0xF7, 0xF7)
+                g2.fillRect(0, 0, imagen.width, imagen.height)
+
+                g2.color = Color(0xD9, 0x35, 0x35)
+                g2.stroke = BasicStroke(8f)
+                g2.drawRoundRect(18, 18, imagen.width - 36, imagen.height - 36, 28, 28)
+
+                g2.color = Color(0x22, 0x22, 0x22)
+                g2.font = Font("SansSerif", Font.BOLD, 34)
+                g2.drawString("FACTURA DE EJEMPLO", 52, 95)
+
+                g2.font = Font("SansSerif", Font.PLAIN, 28)
+                g2.drawString("Aqu\u00ed va la factura", 52, 155)
+
+                g2.font = Font("SansSerif", Font.PLAIN, 22)
+                g2.drawString("Gasto: ${gastoGuardado.descripcion}", 52, 215)
+                g2.drawString("ID: ${gastoGuardado.id}", 52, 255)
+                g2.drawString("Ticket $numeroTicket de $cantidadTickets", 52, 290)
+                g2.drawString("Subido automáticamente desde el bootstrap", 52, 325)
+            } finally {
+                g2.dispose()
+            }
+
+            return ByteArrayOutputStream().use { outputStream ->
+                ImageIO.write(imagen, "jpg", outputStream)
+                outputStream.toByteArray()
+            }
+        }
+
+        fun guardarTicketSiCorresponde(gastoGuardado: ar.edu.unsam.proyectosoftware.domain.Gasto) {
+            if (gastoGuardado.descripcion !in descripcionesConTicket) return
+
+            val cantidadTickets = if (gastoGuardado.descripcion == "Filtro - A Juan le deben") 3 else 1
+
+            (1..cantidadTickets).forEach { numeroTicket ->
+                val sufijo = if (cantidadTickets == 1) "" else "-$numeroTicket"
+                val storageKey = "expenses/${gastoGuardado.id}/ticket-${gastoGuardado.id}$sufijo.jpg"
+                val filename = "ticket-${gastoGuardado.id}$sufijo.jpg"
+                val ticketBytes = crearTicketEjemplo(gastoGuardado, numeroTicket, cantidadTickets)
+
+                storageService.uploadObject(
+                    storageKey = storageKey,
+                    mimeType = "image/jpeg",
+                    content = ticketBytes
+                )
+
+                expenseAttachmentRepository.save(
+                    ExpenseAttachment(
+                        expense = gastoGuardado,
+                        uploadedBy = gastoGuardado.pagador,
+                        storageKey = storageKey,
+                        originalFilename = filename,
+                        mimeType = "image/jpeg",
+                        fileSizeBytes = ticketBytes.size.toLong()
+                    )
+                )
+            }
+
+            gastoRepository.save(gastoGuardado.apply { ticketAlmacenado = true })
+        }
 
         listOf(
             // ── Asado UNSAM ──────────────────────────────────────────────
@@ -787,6 +878,7 @@ class BootstrapData(
 
         ).forEach { gasto ->
             val gastoGuardado = gastoRepository.save(gasto)
+            guardarTicketSiCorresponde(gastoGuardado)
             val fracciones = gastoGuardado.repartirGasto()
             val fraccionesExternas = fracciones.filter { it.deudor.id != it.acreedor.id }
             fraccionGastoRepository.saveAll(fraccionesExternas)
@@ -846,6 +938,7 @@ class BootstrapData(
             ).apply { agregarItem("Bebidas", 1.0, 6000.0) },
         ).forEach { gasto ->
             val gastoGuardado = gastoRepository.save(gasto)
+            guardarTicketSiCorresponde(gastoGuardado)
             val fracciones = gastoGuardado.repartirGasto()
             val fraccionesExternas = fracciones.filter { it.deudor.id != it.acreedor.id }
             fraccionGastoRepository.saveAll(fraccionesExternas)

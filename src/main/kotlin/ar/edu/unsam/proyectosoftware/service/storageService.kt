@@ -2,6 +2,7 @@ package ar.edu.unsam.proyectosoftware.service
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
 import software.amazon.awssdk.services.s3.presigner.S3Presigner
 import software.amazon.awssdk.services.s3.S3Client
@@ -14,7 +15,7 @@ import java.util.UUID
 @Service
 class StorageService(
 
-    @Value("\${storage.bucket}")
+    @param:Value("\${storage.bucket}")
     private val bucket: String,
 
     private val presigner: S3Presigner,
@@ -52,6 +53,20 @@ class StorageService(
         )
     }
 
+    fun uploadObject(
+        storageKey: String,
+        mimeType: String,
+        content: ByteArray = ByteArray(0)
+    ) {
+        val putObjectRequest = PutObjectRequest.builder()
+            .bucket(bucket)
+            .key(storageKey)
+            .contentType(mimeType)
+            .build()
+
+        s3Client.putObject(putObjectRequest, RequestBody.fromBytes(content))
+    }
+
     fun exists(storageKey: String): Boolean {
         return try {
 
@@ -62,7 +77,7 @@ class StorageService(
 
             true
 
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             false
         }
     }

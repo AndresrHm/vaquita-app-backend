@@ -43,7 +43,8 @@ data class GastoItemDTO(
     val amount: Double,
     val currency: String,
     val paymentType: String,
-    val imageUrl: String
+    val imageUrl: String,
+    val tieneTicket: Boolean
 )
 
 data class GastoDetalleDTO(
@@ -54,7 +55,14 @@ data class GastoDetalleDTO(
     val fecha: LocalDate,
     val pagador: String,
     val participantes: List<Usuario>,
-    val tipoGasto: TipoGasto
+    val tipoGasto: TipoGasto,
+    val items: List<ItemGastoDTO> = emptyList(),
+)
+
+data class GastoDetalleModalDTO(
+    val id: Long,
+    val nombre: String,
+    val items: List<ItemGastoDTO>
 )
 
 data class FilterGastosCustom(

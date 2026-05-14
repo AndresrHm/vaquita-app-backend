@@ -36,6 +36,7 @@ object ErrorStrings {
     //Entidades no encontradas
     const val USUARIO_NO_ENCONTRADO = "El usuario no ha sido encontrado."
     const val GRUPO_NO_ENCONTRADO = "El grupo no ha sido encontrado."
+    const val GASTO_NO_ENCONTRADO = "El gasto no ha sido encontrado."
     const val NINGUN_USUARIO_ENCONTRADO = "Uno o más elementos no fueron encontrados"
 
     //Pagos

@@ -359,7 +359,11 @@ class BootstrapData(
             "Filtro - A Juan le deben"
         )
 
-        fun crearTicketEjemplo(gastoGuardado: ar.edu.unsam.proyectosoftware.domain.Gasto): ByteArray {
+        fun crearTicketEjemplo(
+            gastoGuardado: ar.edu.unsam.proyectosoftware.domain.Gasto,
+            numeroTicket: Int,
+            cantidadTickets: Int,
+        ): ByteArray {
             val imagen = BufferedImage(900, 420, BufferedImage.TYPE_INT_RGB)
             val g2 = imagen.createGraphics()
 
@@ -382,6 +386,7 @@ class BootstrapData(
                 g2.font = Font("SansSerif", Font.PLAIN, 22)
                 g2.drawString("Gasto: ${gastoGuardado.descripcion}", 52, 215)
                 g2.drawString("ID: ${gastoGuardado.id}", 52, 255)
+                g2.drawString("Ticket $numeroTicket de $cantidadTickets", 52, 290)
                 g2.drawString("Subido automáticamente desde el bootstrap", 52, 325)
             } finally {
                 g2.dispose()
@@ -396,25 +401,31 @@ class BootstrapData(
         fun guardarTicketSiCorresponde(gastoGuardado: ar.edu.unsam.proyectosoftware.domain.Gasto) {
             if (gastoGuardado.descripcion !in descripcionesConTicket) return
 
-            val storageKey = "expenses/${gastoGuardado.id}/ticket-${gastoGuardado.id}.jpg"
-            val ticketBytes = crearTicketEjemplo(gastoGuardado)
+            val cantidadTickets = if (gastoGuardado.descripcion == "Filtro - A Juan le deben") 3 else 1
 
-            storageService.uploadObject(
-                storageKey = storageKey,
-                mimeType = "image/jpeg",
-                content = ticketBytes
-            )
+            (1..cantidadTickets).forEach { numeroTicket ->
+                val sufijo = if (cantidadTickets == 1) "" else "-$numeroTicket"
+                val storageKey = "expenses/${gastoGuardado.id}/ticket-${gastoGuardado.id}$sufijo.jpg"
+                val filename = "ticket-${gastoGuardado.id}$sufijo.jpg"
+                val ticketBytes = crearTicketEjemplo(gastoGuardado, numeroTicket, cantidadTickets)
 
-            expenseAttachmentRepository.save(
-                ExpenseAttachment(
-                    expense = gastoGuardado,
-                    uploadedBy = gastoGuardado.pagador,
+                storageService.uploadObject(
                     storageKey = storageKey,
-                    originalFilename = "ticket-${gastoGuardado.id}.jpg",
                     mimeType = "image/jpeg",
-                    fileSizeBytes = ticketBytes.size.toLong()
+                    content = ticketBytes
                 )
-            )
+
+                expenseAttachmentRepository.save(
+                    ExpenseAttachment(
+                        expense = gastoGuardado,
+                        uploadedBy = gastoGuardado.pagador,
+                        storageKey = storageKey,
+                        originalFilename = filename,
+                        mimeType = "image/jpeg",
+                        fileSizeBytes = ticketBytes.size.toLong()
+                    )
+                )
+            }
 
             gastoRepository.save(gastoGuardado.apply { ticketAlmacenado = true })
         }

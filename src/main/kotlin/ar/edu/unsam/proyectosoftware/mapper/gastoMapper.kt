@@ -11,7 +11,9 @@ import ar.edu.unsam.proyectosoftware.domain.Porcentual
 import ar.edu.unsam.proyectosoftware.domain.enums.TipoGasto
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.CreacionGastoDTO
+import ar.edu.unsam.proyectosoftware.dto.GastoDetalleModalDTO
 import ar.edu.unsam.proyectosoftware.dto.GastoItemDTO
+import ar.edu.unsam.proyectosoftware.dto.ItemGastoDTO
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 
 object GastoMapper {
@@ -103,11 +105,25 @@ object GastoMapper {
             amount = gasto.monto,
             currency = "$",
             paymentType = calcularPaymentType(gasto, userId),
-            imageUrl = "https://cdn-icons-png.flaticon.com/512/891/891462.png"
+            imageUrl = "https://cdn-icons-png.flaticon.com/512/891/891462.png",
+            tieneTicket = gasto.ticketAlmacenado
+        )
+    }
+    fun toGastoDetalleItemDTO(gasto: Gasto) : GastoDetalleModalDTO {
+        return GastoDetalleModalDTO(
+            id = gasto.id!!,
+            nombre = gasto.descripcion,
+            items = gasto.items.map {
+                ItemGastoDTO(
+                    nombre = it.nombre,
+                    cantidad = it.cantidad,
+                    precioUnitario = it.precioUnitario
+                )
+            }
         )
     }
 
-    fun toViewDTO(gasto: Gasto, userId: Long): GastoDetalleDTO {
+    fun toViewDTO(gasto: Gasto): GastoDetalleDTO {
         return GastoDetalleDTO(
             id = gasto.id!!,
             descripcion = gasto.descripcion,
@@ -116,7 +132,14 @@ object GastoMapper {
             fecha = gasto.fecha,
             pagador = gasto.pagador.nombre,
             participantes = gasto.participantes,
-            tipoGasto = gasto.tipoGasto()
+            tipoGasto = gasto.tipoGasto(),
+            items = gasto.items.map {
+                ItemGastoDTO(
+                    nombre = it.nombre,
+                    cantidad = it.cantidad,
+                    precioUnitario = it.precioUnitario
+                )
+            }
         )
     }
 

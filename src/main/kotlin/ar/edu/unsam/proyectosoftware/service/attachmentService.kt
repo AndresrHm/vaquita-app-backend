@@ -42,7 +42,13 @@ class AttachmentService(
             fileSizeBytes = request.fileSizeBytes
         )
 
-        return attachmentRepository.save(attachment)
+        val saved = attachmentRepository.save(attachment)
+
+        // Marcar el gasto como que tiene ticket y persistir el cambio
+        gasto.ticketAlmacenado = true
+        gastoRepository.save(gasto)
+
+        return saved
     }
 
     // get

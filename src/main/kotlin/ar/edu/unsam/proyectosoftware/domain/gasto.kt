@@ -6,7 +6,6 @@ import ar.edu.unsam.proyectosoftware.domain.enums.TipoGasto
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 import jakarta.persistence.CascadeType
 import jakarta.persistence.CollectionTable
-import jakarta.persistence.Column
 import jakarta.persistence.DiscriminatorColumn
 import jakarta.persistence.DiscriminatorValue
 import jakarta.persistence.ElementCollection
@@ -24,6 +23,7 @@ import jakarta.persistence.ManyToMany
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.MapKeyJoinColumn
 import jakarta.persistence.OneToMany
+import jakarta.persistence.Column
 import java.time.LocalDate
 import kotlin.math.roundToInt
 
@@ -54,6 +54,8 @@ abstract class Gasto(
     @Id
     @GeneratedValue
     var id: Long? = null
+    @Column(name = "ticket_almacenado", nullable = false)
+    var ticketAlmacenado: Boolean = false
 
     @OneToMany(mappedBy = "gasto", cascade = [CascadeType.ALL], orphanRemoval = true)
     var items: MutableList<ItemGasto> = mutableListOf()

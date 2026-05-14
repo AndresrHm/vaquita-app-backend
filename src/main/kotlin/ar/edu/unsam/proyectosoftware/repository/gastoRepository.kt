@@ -21,6 +21,16 @@ interface GastoRepository : CrudRepository<Gasto, Long> {
     )
     fun findByGrupoId(grupoId: Long, pageable: Pageable): Page<Gasto>
 
+    @EntityGraph(attributePaths = ["items", "grupo", "pagador"])
+    @Query(
+        """
+        SELECT g
+        FROM Gasto g
+        WHERE g.id = :gastoId
+        """
+    )
+    fun findDetalleById(@Param("gastoId") gastoId: Long): Gasto?
+
     /**
      * Devuelve true si el usuario tiene al menos una fracción con saldo pendiente (> 0)
      * dentro de cualquier gasto del grupo indicado.

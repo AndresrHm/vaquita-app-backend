@@ -12,6 +12,7 @@ import ar.edu.unsam.proyectosoftware.dto.CreacionGastoDTO
 import ar.edu.unsam.proyectosoftware.dto.FilterGastosCustom
 import ar.edu.unsam.proyectosoftware.dto.OrdenGasto
 import ar.edu.unsam.proyectosoftware.dto.GastoDetalleDTO
+import ar.edu.unsam.proyectosoftware.dto.GastoDetalleModalDTO
 import ar.edu.unsam.proyectosoftware.dto.PageResponse
 import org.springframework.security.core.Authentication
 import ar.edu.unsam.proyectosoftware.dto.toPageResponse
@@ -166,7 +167,21 @@ class GastoService(
             pageable = pageable,
         )
 
-        return gastosPage.toPageResponse { GastoMapper.toViewDTO(it, userId) }
+        return gastosPage.toPageResponse { GastoMapper.toViewDTO(it) }
+    }
+
+    @Transactional(readOnly = true)
+    fun obtenerListaItems(auth: Authentication, gastoId: Long): GastoDetalleModalDTO {
+        val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
+
+        val gasto = gastoRepository.findDetalleById(gastoId)
+            ?: throw BusinessException(ErrorStrings.GASTO_NO_ENCONTRADO)
+
+        if (!integranteGrupoRepository.esMiembro(gasto.grupo.id!!, usuarioLogueado.id!!)) {
+            throw BusinessException(ErrorStrings.USUARIO_NO_PERTENECE_AL_GRUPO)
+        }
+
+        return GastoMapper.toGastoDetalleItemDTO(gasto)
     }
 
     @Transactional(readOnly = true)

@@ -1,7 +1,7 @@
 package ar.edu.unsam.proyectosoftware.mapper
 
 import ar.edu.unsam.proyectosoftware.domain.Usuario
-import ar.edu.unsam.proyectosoftware.dto.GastosPorAnioDTO
+import ar.edu.unsam.proyectosoftware.dto.BalanceConGrupoDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoNombreIdDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioBusquedaDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioInfoDTO
@@ -12,7 +12,7 @@ object UsuarioMapper {
         esAmigo: Boolean,
         solicitudPendiente: Boolean,
         gruposCompartidos: List<GrupoNombreIdDTO>,
-        gastosPendientes: List<GastosPorAnioDTO>
+        balances: List<BalanceConGrupoDTO>
     ): UsuarioInfoDTO {
         return UsuarioInfoDTO(
             nombre = usuarioBuscado.nombre,
@@ -21,7 +21,7 @@ object UsuarioMapper {
             esAmigo = esAmigo,
             solicitudPendiente = solicitudPendiente,
             gruposCompartidos = gruposCompartidos,
-            gastosPendientes = gastosPendientes
+            balances = balances
         )
     }
 

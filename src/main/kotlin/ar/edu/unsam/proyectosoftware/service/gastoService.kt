@@ -30,7 +30,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import ar.edu.unsam.proyectosoftware.dto.TipoRelacionVista
 
-const val MAX_CARACTERES_DESCRIPCION = 50
+const val MAX_CARACTERES_DESCRIPCION = 200
 const val MAX_CARACTERES_NOMBRE_PRODUCTO = 50
 
 @Service

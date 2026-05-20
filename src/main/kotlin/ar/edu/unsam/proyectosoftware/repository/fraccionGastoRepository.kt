@@ -16,8 +16,6 @@ interface SaldoPendiente {
 
 @Repository
 interface FraccionGastoRepository : CrudRepository<FraccionGasto, Long> {
-    fun findByAcreedorIdAndGastoAsociadoGrupoId(acreedorId: Long, grupoId: Long): List<SaldoPendiente>
-    fun findByDeudorIdAndGastoAsociadoGrupoId(deudorId: Long, grupoId: Long): List<SaldoPendiente>
     fun findByDeudorIdAndGastoAsociadoId(deudorId: Long, gastoId: Long): FraccionGasto?
     fun findByDeudorId(id: Long): List<SaldoPendiente>
     @Query("""

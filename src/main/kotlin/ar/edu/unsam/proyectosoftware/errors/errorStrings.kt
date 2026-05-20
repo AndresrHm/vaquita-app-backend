@@ -8,6 +8,7 @@ object ErrorStrings {
     const val DESCRIPCION_VACIA = "La descripción no puede estar vacía."
     const val INFORMACION_INVALIDA = "La información ingresada es inválida."
     const val NOMBRE_OBLIGATORIO = "El nombre es obligatorio."
+    const val TIPO_GASTO_INEXISTENTE = "Tipo de gasto no soportado"
     fun DESCRIPCION_LARGA(maxCaracteres: Int): String {
         return "La descripción no puede tener más de ${maxCaracteres} caracteres."
     }
@@ -35,6 +36,7 @@ object ErrorStrings {
     //Entidades no encontradas
     const val USUARIO_NO_ENCONTRADO = "El usuario no ha sido encontrado."
     const val GRUPO_NO_ENCONTRADO = "El grupo no ha sido encontrado."
+    const val GASTO_NO_ENCONTRADO = "El gasto no ha sido encontrado."
     const val NINGUN_USUARIO_ENCONTRADO = "Uno o más elementos no fueron encontrados"
 
     //Pagos
@@ -49,5 +51,6 @@ object ErrorStrings {
     const val FALTAN_ASIGNACIONES = "Faltan las asignaciones para el tipo PARTES_EXACTAS"
     const val FRACCIONES_NO_COINCIDEN_CON_TOTAL_DE_GASTO = "La suma de los montos no coincide con el total del gasto"
     const val ASIGNACIONES_DEBEN_TENER_MONTO_POSITIVO = "Todas las asignaciones exactas deben tener un monto positivo"
+    const val PORCENTAJE_NO_SUMA_100 = "La suma de los porcentajes debe ser exactamente 100 %"
 
 }

@@ -1,15 +1,19 @@
 package ar.edu.unsam.proyectosoftware.mapper
 
 import ar.edu.unsam.proyectosoftware.BusinessException
+import ar.edu.unsam.proyectosoftware.domain.Aleatorio
 import ar.edu.unsam.proyectosoftware.domain.Gasto
 import ar.edu.unsam.proyectosoftware.dto.GastoDetalleDTO
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.PartesExactas
 import ar.edu.unsam.proyectosoftware.domain.PartesIguales
+import ar.edu.unsam.proyectosoftware.domain.Porcentual
 import ar.edu.unsam.proyectosoftware.domain.enums.TipoGasto
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.CreacionGastoDTO
+import ar.edu.unsam.proyectosoftware.dto.GastoDetalleModalDTO
 import ar.edu.unsam.proyectosoftware.dto.GastoItemDTO
+import ar.edu.unsam.proyectosoftware.dto.ItemGastoDTO
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 
 object GastoMapper {
@@ -53,7 +57,29 @@ object GastoMapper {
                     asignacionesExactas = mapaAsignaciones
                 )
             }
-            else -> throw BusinessException("Tipo de gasto no soportado")
+
+            TipoGasto.PORCENTUAL -> {
+                val mapaPorcentajes = participantes.associateWith { usuario ->
+                    dto.asignacionesExactas?.get(usuario.id) ?: 0.0
+                }.toMutableMap()
+
+                Porcentual(
+                    descripcion = dto.descripcion,
+                    categoria = dto.categoria,
+                    monto = dto.monto,
+                    fecha = dto.fecha,
+                    grupo = grupo,
+                    pagador = pagador,
+                    participantes = participantes,
+                    porcentajes = mapaPorcentajes
+                )
+            }
+
+            TipoGasto.ALEATORIO -> Aleatorio(
+                dto.descripcion, dto.categoria, dto.monto, dto.fecha, grupo, pagador, participantes
+            )
+
+            else -> throw BusinessException(ErrorStrings.TIPO_GASTO_INEXISTENTE)
         }
 
         // 2. Cargamos los items (común a todos)
@@ -79,11 +105,25 @@ object GastoMapper {
             amount = gasto.monto,
             currency = "$",
             paymentType = calcularPaymentType(gasto, userId),
-            imageUrl = "https://cdn-icons-png.flaticon.com/512/891/891462.png"
+            imageUrl = "https://cdn-icons-png.flaticon.com/512/891/891462.png",
+            tieneTicket = gasto.ticketAlmacenado
+        )
+    }
+    fun toGastoDetalleItemDTO(gasto: Gasto) : GastoDetalleModalDTO {
+        return GastoDetalleModalDTO(
+            id = gasto.id!!,
+            nombre = gasto.descripcion,
+            items = gasto.items.map {
+                ItemGastoDTO(
+                    nombre = it.nombre,
+                    cantidad = it.cantidad,
+                    precioUnitario = it.precioUnitario
+                )
+            }
         )
     }
 
-    fun toViewDTO(gasto: Gasto, userId: Long): GastoDetalleDTO {
+    fun toViewDTO(gasto: Gasto): GastoDetalleDTO {
         return GastoDetalleDTO(
             id = gasto.id!!,
             descripcion = gasto.descripcion,
@@ -92,7 +132,14 @@ object GastoMapper {
             fecha = gasto.fecha,
             pagador = gasto.pagador.nombre,
             participantes = gasto.participantes,
-            tipoGasto = gasto.tipoGasto()
+            tipoGasto = gasto.tipoGasto(),
+            items = gasto.items.map {
+                ItemGastoDTO(
+                    nombre = it.nombre,
+                    cantidad = it.cantidad,
+                    precioUnitario = it.precioUnitario
+                )
+            }
         )
     }
 

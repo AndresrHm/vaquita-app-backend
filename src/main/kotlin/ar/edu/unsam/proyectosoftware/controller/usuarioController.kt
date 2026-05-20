@@ -3,8 +3,6 @@ package ar.edu.unsam.proyectosoftware.controller
 import ar.edu.unsam.proyectosoftware.BusinessException
 import ar.edu.unsam.proyectosoftware.domain.SolicitudAmistadFront
 import ar.edu.unsam.proyectosoftware.domain.Usuario
-import ar.edu.unsam.proyectosoftware.dto.GastosPorAnioDTO
-import ar.edu.unsam.proyectosoftware.dto.GastosPorMesDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioBusquedaDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioInfoDTO
 import ar.edu.unsam.proyectosoftware.dto.CambioContrasenaDTO
@@ -14,8 +12,8 @@ import ar.edu.unsam.proyectosoftware.dto.UsuarioLoginDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioLogueadoDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioNombreIdDTO
 import ar.edu.unsam.proyectosoftware.dto.UsuarioRegistradoDTO
-import ar.edu.unsam.proyectosoftware.mapper.GastoMapper
 import ar.edu.unsam.proyectosoftware.mapper.UsuarioMapper
+import ar.edu.unsam.proyectosoftware.service.GastoService
 import ar.edu.unsam.proyectosoftware.service.GrupoService
 import ar.edu.unsam.proyectosoftware.service.UsuarioService
 import org.springframework.http.HttpHeaders
@@ -33,15 +31,14 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import java.time.format.TextStyle
-import java.util.Locale
 
 @RestController
 @RequestMapping("/usuarios")
 @CrossOrigin(origins = ["http://localhost:5173"])
 class UsuarioController(
     private val usuarioService: UsuarioService,
-    private val grupoService: GrupoService
+    private val grupoService: GrupoService,
+    private val gastoService: GastoService
 ) {
 
     @GetMapping("/buscar")
@@ -77,26 +74,8 @@ class UsuarioController(
         val esAmigo = usuarioService.sonAmigos(idBuscado, usuario.id!!)
         val solicitudPendiente = if (esAmigo) false else usuarioService.tieneSolicitudPendiente(usuario.id!!, idBuscado)
         val gruposCompartidos = grupoService.obtenerGruposCompartidos(usuario.id!!, usuarioBuscado.id!!)
-        val locale = Locale.forLanguageTag("es-AR")
-        val gastosPendientes = usuarioService.obtenerGastosEntreUsuarios(usuario.id!!, usuarioBuscado.id!!)
-            .sortedByDescending { it.fecha }
-            .groupBy { it.fecha.year }
-            .toSortedMap(compareByDescending { it })
-            .map { (anio, gastosDelAnio) ->
-                GastosPorAnioDTO(
-                    year = anio,
-                    months = gastosDelAnio
-                        .groupBy { it.fecha.month }
-                        .toSortedMap(compareByDescending { it.value })
-                        .map { (mes, gastosDelMes) ->
-                            GastosPorMesDTO(
-                                month = mes.getDisplayName(TextStyle.FULL, locale),
-                                expenses = gastosDelMes.map { GastoMapper.toItemDTO(it, usuario.id!!) }
-                            )
-                        }
-                )
-            }
-        val usuarioBuscadoInfo = UsuarioMapper.toInfoDTO(usuarioBuscado, esAmigo, solicitudPendiente, gruposCompartidos, gastosPendientes)
+        val balances = gastoService.obtenerBalancesEntreUsuarios(usuario.id!!, usuarioBuscado.id!!)
+        val usuarioBuscadoInfo = UsuarioMapper.toInfoDTO(usuarioBuscado, esAmigo, solicitudPendiente, gruposCompartidos, balances)
         return ResponseEntity.ok(usuarioBuscadoInfo)
     }
 

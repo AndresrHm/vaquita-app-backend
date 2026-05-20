@@ -1,22 +1,34 @@
 package ar.edu.unsam.proyectosoftware.bootstrap
 
+import ar.edu.unsam.proyectosoftware.domain.Aleatorio
+import ar.edu.unsam.proyectosoftware.domain.ExpenseAttachment
 import ar.edu.unsam.proyectosoftware.domain.enums.CategoriaGasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.PartesExactas
 import ar.edu.unsam.proyectosoftware.domain.PartesIguales
+import ar.edu.unsam.proyectosoftware.domain.Porcentual
 import ar.edu.unsam.proyectosoftware.domain.RolIntegrante
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.TipoActividad
 import ar.edu.unsam.proyectosoftware.repository.FraccionGastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
+import ar.edu.unsam.proyectosoftware.repository.ExpenseAttachmentRepository
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import ar.edu.unsam.proyectosoftware.repository.UsuarioRepository
 import ar.edu.unsam.proyectosoftware.service.ActividadService
+import ar.edu.unsam.proyectosoftware.service.StorageService
 import org.springframework.boot.CommandLineRunner
 import org.springframework.security.crypto.password.PasswordEncoder
+import java.awt.BasicStroke
+import java.awt.Color
+import java.awt.Font
+import java.awt.RenderingHints
+import java.awt.image.BufferedImage
+import java.io.ByteArrayOutputStream
 import java.time.LocalDate
+import javax.imageio.ImageIO
 
 @Configuration
 class BootstrapData(
@@ -24,8 +36,10 @@ class BootstrapData(
     val grupoRepository: GrupoRepository,
     val gastoRepository: GastoRepository,
     val fraccionGastoRepository: FraccionGastoRepository,
+    val expenseAttachmentRepository: ExpenseAttachmentRepository,
     val passwordEncoder: PasswordEncoder,
     val actividadService: ActividadService,
+    val storageService: StorageService,
 ) {
 
     @Bean
@@ -34,42 +48,42 @@ class BootstrapData(
         // 1. Usuarios
         val pass = passwordEncoder.encode("contrasena123")
         val usuarios = listOf(
-            Usuario("Juan Alvarez",    "juan.alvarez@mail.com", pass, "https://i.pravatar.cc/150?img=12", "juan.alvarez"),
-            Usuario("Andrés Hernández","andres.h@mail.com",     pass, "https://i.pravatar.cc/150?img=15", "andres.h"),
-            Usuario("Agustín Hoj",     "agustin.hoj@mail.com",  pass, "https://i.pravatar.cc/150?img=18", "agustin.hoj"),
-            Usuario("Juan Maidana",    "juan.m@mail.com",       pass, "https://i.pravatar.cc/150?img=21", "juan.maidana"),
-            Usuario("Giuliana Massanet","giuli.m@mail.com",     pass, "https://i.pravatar.cc/150?img=47", "giuli.m"),
-            Usuario("Andrés Simonini", "andres.s@mail.com",     pass, "https://i.pravatar.cc/150?img=33", "andres.s"),
-            Usuario("Camila Rojas",    "camila.rojas@mail.com", pass, "https://i.pravatar.cc/150?img=44", "camila.rojas"),
-            Usuario("Lucas Pereyra",   "lucas.p@mail.com",      pass, "https://i.pravatar.cc/150?img=56", "lucas.p"),
-            Usuario("Valentina Nuñez", "valentina.n@mail.com",  pass, "https://i.pravatar.cc/150?img=49", "valentina.n"),
-            Usuario("Matías Ferreyra", "matias.f@mail.com",     pass, "https://i.pravatar.cc/150?img=60", "matias.f"),
-            Usuario("Sofía López",     "sofia.l@mail.com",      pass, "https://i.pravatar.cc/150?img=53", "sofia.l"),
+            Usuario("Juan Alvarez", "juan.alvarez@mail.com", pass, "https://i.pravatar.cc/150?img=12", "juan.alvarez"),
+            Usuario("Andrés Hernández", "andres.h@mail.com", pass, "https://i.pravatar.cc/150?img=15", "andres.h"),
+            Usuario("Agustín Hoj", "agustin.hoj@mail.com", pass, "https://i.pravatar.cc/150?img=18", "agustin.hoj"),
+            Usuario("Juan Maidana", "juan.m@mail.com", pass, "https://i.pravatar.cc/150?img=21", "juan.maidana"),
+            Usuario("Giuliana Massanet", "giuli.m@mail.com", pass, "https://i.pravatar.cc/150?img=47", "giuli.m"),
+            Usuario("Andrés Simonini", "andres.s@mail.com", pass, "https://i.pravatar.cc/150?img=33", "andres.s"),
+            Usuario("Camila Rojas", "camila.rojas@mail.com", pass, "https://i.pravatar.cc/150?img=44", "camila.rojas"),
+            Usuario("Lucas Pereyra", "lucas.p@mail.com", pass, "https://i.pravatar.cc/150?img=56", "lucas.p"),
+            Usuario("Valentina Nuñez", "valentina.n@mail.com", pass, "https://i.pravatar.cc/150?img=49", "valentina.n"),
+            Usuario("Matías Ferreyra", "matias.f@mail.com", pass, "https://i.pravatar.cc/150?img=60", "matias.f"),
+            Usuario("Sofía López", "sofia.l@mail.com", pass, "https://i.pravatar.cc/150?img=53", "sofia.l"),
         )
 
-        val juanA      = usuarios[0]
-        val andresH    = usuarios[1]
-        val agustinH   = usuarios[2]
-        val juanM      = usuarios[3]
-        val giulianaM  = usuarios[4]
-        val andresS    = usuarios[5]
-        val camilaR    = usuarios[6]
-        val lucasP     = usuarios[7]
+        val juanA = usuarios[0]
+        val andresH = usuarios[1]
+        val agustinH = usuarios[2]
+        val juanM = usuarios[3]
+        val giulianaM = usuarios[4]
+        val andresS = usuarios[5]
+        val camilaR = usuarios[6]
+        val lucasP = usuarios[7]
         val valentinaN = usuarios[8]
-        val matiasF    = usuarios[9]
-        val sofiaL     = usuarios[10]
+        val matiasF = usuarios[9]
+        val sofiaL = usuarios[10]
 
-        juanA.apply      { amigos = mutableListOf(andresH, agustinH) }
-        andresH.apply    { amigos = mutableListOf(agustinH, juanA, camilaR, matiasF) }
-        agustinH.apply   { amigos = mutableListOf(andresH, juanA, giulianaM, valentinaN) }
-        juanM.apply      { amigos = mutableListOf(giulianaM, matiasF, lucasP) }
-        giulianaM.apply  { amigos = mutableListOf(juanM, agustinH, valentinaN, camilaR) }
-        andresS.apply    { amigos = mutableListOf(sofiaL, camilaR, juanA) }
-        camilaR.apply    { amigos = mutableListOf(andresS, andresH, giulianaM) }
-        lucasP.apply     { amigos = mutableListOf(juanA, juanM, matiasF) }
+        juanA.apply { amigos = mutableListOf(andresH, agustinH) }
+        andresH.apply { amigos = mutableListOf(agustinH, juanA, camilaR, matiasF) }
+        agustinH.apply { amigos = mutableListOf(andresH, juanA, giulianaM, valentinaN) }
+        juanM.apply { amigos = mutableListOf(giulianaM, matiasF, lucasP) }
+        giulianaM.apply { amigos = mutableListOf(juanM, agustinH, valentinaN, camilaR) }
+        andresS.apply { amigos = mutableListOf(sofiaL, camilaR, juanA) }
+        camilaR.apply { amigos = mutableListOf(andresS, andresH, giulianaM) }
+        lucasP.apply { amigos = mutableListOf(juanA, juanM, matiasF) }
         valentinaN.apply { amigos = mutableListOf(agustinH, giulianaM, sofiaL) }
-        matiasF.apply    { amigos = mutableListOf(juanM, lucasP, andresH) }
-        sofiaL.apply     { amigos = mutableListOf(andresS, valentinaN, juanA) }
+        matiasF.apply { amigos = mutableListOf(juanM, lucasP, andresH) }
+        sofiaL.apply { amigos = mutableListOf(andresS, valentinaN, juanA) }
 
         usuarioRepository.saveAll(usuarios)
 
@@ -210,6 +224,27 @@ class BootstrapData(
                 agregarIntegrante(juanA, RolIntegrante.ADMIN)
                 agregarIntegrante(andresH, RolIntegrante.MIEMBRO)
             },
+            Grupo(
+                nombre = "Merentielistas de verdad",
+                descripcion = "Merentiel está gagá",
+                imagenUrl = "https://pbs.twimg.com/media/HGS_zikaQAA2NdL?format=jpg&name=small",
+                fechaCreacion = LocalDate.now()
+            ).apply {
+                agregarIntegrante(juanA, RolIntegrante.ADMIN)
+                agregarIntegrante(lucasP, RolIntegrante.MIEMBRO)
+                agregarIntegrante(matiasF, RolIntegrante.MIEMBRO)
+            },
+            Grupo(
+                nombre = "Salida al casino",
+                descripcion = "Lo que pasa en el casino, queda en el casino",
+                imagenUrl = "https://images.unsplash.com/photo-1596838132731-3301c3fd4317",
+                fechaCreacion = LocalDate.now()
+            ).apply {
+                listOf(juanA, andresH, agustinH, juanM, giulianaM).forEach {
+                    agregarIntegrante(it, RolIntegrante.MIEMBRO)
+                }
+                agregarIntegrante(andresS, RolIntegrante.ADMIN)
+            },
         )
 
         val gruposFiltro = listOf(
@@ -261,17 +296,19 @@ class BootstrapData(
 
         grupoRepository.saveAll(grupos + gruposFiltro)
 
-        val grupoAsado   = grupos[0]
-        val grupoDepto   = grupos[1]
-        val grupoFutbol  = grupos[2]
+        val grupoAsado = grupos[0]
+        val grupoDepto = grupos[1]
+        val grupoFutbol = grupos[2]
         val grupoEstudio = grupos[3]
-        val grupoViaje   = grupos[4]
-        val grupoCumple  = grupos[5]
-        val grupoGym     = grupos[6]
+        val grupoViaje = grupos[4]
+        val grupoCumple = grupos[5]
+        val grupoGym = grupos[6]
         val grupoHackLab = grupos[7]
-        val grupoSeries  = grupos[8]
-        val grupoFinde   = grupos[9]
-        val grupoBestia   = grupos[10]
+        val grupoSeries = grupos[8]
+        val grupoFinde = grupos[9]
+        val grupoBestia = grupos[10]
+        val grupoAntiBestia = grupos[11]
+        val grupoCasino = grupos[12]
         val grupoFiltroTodos = gruposFiltro[0]
         val grupoFiltroJuanDebe = gruposFiltro[1]
         val grupoFiltroJuanLeDeben = gruposFiltro[2]
@@ -288,6 +325,9 @@ class BootstrapData(
             grupoGym to listOf(andresH, juanA, sofiaL, matiasF, valentinaN),
             grupoHackLab to todosLosUsuarios,
             grupoSeries to todosLosUsuarios.filter { it != camilaR }.plus(camilaR),
+            grupoBestia to listOf(juanA, andresH),
+            grupoAntiBestia to listOf(juanA, lucasP, matiasF),
+            grupoCasino to listOf(juanA, andresH, agustinH, juanM, giulianaM, andresS),
             grupoFinde to todosLosUsuarios.filter { it != valentinaN }.plus(valentinaN),
             grupoFiltroTodos to listOf(juanA, andresH, agustinH, giulianaM),
             grupoFiltroJuanDebe to listOf(juanA, andresH, agustinH),
@@ -310,6 +350,85 @@ class BootstrapData(
         // 3. Gastos
         var diasAtras = 0L
         fun nextFecha(): LocalDate = LocalDate.now().minusDays(diasAtras++)
+        val descripcionesConTicket = setOf(
+            "Compras para el asado",
+            "Internet y cable",
+            "Combustible",
+            "Suscripciones streaming",
+            "Fichas ruleta",
+            "Filtro - A Juan le deben"
+        )
+
+        fun crearTicketEjemplo(
+            gastoGuardado: ar.edu.unsam.proyectosoftware.domain.Gasto,
+            numeroTicket: Int,
+            cantidadTickets: Int,
+        ): ByteArray {
+            val imagen = BufferedImage(900, 420, BufferedImage.TYPE_INT_RGB)
+            val g2 = imagen.createGraphics()
+
+            try {
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+                g2.color = Color(0xF7, 0xF7, 0xF7)
+                g2.fillRect(0, 0, imagen.width, imagen.height)
+
+                g2.color = Color(0xD9, 0x35, 0x35)
+                g2.stroke = BasicStroke(8f)
+                g2.drawRoundRect(18, 18, imagen.width - 36, imagen.height - 36, 28, 28)
+
+                g2.color = Color(0x22, 0x22, 0x22)
+                g2.font = Font("SansSerif", Font.BOLD, 34)
+                g2.drawString("FACTURA DE EJEMPLO", 52, 95)
+
+                g2.font = Font("SansSerif", Font.PLAIN, 28)
+                g2.drawString("Aqu\u00ed va la factura", 52, 155)
+
+                g2.font = Font("SansSerif", Font.PLAIN, 22)
+                g2.drawString("Gasto: ${gastoGuardado.descripcion}", 52, 215)
+                g2.drawString("ID: ${gastoGuardado.id}", 52, 255)
+                g2.drawString("Ticket $numeroTicket de $cantidadTickets", 52, 290)
+                g2.drawString("Subido automáticamente desde el bootstrap", 52, 325)
+            } finally {
+                g2.dispose()
+            }
+
+            return ByteArrayOutputStream().use { outputStream ->
+                ImageIO.write(imagen, "jpg", outputStream)
+                outputStream.toByteArray()
+            }
+        }
+
+        fun guardarTicketSiCorresponde(gastoGuardado: ar.edu.unsam.proyectosoftware.domain.Gasto) {
+            if (gastoGuardado.descripcion !in descripcionesConTicket) return
+
+            val cantidadTickets = if (gastoGuardado.descripcion == "Filtro - A Juan le deben") 3 else 1
+
+            (1..cantidadTickets).forEach { numeroTicket ->
+                val sufijo = if (cantidadTickets == 1) "" else "-$numeroTicket"
+                val storageKey = "expenses/${gastoGuardado.id}/ticket-${gastoGuardado.id}$sufijo.jpg"
+                val filename = "ticket-${gastoGuardado.id}$sufijo.jpg"
+                val ticketBytes = crearTicketEjemplo(gastoGuardado, numeroTicket, cantidadTickets)
+
+                storageService.uploadObject(
+                    storageKey = storageKey,
+                    mimeType = "image/jpeg",
+                    content = ticketBytes
+                )
+
+                expenseAttachmentRepository.save(
+                    ExpenseAttachment(
+                        expense = gastoGuardado,
+                        uploadedBy = gastoGuardado.pagador,
+                        storageKey = storageKey,
+                        originalFilename = filename,
+                        mimeType = "image/jpeg",
+                        fileSizeBytes = ticketBytes.size.toLong()
+                    )
+                )
+            }
+
+            gastoRepository.save(gastoGuardado.apply { ticketAlmacenado = true })
+        }
 
         listOf(
             // ── Asado UNSAM ──────────────────────────────────────────────
@@ -701,6 +820,7 @@ class BootstrapData(
                 grupoFinde, lucasP, grupoFinde.usuarios()
             ).apply { agregarItem("Tickets campo", 4.0, 16500.0) },
 
+            // ── Merentiel ─────────────────────────────────────────────
             PartesIguales(
                 "Gorras de Merentiel", CategoriaGasto.VARIOS, 10000.0, nextFecha(),
                 grupoBestia, andresH, grupoBestia.usuarios()
@@ -711,8 +831,54 @@ class BootstrapData(
                 grupoBestia, juanA, grupoBestia.usuarios()
             ),
 
-            ).forEach { gasto ->
+            // ── Merentieln't ─────────────────────────────────────────────
+            Porcentual(
+                "Torta de velorio", CategoriaGasto.COMIDA, 10000.0, nextFecha(),
+                grupoAntiBestia, juanA, grupoBestia.usuarios(),
+                mutableMapOf(juanA to 10.0, lucasP to 50.0, matiasF to 40.0)
+            ),
+
+            Porcentual(
+                "Gorras de luto", CategoriaGasto.VARIOS, 6000.0, nextFecha(),
+                grupoAntiBestia, juanA, grupoBestia.usuarios(),
+                mutableMapOf(juanA to 60.0, lucasP to 20.0, matiasF to 20.0)
+            ),
+
+            Aleatorio(
+                "$250.000 en NFT", CategoriaGasto.ENTRETENIMIENTO, 250000.0, nextFecha(),
+                grupoAntiBestia, lucasP, grupoBestia.usuarios()
+            ),
+
+            // ── Casino ─────────────────────────────────────────────
+            Aleatorio(
+                "Fichas ruleta", CategoriaGasto.ENTRETENIMIENTO, 45000.0, nextFecha(),
+                grupoCasino, juanA, grupoCasino.usuarios()
+            ),
+
+            Aleatorio(
+                "Tragamonedas ronda 1", CategoriaGasto.ENTRETENIMIENTO, 28000.0, nextFecha(),
+                grupoCasino, andresH, grupoCasino.usuarios()
+            ),
+
+            Aleatorio(
+                "Bebidas en el piso", CategoriaGasto.BEBIDA, 28500.0, nextFecha(),
+                grupoCasino, agustinH, grupoCasino.usuarios()
+            ),
+
+            Aleatorio(
+                "Blackjack mesa VIP", CategoriaGasto.ENTRETENIMIENTO, 120000.0, nextFecha(),
+                grupoCasino, juanM, grupoCasino.usuarios()
+            ),
+
+            Aleatorio(
+                "Cena post casino", CategoriaGasto.COMIDA, 67000.0, nextFecha(),
+                grupoCasino, giulianaM, grupoCasino.usuarios()
+            ),
+
+
+        ).forEach { gasto ->
             val gastoGuardado = gastoRepository.save(gasto)
+            guardarTicketSiCorresponde(gastoGuardado)
             val fracciones = gastoGuardado.repartirGasto()
             val fraccionesExternas = fracciones.filter { it.deudor.id != it.acreedor.id }
             fraccionGastoRepository.saveAll(fraccionesExternas)
@@ -772,6 +938,7 @@ class BootstrapData(
             ).apply { agregarItem("Bebidas", 1.0, 6000.0) },
         ).forEach { gasto ->
             val gastoGuardado = gastoRepository.save(gasto)
+            guardarTicketSiCorresponde(gastoGuardado)
             val fracciones = gastoGuardado.repartirGasto()
             val fraccionesExternas = fracciones.filter { it.deudor.id != it.acreedor.id }
             fraccionGastoRepository.saveAll(fraccionesExternas)

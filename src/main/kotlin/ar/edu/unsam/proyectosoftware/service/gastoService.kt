@@ -6,12 +6,14 @@ import ar.edu.unsam.proyectosoftware.domain.FraccionGasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.BalanceDTO
+import ar.edu.unsam.proyectosoftware.dto.BalanceConGrupoDTO
 import ar.edu.unsam.proyectosoftware.dto.PagoDTO
 import ar.edu.unsam.proyectosoftware.dto.TipoActividad
 import ar.edu.unsam.proyectosoftware.dto.CreacionGastoDTO
 import ar.edu.unsam.proyectosoftware.dto.FilterGastosCustom
 import ar.edu.unsam.proyectosoftware.dto.OrdenGasto
 import ar.edu.unsam.proyectosoftware.dto.GastoDetalleDTO
+import ar.edu.unsam.proyectosoftware.dto.GastoDetalleModalDTO
 import ar.edu.unsam.proyectosoftware.dto.PageResponse
 import org.springframework.security.core.Authentication
 import ar.edu.unsam.proyectosoftware.dto.toPageResponse
@@ -28,8 +30,8 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import ar.edu.unsam.proyectosoftware.dto.TipoRelacionVista
 
-const val MAX_CARACTERES_DESCRIPCION = 50
-const val MAX_CARACTERES_NOMBRE_PRODUCTO = 20
+const val MAX_CARACTERES_DESCRIPCION = 200
+const val MAX_CARACTERES_NOMBRE_PRODUCTO = 50
 
 @Service
 class GastoService(
@@ -166,7 +168,63 @@ class GastoService(
             pageable = pageable,
         )
 
-        return gastosPage.toPageResponse { GastoMapper.toViewDTO(it, userId) }
+        return gastosPage.toPageResponse { GastoMapper.toViewDTO(it) }
+    }
+
+    @Transactional(readOnly = true)
+    fun obtenerListaItems(auth: Authentication, gastoId: Long): GastoDetalleModalDTO {
+        val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
+
+        val gasto = gastoRepository.findDetalleById(gastoId)
+            ?: throw BusinessException(ErrorStrings.GASTO_NO_ENCONTRADO)
+
+        if (!integranteGrupoRepository.esMiembro(gasto.grupo.id!!, usuarioLogueado.id!!)) {
+            throw BusinessException(ErrorStrings.USUARIO_NO_PERTENECE_AL_GRUPO)
+        }
+
+        return GastoMapper.toGastoDetalleItemDTO(gasto)
+    }
+
+    @Transactional(readOnly = true)
+    fun obtenerBalancesEntreUsuarios(usuarioId: Long, otroUsuarioId: Long): List<BalanceConGrupoDTO> {
+        val fracciones = (
+            fraccionGastoRepository.findGastosPendientesBetween(usuarioId, otroUsuarioId) +
+            fraccionGastoRepository.findGastosPendientesBetween(otroUsuarioId, usuarioId)
+        ).filter { it.saldoPendiente() > 0.01 }
+
+        val resultados = mutableListOf<BalanceConGrupoDTO>()
+
+        fracciones.groupBy { it.gastoAsociado.grupo.id!! }.forEach { (grupoId, fraccionesGrupo) ->
+            val grupoNombre = fraccionesGrupo.first().gastoAsociado.grupo.nombre
+            val balancesCruzados = mutableMapOf<Pair<Long, Long>, Double>()
+            val nombres = mutableMapOf<Long, String>()
+
+            fraccionesGrupo.forEach { fracc ->
+                val clave = fracc.deudor.id!! to fracc.acreedor.id!!
+                balancesCruzados[clave] = balancesCruzados.getOrDefault(clave, 0.0) + fracc.saldoPendiente()
+                nombres[fracc.deudor.id!!] = fracc.deudor.nombre
+                nombres[fracc.acreedor.id!!] = fracc.acreedor.nombre
+            }
+
+            val procesados = mutableSetOf<Pair<Long, Long>>()
+
+            balancesCruzados.keys.forEach { (u1, u2) ->
+                if (Pair(u1, u2) in procesados || Pair(u2, u1) in procesados) return@forEach
+
+                val deuda1a2 = balancesCruzados.getOrDefault(u1 to u2, 0.0)
+                val deuda2a1 = balancesCruzados.getOrDefault(u2 to u1, 0.0)
+
+                if (deuda1a2 > deuda2a1) {
+                    resultados.add(BalanceConGrupoDTO(u1, nombres[u1]!!, u2, nombres[u2]!!, Math.round((deuda1a2 - deuda2a1) * 100) / 100.0, grupoId, grupoNombre))
+                } else if (deuda2a1 > deuda1a2) {
+                    resultados.add(BalanceConGrupoDTO(u2, nombres[u2]!!, u1, nombres[u1]!!, Math.round((deuda2a1 - deuda1a2) * 100) / 100.0, grupoId, grupoNombre))
+                }
+
+                procesados.add(u1 to u2)
+            }
+        }
+
+        return resultados.filter { it.monto > 0.01 }
     }
 
     @Transactional(readOnly = true)

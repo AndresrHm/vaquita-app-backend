@@ -7,12 +7,13 @@ import ar.edu.unsam.proyectosoftware.dto.CreacionGastoDTO
 import ar.edu.unsam.proyectosoftware.dto.OrdenGasto
 import ar.edu.unsam.proyectosoftware.dto.TipoRelacionVista
 import ar.edu.unsam.proyectosoftware.dto.GastoDetalleDTO
+import ar.edu.unsam.proyectosoftware.dto.GastoDetalleModalDTO
 import ar.edu.unsam.proyectosoftware.dto.PageResponse
 import ar.edu.unsam.proyectosoftware.domain.enums.CategoriaGasto
+import ar.edu.unsam.proyectosoftware.dto.ActionResponse
 import ar.edu.unsam.proyectosoftware.dto.FilterGastosCustom
 import ar.edu.unsam.proyectosoftware.dto.PagoDTO
 import ar.edu.unsam.proyectosoftware.dto.PagoGlobalDTO
-import ar.edu.unsam.proyectosoftware.service.UsuarioService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -26,12 +27,23 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("gasto")
 class GastoController(
     val gastoService: GastoService,
-    val usuarioService: UsuarioService
 ) {
     @PostMapping
-    fun crearGasto(auth: Authentication, @RequestBody gastoDTO: CreacionGastoDTO): String {
+    fun crearGasto(auth: Authentication, @RequestBody gastoDTO: CreacionGastoDTO): ActionResponse {
         val gasto = gastoService.crearGasto(auth, gastoDTO)
-        return "Gasto de $${gasto.monto} creado exitosamente en ${gasto.grupo.nombre}."
+
+        return ActionResponse(
+            id = gasto.id!!,
+            message = "Gasto de $${gasto.monto} creado exitosamente en ${gasto.grupo.nombre}."
+        )
+    }
+
+    @GetMapping("/listaItems")
+    fun obtenerListaItemModal(
+        auth: Authentication,
+        @RequestParam gastoId: Long,
+    ): GastoDetalleModalDTO {
+        return gastoService.obtenerListaItems(auth, gastoId)
     }
 
     @GetMapping("/me/deuda")
@@ -82,11 +94,13 @@ class GastoController(
             }
         }
 
-        val categoriasEnum = categoria?.mapNotNull { catStr ->
-            try {
-                CategoriaGasto.valueOf(catStr.trim().uppercase())
-            } catch (_: IllegalArgumentException) {
-                throw BusinessException(ErrorStrings.INFORMACION_INVALIDA)
+        val categoriasEnum = categoria?.let { categorias ->
+            categorias.mapNotNull { catStr ->
+                try {
+                    CategoriaGasto.valueOf(catStr.trim().uppercase())
+                } catch (_: IllegalArgumentException) {
+                    throw BusinessException(ErrorStrings.INFORMACION_INVALIDA)
+                }
             }
         }?.takeIf { it.isNotEmpty() }
 

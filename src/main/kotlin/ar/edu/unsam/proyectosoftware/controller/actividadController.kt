@@ -9,6 +9,7 @@ import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
@@ -22,7 +23,7 @@ class ActividadController(
 ) {
 	@GetMapping("/me")
 	fun obtenerMisActividades(
-		auth: Authentication,
+		auth: Authentication?,
 		@RequestParam(required = false) tipo: TipoActividad?,
 		@RequestParam(required = false)
 		@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
@@ -47,5 +48,14 @@ class ActividadController(
 		)
 
 		return actividadService.obtenerActividadesDelUsuarioLogueado(auth, filters)
+	}
+
+	@GetMapping("/grupo/{grupoId}")
+	fun obtenerActividadesDeGastoPorGrupo(
+		@PathVariable grupoId: Long,
+		@RequestParam(defaultValue = "0") page: Int,
+		@RequestParam(defaultValue = "10") size: Int,
+	): PageResponse<ActividadDTO> {
+		return actividadService.obtenerActividadesDeGastoPorGrupo(grupoId, page, size)
 	}
 }

@@ -94,7 +94,7 @@ class GrupoService(
         val end = minOf(start + safeSize, gruposFiltrados.size)
         val content = if (start < gruposFiltrados.size) gruposFiltrados.subList(start, end) else emptyList()
 
-        return org.springframework.data.domain.PageImpl(
+            return PageImpl(
             content,
             pageable,
             gruposFiltrados.size.toLong()
@@ -160,28 +160,10 @@ class GrupoService(
 
         val grupoGuardado = grupoRepository.save(grupo)
 
-        actividadService.registrarActividad(
-            usuario = usuarioLogueado,
-            tipo = TipoActividad.INGRESO_GRUPO,
-            descripcion = "Creaste el grupo ${grupoGuardado.nombre}.",
-            metadata = mapOf(
-                "grupoId" to grupoGuardado.id,
-                "grupoNombre" to grupoGuardado.nombre,
-            ),
-        )
+            actividadService.registrarIngresoGrupo(usuarioLogueado, grupoGuardado)
 
         miembrosAgregados.forEach { miembro ->
-            actividadService.registrarActividad(
-                usuario = miembro,
-                tipo = TipoActividad.INGRESO_GRUPO,
-                descripcion = "Te agregaron al grupo ${grupoGuardado.nombre}.",
-                metadata = mapOf(
-                    "grupoId" to grupoGuardado.id,
-                    "grupoNombre" to grupoGuardado.nombre,
-                    "actorId" to usuarioLogueado.id,
-                    "actorNombre" to usuarioLogueado.nombre,
-                ),
-            )
+              actividadService.registrarIngresoGrupo(miembro, grupoGuardado, usuarioLogueado)
         }
 
         return grupoGuardado
@@ -201,17 +183,7 @@ class GrupoService(
         val grupoGuardado = grupoRepository.save(grupo)
 
         miembrosAgregados.forEach { miembro ->
-            actividadService.registrarActividad(
-                usuario = miembro,
-                tipo = TipoActividad.INGRESO_GRUPO,
-                descripcion = "Te agregaron al grupo ${grupoGuardado.nombre}.",
-                metadata = mapOf(
-                    "grupoId" to grupoGuardado.id,
-                    "grupoNombre" to grupoGuardado.nombre,
-                    "actorId" to usuarioLogueado.id,
-                    "actorNombre" to usuarioLogueado.nombre,
-                ),
-            )
+              actividadService.registrarIngresoGrupo(miembro, grupoGuardado, usuarioLogueado)
         }
 
         return grupoGuardado

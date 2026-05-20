@@ -2,6 +2,7 @@ package ar.edu.unsam.proyectosoftware.service
 
 import ar.edu.unsam.proyectosoftware.BusinessException
 import ar.edu.unsam.proyectosoftware.domain.Actividad
+import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.FilterActividadDTO
 import ar.edu.unsam.proyectosoftware.dto.TipoActividad
@@ -20,6 +21,7 @@ import org.springframework.security.core.Authentication
 import java.time.LocalDateTime
 import java.util.Optional
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class ActividadServiceTest {
@@ -80,6 +82,29 @@ class ActividadServiceTest {
         assertThrows<BusinessException> {
             service.obtenerActividadesDelUsuarioLogueado(auth, filters)
         }
+    }
+
+    @Test
+    fun `registra ingreso a grupo con metadata canonica`() {
+        val usuario = Usuario(nombre = "Pepe", email = "pepe@correo.com", contrasena = "hash").also { it.id = 7L }
+        val actor = Usuario(nombre = "Admin", email = "admin@correo.com", contrasena = "hash").also { it.id = 1L }
+        val grupo = Grupo(nombre = "Plan de Finde", descripcion = "", imagenUrl = "", fechaCreacion = LocalDateTime.now().toLocalDate()).also { it.id = 10L }
+
+        val savedSlot = slot<Actividad>()
+        every { actividadRepository.save(capture(savedSlot)) } answers { savedSlot.captured }
+
+        val result = service.registrarIngresoGrupo(usuario = usuario, grupo = grupo, actor = actor)
+            val metadata = requireNotNull(result.metadata)
+
+        assertEquals(TipoActividad.INGRESO_GRUPO, result.tipo)
+        assertEquals(usuario, result.usuario)
+            assertTrue(metadata.contains("\"grupoId\":10"))
+            assertTrue(metadata.contains("\"grupoNombre\":\"Plan de Finde\""))
+            assertTrue(metadata.contains("\"usuarioId\":7"))
+            assertTrue(metadata.contains("\"usuarioNombre\":\"Pepe\""))
+            assertTrue(metadata.contains("\"actorId\":1"))
+            assertTrue(metadata.contains("\"actorNombre\":\"Admin\""))
+            assertFalse(metadata.contains("Creaste el grupo"))
     }
 }
 

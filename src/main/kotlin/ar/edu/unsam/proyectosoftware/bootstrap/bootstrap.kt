@@ -335,15 +335,7 @@ class BootstrapData(
             grupoFiltroPendienteMixto to listOf(juanA, andresH, agustinH),
         ).forEach { (grupo, miembros) ->
             miembros.forEach { usuario ->
-                actividadService.registrarActividad(
-                    usuario = usuario,
-                    tipo = TipoActividad.INGRESO_GRUPO,
-                    descripcion = "Te uniste al grupo ${grupo.nombre}.",
-                    metadata = mapOf(
-                        "grupoId" to grupo.id,
-                        "grupoNombre" to grupo.nombre,
-                    )
-                )
+                  actividadService.registrarIngresoGrupo(usuario, grupo)
             }
         }
 

@@ -391,6 +391,8 @@ class UsuarioService(
             usuarioRepository.save(usuarioLogueado)
             usuarioRepository.save(emisor)
 
+            actividadService.registrarAmistadAceptada(usuarioLogueado, emisor)
+
             // Clean up any reverse pending request between the two users
             solicitudAmistadRepository.deleteByIdEmisorAndIdReceptor(usuarioLogueado.id!!, solicitud.idEmisor)
         }

@@ -107,6 +107,51 @@ class ActividadService(
 		)
 	}
 
+	fun registrarPago(
+		deudor: Usuario,
+		acreedor: Usuario,
+		monto: Double,
+		grupoId: Long? = null,
+		grupoNombre: String? = null,
+	): Actividad {
+		val metadata = linkedMapOf<String, Any?>(
+			"acreedorId" to acreedor.id,
+			"acreedorNombre" to acreedor.nombre,
+			"monto" to monto,
+		)
+
+		if (grupoId != null) {
+			metadata["grupoId"] = grupoId
+		}
+		if (grupoNombre != null) {
+			metadata["grupoNombre"] = grupoNombre
+		}
+
+		return registrarActividad(
+			usuario = deudor,
+			tipo = TipoActividad.PAGO_REALIZADO,
+			descripcion = "Pagaste ${String.format("%.2f", monto)} a ${acreedor.nombre}." + (grupoNombre?.let { " en $it" } ?: ""),
+			metadata = metadata,
+		)
+	}
+
+	fun registrarAmistadAceptada(
+		usuarioQuienAcepta: Usuario,
+		usuarioEmisor: Usuario,
+	): Actividad {
+		val metadata = linkedMapOf<String, Any?>(
+			"amigoId" to usuarioEmisor.id,
+			"amigoNombre" to usuarioEmisor.nombre,
+		)
+
+		return registrarActividad(
+			usuario = usuarioQuienAcepta,
+			tipo = TipoActividad.AMISTAD_ACEPTADA,
+			descripcion = "Aceptaste la solicitud de amistad de ${usuarioEmisor.nombre}.",
+			metadata = metadata,
+		)
+	}
+
 	@Transactional(readOnly = true)
 	fun obtenerActividadesDeGastoPorGrupo(
 		grupoId: Long,

@@ -10,6 +10,8 @@ enum class TipoActividad {
     INGRESO_GRUPO,
     EGRESO_GRUPO,
     CUENTA_CREADA,
+    PAGO_REALIZADO, // Cuando pagas una deuda
+    AMISTAD_ACEPTADA, // Cuando aceptas una solicitud de amistad
 }
 
 data class ActividadDTO(

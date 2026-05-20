@@ -106,5 +106,45 @@ class ActividadServiceTest {
             assertTrue(metadata.contains("\"actorNombre\":\"Admin\""))
             assertFalse(metadata.contains("Creaste el grupo"))
     }
+
+      @Test
+      fun `registra pago con metadata canonica`() {
+        val deudor = Usuario(nombre = "Juan", email = "juan@correo.com", contrasena = "hash").also { it.id = 2L }
+        val acreedor = Usuario(nombre = "María", email = "maria@correo.com", contrasena = "hash").also { it.id = 3L }
+
+        val savedSlot = slot<Actividad>()
+        every { actividadRepository.save(capture(savedSlot)) } answers { savedSlot.captured }
+
+        val result = service.registrarPago(deudor, acreedor, 100.5, grupoId = 5L, grupoNombre = "Viaje")
+        val metadata = requireNotNull(result.metadata)
+
+        assertEquals(TipoActividad.PAGO_REALIZADO, result.tipo)
+        assertEquals(deudor, result.usuario)
+        assertTrue(metadata.contains("\"acreedorId\":3"))
+        assertTrue(metadata.contains("\"acreedorNombre\":\"María\""))
+        assertTrue(metadata.contains("\"monto\":100.5"))
+        assertTrue(metadata.contains("\"grupoId\":5"))
+        assertTrue(metadata.contains("\"grupoNombre\":\"Viaje\""))
+        assertTrue(result.descripcion?.contains("100.50") == true)
+        assertTrue(result.descripcion?.contains("María") == true)
+      }
+
+      @Test
+      fun `registra amistad aceptada con metadata canonica`() {
+        val quienAcepta = Usuario(nombre = "Laura", email = "laura@correo.com", contrasena = "hash").also { it.id = 4L }
+        val emisor = Usuario(nombre = "Carlos", email = "carlos@correo.com", contrasena = "hash").also { it.id = 5L }
+
+        val savedSlot = slot<Actividad>()
+        every { actividadRepository.save(capture(savedSlot)) } answers { savedSlot.captured }
+
+        val result = service.registrarAmistadAceptada(quienAcepta, emisor)
+        val metadata = requireNotNull(result.metadata)
+
+        assertEquals(TipoActividad.AMISTAD_ACEPTADA, result.tipo)
+        assertEquals(quienAcepta, result.usuario)
+        assertTrue(metadata.contains("\"amigoId\":5"))
+        assertTrue(metadata.contains("\"amigoNombre\":\"Carlos\""))
+        assertTrue(result.descripcion?.contains("Carlos") == true)
+      }
 }
 

@@ -272,19 +272,35 @@ class GastoService(
         val fraccion = fraccionGastoRepository.findByDeudorIdAndGastoAsociadoId(usuarioLogueado.id!!, gastoId)
             ?: throw BusinessException(ErrorStrings.FRACCION_NO_ENCONTRADA)
 
+        val gasto = fraccion.gastoAsociado
         fraccion.pagar(pagoDTO.monto)
 
         fraccionGastoRepository.save(fraccion)
+
+        actividadService.registrarPago(
+          deudor = usuarioLogueado,
+          acreedor = fraccion.acreedor,
+          monto = pagoDTO.monto,
+          grupoId = gasto.grupo.id,
+          grupoNombre = gasto.grupo.nombre,
+        )
     }
 
     @Transactional
     fun realizarPagoGlobalAUsuario(auth: Authentication, acreedorId: Long, montoEnviado: Double) {
+        val deudor = usuarioService.obtenerUsuarioLogueado(auth)
+        val acreedor = obtenerUsuarioOLanzarExcepcion(acreedorId)
         procesarPagoSimplificado(auth, null, acreedorId, montoEnviado)
+        actividadService.registrarPago(deudor, acreedor, montoEnviado)
     }
 
     @Transactional
     fun realizarPagoGrupoAUsuario(auth: Authentication, grupoId: Long, acreedorId: Long, montoEnviado: Double) {
+        val deudor = usuarioService.obtenerUsuarioLogueado(auth)
+        val acreedor = obtenerUsuarioOLanzarExcepcion(acreedorId)
+        val grupo = obtenerGrupoOLanzarExcepcion(grupoId)
         procesarPagoSimplificado(auth, grupoId, acreedorId, montoEnviado)
+        actividadService.registrarPago(deudor, acreedor, montoEnviado, grupoId, grupo.nombre)
     }
 
     private fun validarDatosBasicos(gasto: Gasto) {

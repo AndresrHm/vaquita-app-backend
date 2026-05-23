@@ -315,6 +315,9 @@ class UsuarioService(
         if (!usuarioRepository.existsByIdAndAmigosId(idUsuario, idAmigo))
             throw Exception("Este usuario no es tu amigo")
 
+        if (fraccionGastoRepository.findGastosPendientesBetween(idUsuario, idAmigo).isNotEmpty())
+            throw Exception(ErrorStrings.DEUDA_PENDIENTE_CON_AMIGO)
+
         val usuario = obtenerUsuario(idUsuario)
         val amigo = obtenerUsuario(idAmigo)
         usuario.eliminarAmigo(amigo)

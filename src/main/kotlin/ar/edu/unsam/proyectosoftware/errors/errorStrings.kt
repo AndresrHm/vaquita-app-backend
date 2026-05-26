@@ -39,6 +39,9 @@ object ErrorStrings {
     const val GASTO_NO_ENCONTRADO = "El gasto no ha sido encontrado."
     const val NINGUN_USUARIO_ENCONTRADO = "Uno o más elementos no fueron encontrados"
 
+    //Amigos
+    const val DEUDA_PENDIENTE_CON_AMIGO = "No podés eliminar a este amigo porque hay deudas pendientes entre ustedes."
+
     //Pagos
     const val FRACCION_NO_ENCONTRADA = "No se ha encontrado la fracción a pagar."
     const val FRACCION_YA_SALDADA = "Esta deuda ya se encuentra cancelada"

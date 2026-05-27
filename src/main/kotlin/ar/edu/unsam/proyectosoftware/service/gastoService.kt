@@ -1,6 +1,7 @@
 package ar.edu.unsam.proyectosoftware.service
 
 import ar.edu.unsam.proyectosoftware.BusinessException
+import ar.edu.unsam.proyectosoftware.AnalyticsProcessingException
 import ar.edu.unsam.proyectosoftware.domain.Gasto
 import ar.edu.unsam.proyectosoftware.domain.FraccionGasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo
@@ -29,6 +30,15 @@ import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import ar.edu.unsam.proyectosoftware.dto.TipoRelacionVista
+import ar.edu.unsam.proyectosoftware.dto.GastoAnalyticsResponse
+import ar.edu.unsam.proyectosoftware.dto.GastoPorMesDTO
+import ar.edu.unsam.proyectosoftware.dto.GastoPorCategoriaDTO
+import ar.edu.unsam.proyectosoftware.dto.GastoPorGrupoDTO
+import ar.edu.unsam.proyectosoftware.dto.GastoPorPagadorDTO
+import ar.edu.unsam.proyectosoftware.dto.RangoDTO
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.YearMonth
 
 const val MAX_CARACTERES_DESCRIPCION = 200
 const val MAX_CARACTERES_NOMBRE_PRODUCTO = 50
@@ -412,6 +422,50 @@ class GastoService(
 
             null ->
                 Sort.by(Sort.Direction.DESC, "fecha") // default
+        }
+    }
+
+    @Transactional(readOnly = true)
+    fun obtenerAnalyticsMisGastos(auth: Authentication, desde: LocalDate, hasta: LocalDate): GastoAnalyticsResponse {
+        return try {
+            val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
+            val gastos = gastoRepository.findByPagadorIdAndFechaBetween(usuarioLogueado.id!!, desde, hasta)
+
+            val totalGastado = gastos.sumOf { it.monto }
+            val cantidadGastos = gastos.size
+            val promedioPorGasto = if (cantidadGastos > 0) Math.round((totalGastado / cantidadGastos) * 100) / 100.0 else 0.0
+
+            val meses = gastos.groupBy { YearMonth.from(it.fecha) }
+                .map { (ym, lista) -> GastoPorMesDTO(ym.toString(), lista.sumOf { it.monto }) }
+                .sortedBy { it.mes }
+
+            val porCategoria = gastos.groupBy { it.categoria.name }
+                .map { GastoPorCategoriaDTO(it.key, it.value.sumOf { it.monto }) }
+
+            val porGrupo = gastos.groupBy { it.grupo.id!! }
+                .map { GastoPorGrupoDTO(it.key, it.value.first().grupo.nombre, it.value.sumOf { it.monto }) }
+
+            val porPagador = gastos.groupBy { it.pagador.id!! }
+                .map { GastoPorPagadorDTO(it.key, it.value.first().pagador.nombre, it.value.sumOf { it.monto }) }
+
+            val resumen = mapOf(
+                "totalGastado" to totalGastado,
+                "cantidadGastos" to cantidadGastos,
+                "promedioPorGasto" to promedioPorGasto
+            )
+
+            GastoAnalyticsResponse(
+                rango = RangoDTO(desde, hasta),
+                resumen = resumen,
+                porMes = meses,
+                porCategoria = porCategoria,
+                porGrupo = porGrupo,
+                porPagador = porPagador,
+            )
+        } catch (ex: BusinessException) {
+            throw ex
+        } catch (ex: Exception) {
+            throw AnalyticsProcessingException(ErrorStrings.ERROR_ANALYTICS_PROCESAMIENTO, ex)
         }
     }
 

@@ -1,7 +1,9 @@
 package ar.edu.unsam.proyectosoftware.controller
 
+import ar.edu.unsam.proyectosoftware.BusinessException
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.dto.*
+import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
 import ar.edu.unsam.proyectosoftware.mapper.GastoMapper
 import ar.edu.unsam.proyectosoftware.mapper.GrupoMapper
 import ar.edu.unsam.proyectosoftware.service.GastoService
@@ -11,6 +13,8 @@ import org.springframework.security.core.Authentication
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.net.URI
+import java.time.LocalDate
+import java.time.format.DateTimeParseException
 import java.time.format.TextStyle
 import java.util.*
 
@@ -107,6 +111,34 @@ class GrupoController(
 
         val response = PageResponse(agrupado, gastosPage.number, gastosPage.size, gastosPage.totalElements, gastosPage.totalPages, gastosPage.hasNext())
         return ResponseEntity.ok(response)
+    }
+
+    @GetMapping("/{grupoId}/analytics")
+    fun obtenerAnalyticsGrupo(
+        @PathVariable grupoId: Long,
+        auth: Authentication?,
+        @RequestParam desde: String,
+        @RequestParam hasta: String,
+    ): GrupoAnalyticsResponse {
+        val authentication = auth ?: throw Exception("No autorizado: Token no encontrado")
+
+        val desdeDate = try {
+            LocalDate.parse(desde)
+        } catch (_: DateTimeParseException) {
+            throw BusinessException(ErrorStrings.FECHA_INVALIDA)
+        }
+
+        val hastaDate = try {
+            LocalDate.parse(hasta)
+        } catch (_: DateTimeParseException) {
+            throw BusinessException(ErrorStrings.FECHA_INVALIDA)
+        }
+
+        if (desdeDate.isAfter(hastaDate)) {
+            throw BusinessException(ErrorStrings.RANGO_FECHAS_INVALIDO)
+        }
+
+        return grupoService.obtenerAnalyticsGrupo(grupoId, authentication, desdeDate, hastaDate)
     }
 
     @GetMapping("/{grupoId}/balances")

@@ -9,3 +9,6 @@ class BusinessException(msg: String) : RuntimeException(msg)
 
 @ResponseStatus(HttpStatus.NOT_FOUND)
 class NotFoundException(msg: String) : RuntimeException(msg)
+
+@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+class AnalyticsProcessingException(msg: String, cause: Throwable? = null) : RuntimeException(msg, cause)

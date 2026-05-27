@@ -8,6 +8,7 @@ import ar.edu.unsam.proyectosoftware.dto.OrdenGasto
 import ar.edu.unsam.proyectosoftware.dto.TipoRelacionVista
 import ar.edu.unsam.proyectosoftware.dto.GastoDetalleDTO
 import ar.edu.unsam.proyectosoftware.dto.GastoDetalleModalDTO
+import ar.edu.unsam.proyectosoftware.dto.GastoAnalyticsResponse
 import ar.edu.unsam.proyectosoftware.dto.PageResponse
 import ar.edu.unsam.proyectosoftware.domain.enums.CategoriaGasto
 import ar.edu.unsam.proyectosoftware.dto.ActionResponse
@@ -22,6 +23,8 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import java.time.LocalDate
+import java.time.format.DateTimeParseException
 
 @RestController
 @RequestMapping("gasto")
@@ -135,5 +138,30 @@ class GastoController(
         )
 
         return gastoService.getGastosByFilters(auth, filters)
+    }
+
+    @GetMapping("/me/analytics")
+    fun obtenerMisGastosAnalytics(
+        auth: Authentication,
+        @RequestParam desde: String,
+        @RequestParam hasta: String,
+    ) : GastoAnalyticsResponse {
+        val desdeDate = try {
+            LocalDate.parse(desde)
+        } catch (_: DateTimeParseException) {
+            throw BusinessException(ErrorStrings.FECHA_INVALIDA)
+        }
+
+        val hastaDate = try {
+            LocalDate.parse(hasta)
+        } catch (_: DateTimeParseException) {
+            throw BusinessException(ErrorStrings.FECHA_INVALIDA)
+        }
+
+        if (desdeDate.isAfter(hastaDate)) {
+            throw BusinessException(ErrorStrings.RANGO_FECHAS_INVALIDO)
+        }
+
+        return gastoService.obtenerAnalyticsMisGastos(auth, desdeDate, hastaDate)
     }
 }

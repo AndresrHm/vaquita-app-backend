@@ -1,6 +1,7 @@
 package ar.edu.unsam.proyectosoftware.service
 
 import ar.edu.unsam.proyectosoftware.BusinessException
+import ar.edu.unsam.proyectosoftware.AnalyticsProcessingException
 import ar.edu.unsam.proyectosoftware.domain.Gasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.RolIntegrante
@@ -53,6 +54,7 @@ class GrupoService(
     private val fraccionGastoRepository: FraccionGastoRepository,
     private val usuarioService: UsuarioService,
     private val actividadService: ActividadService,
+    private val gastoService: GastoService,
 ) {
     fun obtenerGrupos(auth: Authentication, page: Int, size: Int, search: String? = null, filter: String? = null): Page<Grupo> {
         val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
@@ -239,6 +241,64 @@ class GrupoService(
 
         return miembros.map { miembro ->
             miembro.copy(esRata = miembro.id == usuarioMasDeudorId)
+        }
+    }
+
+    @Transactional(readOnly = true)
+    fun obtenerAnalyticsGrupo(grupoId: Long, auth: Authentication, desde: LocalDate, hasta: LocalDate): ar.edu.unsam.proyectosoftware.dto.GrupoAnalyticsResponse {
+        return try {
+            val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
+            if (!integranteGrupoRepository.esMiembro(grupoId, usuarioLogueado.id!!)) throw BusinessException(ErrorStrings.USUARIO_NO_PERTENECE_AL_GRUPO)
+
+            val grupo = grupoRepository.findByIdOrNull(grupoId) ?: throw BusinessException(ErrorStrings.GRUPO_NO_ENCONTRADO)
+
+            val gastos = gastoRepository.findByGrupoIdAndFechaBetween(grupoId, desde, hasta)
+
+            val totalGastado = gastos.sumOf { it.monto }
+            val cantidadGastos = gastos.size
+            val promedioPorGasto = if (cantidadGastos > 0) Math.round((totalGastado / cantidadGastos) * 100) / 100.0 else 0.0
+
+            val meses = gastos.groupBy { java.time.YearMonth.from(it.fecha) }
+                .map { (ym, lista) -> ar.edu.unsam.proyectosoftware.dto.GastoPorMesDTO(ym.toString(), lista.sumOf { it.monto }) }
+                .sortedBy { it.mes }
+
+            val porCategoria = gastos.groupBy { it.categoria.name }
+                .map { ar.edu.unsam.proyectosoftware.dto.GastoPorCategoriaDTO(it.key, it.value.sumOf { it.monto }) }
+
+            val porPagador = gastos.groupBy { it.pagador.id!! }
+                .map { ar.edu.unsam.proyectosoftware.dto.GastoPorPagadorDTO(it.key, it.value.first().pagador.nombre, it.value.sumOf { it.monto }) }
+
+            val balancesRaw = gastoService.obtenerBalancesGrupo(grupoId)
+            val netMap = mutableMapOf<Long, Double>()
+            val nombres = mutableMapOf<Long, String>()
+            balancesRaw.forEach { b ->
+                nombres[b.deudorId] = b.deudorNombre
+                nombres[b.acreedorId] = b.acreedorNombre
+                netMap[b.deudorId] = netMap.getOrDefault(b.deudorId, 0.0) - b.monto
+                netMap[b.acreedorId] = netMap.getOrDefault(b.acreedorId, 0.0) + b.monto
+            }
+            val balances = netMap.map { (userId, saldo) -> ar.edu.unsam.proyectosoftware.dto.BalanceUsuarioDTO(userId, nombres[userId] ?: "", saldo) }
+
+            val resumen = mapOf(
+                "totalGastado" to totalGastado,
+                "cantidadGastos" to cantidadGastos,
+                "promedioPorGasto" to promedioPorGasto
+            )
+
+            ar.edu.unsam.proyectosoftware.dto.GrupoAnalyticsResponse(
+                grupoId = grupoId,
+                grupoNombre = grupo.nombre,
+                rango = ar.edu.unsam.proyectosoftware.dto.RangoDTO(desde, hasta),
+                resumen = resumen,
+                porMes = meses,
+                porCategoria = porCategoria,
+                porPagador = porPagador,
+                balances = balances
+            )
+        } catch (ex: BusinessException) {
+            throw ex
+        } catch (ex: Exception) {
+            throw AnalyticsProcessingException(ErrorStrings.ERROR_ANALYTICS_PROCESAMIENTO, ex)
         }
     }
 

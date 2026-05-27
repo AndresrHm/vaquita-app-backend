@@ -44,7 +44,7 @@ class UsuarioServiceTest {
     fun `login - camino feliz - devuelve DTO con access y refresh tokens si credenciales son correctas`() {
         // Arrange
         val loginDTO = UsuarioLoginDTO("giuli.m@mail.com", "mipassword123")
-        val usuarioMock = Usuario(nombre = "Giuliana", email = "giuli.m@mail.com", contrasena = "hash").apply {
+        val usuarioMock = Usuario(nombre = "Giuliana", email = "giuli.m@mail.com", contrasena = "hash", username = "giuli").apply {
             id = 1L
             imagenUrl = ""
         }
@@ -68,7 +68,7 @@ class UsuarioServiceTest {
     @Test
     fun `login - camino triste - lanza excepcion si la contrasena es incorrecta`() {
         val loginDTO = UsuarioLoginDTO("giuli.m@mail.com", "password_equivocada")
-        val usuarioMock = Usuario(nombre = "Giuliana", email = "giuli.m@mail.com", contrasena = "hash").apply { id = 1L }
+        val usuarioMock = Usuario(nombre = "Giuliana", email = "giuli.m@mail.com", contrasena = "hash", username = "giuli").apply { id = 1L }
 
         every { usuarioRepository.findByEmail(loginDTO.email) } returns Optional.of(usuarioMock)
         every { passwordEncoder.matches(loginDTO.contrasena, usuarioMock.contrasena) } returns false
@@ -82,7 +82,7 @@ class UsuarioServiceTest {
     fun `refrescarToken - camino feliz - devuelve nuevos tokens si el refresh token es valido`() {
         // Arrange
         val tokenViejo = "refresh_token_valido"
-        val usuarioMock = Usuario(nombre = "Giuliana", email = "giuli@mail.com", contrasena = "hash").apply { id = 1L }
+        val usuarioMock = Usuario(nombre = "Giuliana", email = "giuli@mail.com", contrasena = "hash", username = "giuli").apply { id = 1L }
 
         every { jwtUtils.esTokenValido(tokenViejo) } returns true
         every { jwtUtils.obtenerEmailDeToken(tokenViejo) } returns "giuli@mail.com"
@@ -119,7 +119,7 @@ class UsuarioServiceTest {
 
     @Test
     fun `registrarUsuario - camino feliz - guarda el usuario con contrasena encriptada`() {
-        val registroDTO = UsuarioRegistradoDTO("Giuliana", "giuli.m@mail.com", "secreta123")
+        val registroDTO = UsuarioRegistradoDTO("Giuliana", "giuli.m@mail.com", "secreta123", "giuli")
         every { usuarioRepository.findByEmail(registroDTO.email) } returns Optional.empty()
         every { passwordEncoder.encode(registroDTO.contrasena) } returns "secreta123_hasheada"
         every { usuarioRepository.save(any()) } answers { firstArg() }
@@ -133,8 +133,8 @@ class UsuarioServiceTest {
 
     @Test
     fun `registrarUsuario - camino triste - lanza excepcion si el email ya existe`() {
-        val registroDTO = UsuarioRegistradoDTO("Giuliana", "giuli.m@mail.com", "secreta123")
-        val usuarioExistente = Usuario(nombre = "Otra Persona", email = "giuli.m@mail.com", contrasena = "hash")
+        val registroDTO = UsuarioRegistradoDTO("Giuliana", "giuli.m@mail.com", "secreta123", "giuli")
+        val usuarioExistente = Usuario(nombre = "Otra Persona", email = "giuli.m@mail.com", contrasena = "hash", username = "otrap")
         every { usuarioRepository.findByEmail(registroDTO.email) } returns Optional.of(usuarioExistente)
         every { usuarioRepository.existsByUsername(registroDTO.username) } returns false
 
@@ -152,7 +152,7 @@ class UsuarioServiceTest {
         val authMock = mockk<Authentication>()
         every { authMock.name } returns "giuli.m@mail.com"
 
-        val usuarioMock = Usuario(nombre = "Giuliana Vieja", email = "giuli.m@mail.com", contrasena = "hash").apply {
+        val usuarioMock = Usuario(nombre = "Giuliana Vieja", email = "giuli.m@mail.com", contrasena = "hash", username = "giuliv").apply {
             id = 1L; imagenUrl = "foto_vieja.png"
         }
 
@@ -179,7 +179,7 @@ class UsuarioServiceTest {
         val authMock = mockk<Authentication>()
         every { authMock.name } returns "giuli.m@mail.com"
 
-        val usuarioMock = Usuario(nombre = "Giuliana", email = "giuli.m@mail.com", contrasena = "hash_viejo").apply { id = 1L }
+        val usuarioMock = Usuario(nombre = "Giuliana", email = "giuli.m@mail.com", contrasena = "hash_viejo", username = "giuli").apply { id = 1L }
         val dtoPass = CambioContrasenaDTO(contrasenaActual = "clave_equivocada", contrasenaNueva = "nueva12345")
 
         every { usuarioRepository.findByEmail("giuli.m@mail.com") } returns Optional.of(usuarioMock)
@@ -207,8 +207,8 @@ class UsuarioServiceTest {
         val authMock = mockk<Authentication>()
         every { authMock.name } returns "giuli@mail.com"
 
-        val amigoMock = Usuario(nombre = "Hermano", email = "hermano@mail.com", contrasena = "hash").apply { id = 2L; imagenUrl = "" }
-        val usuarioMock = Usuario(nombre = "Giuliana", email = "giuli@mail.com", contrasena = "hash").apply {
+        val amigoMock = Usuario(nombre = "Hermano", email = "hermano@mail.com", contrasena = "hash", username = "hermano").apply { id = 2L; imagenUrl = "" }
+        val usuarioMock = Usuario(nombre = "Giuliana", email = "giuli@mail.com", contrasena = "hash", username = "giuli").apply {
             id = 1L; amigos = mutableListOf(amigoMock)
         }
 
@@ -225,7 +225,7 @@ class UsuarioServiceTest {
     fun `enviarSolicitudAmistad - camino feliz - guarda la solicitud y devuelve el ID`() {
         val authMock = mockk<Authentication>()
         every { authMock.name } returns "giuli@mail.com"
-        val emisorMock = Usuario(nombre = "Giuliana", email = "giuli@mail.com", contrasena = "hash").apply { id = 1L }
+        val emisorMock = Usuario(nombre = "Giuliana", email = "giuli@mail.com", contrasena = "hash", username = "giuli").apply { id = 1L }
 
         every { usuarioRepository.findByEmail("giuli@mail.com") } returns Optional.of(emisorMock)
         every { solicitudAmistadRepository.save(any()) } answers { firstArg() }
@@ -241,7 +241,7 @@ class UsuarioServiceTest {
     fun `enviarSolicitudAmistad - camino triste - falla si se envia a si mismo`() {
         val authMock = mockk<Authentication>()
         every { authMock.name } returns "giuli@mail.com"
-        val emisorMock = Usuario(nombre = "Giuliana", email = "giuli@mail.com", contrasena = "hash").apply { id = 1L }
+        val emisorMock = Usuario(nombre = "Giuliana", email = "giuli@mail.com", contrasena = "hash", username = "giuli").apply { id = 1L }
 
         every { usuarioRepository.findByEmail("giuli@mail.com") } returns Optional.of(emisorMock)
 
@@ -254,8 +254,8 @@ class UsuarioServiceTest {
     fun `responderSolicitudAmistad - camino feliz - acepta solicitud y se agregan como amigos`() {
         val authMock = mockk<Authentication>()
         every { authMock.name } returns "giuli@mail.com"
-        val usuarioLogueado = Usuario(nombre = "Giuliana", email = "giuli@mail.com", contrasena = "").apply { id = 1L }
-        val emisorMock = Usuario(nombre = "Hermano", email = "hermano@mail.com", contrasena = "").apply { id = 2L }
+        val usuarioLogueado = Usuario(nombre = "Giuliana", email = "giuli@mail.com", contrasena = "", username = "giuli").apply { id = 1L }
+        val emisorMock = Usuario(nombre = "Hermano", email = "hermano@mail.com", contrasena = "", username = "hermano").apply { id = 2L }
         val solicitudMock = ar.edu.unsam.proyectosoftware.domain.SolicitudAmistad(2L, 1L).apply { id = 100L }
 
         every { usuarioRepository.findByEmail("giuli@mail.com") } returns Optional.of(usuarioLogueado)
@@ -277,7 +277,7 @@ class UsuarioServiceTest {
     fun `responderSolicitudAmistad - camino triste - falla si respondes la solicitud de otro`() {
         val authMock = mockk<Authentication>()
         every { authMock.name } returns "giuli@mail.com"
-        val usuarioLogueado = Usuario(nombre = "Giuliana", email = "giuli@mail.com", contrasena = "").apply { id = 1L }
+        val usuarioLogueado = Usuario(nombre = "Giuliana", email = "giuli@mail.com", contrasena = "", username = "giuli").apply { id = 1L }
         val solicitudAjena = ar.edu.unsam.proyectosoftware.domain.SolicitudAmistad(2L, 99L).apply { id = 100L }
 
         every { usuarioRepository.findByEmail("giuli@mail.com") } returns Optional.of(usuarioLogueado)
@@ -291,8 +291,8 @@ class UsuarioServiceTest {
     @Test
     fun `obtenerUsuariosPorGrupo - camino feliz - devuelve los integrantes`() {
         val grupoId = 10L
-        val usuario1 = Usuario(nombre = "Giuli", email = "g@g.com", contrasena = "").apply { id = 1L }
-        val usuario2 = Usuario(nombre = "Novio", email = "n@n.com", contrasena = "").apply { id = 2L }
+        val usuario1 = Usuario(nombre = "Giuli", email = "g@g.com", contrasena = "", username = "giuli").apply { id = 1L }
+        val usuario2 = Usuario(nombre = "Novio", email = "n@n.com", contrasena = "", username = "novio").apply { id = 2L }
 
         every { grupoRepository.findById(grupoId) } returns Optional.of(mockk())
         every { integranteGrupoRepository.findAllByGrupoId(grupoId) } returns listOf(usuario1, usuario2)

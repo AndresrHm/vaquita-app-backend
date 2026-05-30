@@ -7,6 +7,9 @@ object ErrorStrings {
         "El total del monto del gasto debe coincidir con la suma de los ítems del mismo"
     const val DESCRIPCION_VACIA = "La descripción no puede estar vacía."
     const val INFORMACION_INVALIDA = "La información ingresada es inválida."
+    const val FECHA_INVALIDA = "El formato de fecha es inválido. Use yyyy-MM-dd."
+    const val RANGO_FECHAS_INVALIDO = "El rango de fechas es inválido. 'desde' no puede ser mayor que 'hasta'."
+    const val ERROR_ANALYTICS_PROCESAMIENTO = "Ocurrió un error al procesar la información de analytics."
     const val NOMBRE_OBLIGATORIO = "El nombre es obligatorio."
     const val TIPO_GASTO_INEXISTENTE = "Tipo de gasto no soportado"
     fun DESCRIPCION_LARGA(maxCaracteres: Int): String {

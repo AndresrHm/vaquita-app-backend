@@ -40,7 +40,7 @@ class GrupoServiceTest {
     fun `crearGrupo - camino feliz - guarda el grupo y asigna al creador como ADMIN`() {
         // Arrange
         val authMock = mockk<Authentication>()
-        val usuarioCreador = Usuario(nombre = "Giuliana", email = "giuli@mail.com", contrasena = "").apply { id = 1L }
+        val usuarioCreador = Usuario(nombre = "Giuliana", email = "giuli@mail.com", contrasena = "", username = "giuli").apply { id = 1L }
 
         val dto = GrupoCreacionDTO(
             nombre = "Viaje al Sur",
@@ -71,7 +71,7 @@ class GrupoServiceTest {
     fun `crearGrupo - camino triste - falla si el nombre viene vacio o nulo`() {
         // Arrange
         val authMock = mockk<Authentication>()
-        val usuarioCreador = Usuario(nombre = "Giuliana", email = "giuli@mail.com", contrasena = "").apply { id = 1L }
+        val usuarioCreador = Usuario(nombre = "Giuliana", email = "giuli@mail.com", contrasena = "", username = "giuli").apply { id = 1L }
 
         val dtoSinNombre = GrupoCreacionDTO(
             nombre = "   ", // Nombre en blanco
@@ -97,7 +97,7 @@ class GrupoServiceTest {
     fun `obtenerDetalleGrupo - camino triste - rechaza el acceso si el usuario no es miembro`() {
         // Arrange
         val authMock = mockk<Authentication>()
-        val usuarioIntruso = Usuario(nombre = "Intruso", email = "intruso@mail.com", contrasena = "").apply { id = 99L }
+        val usuarioIntruso = Usuario(nombre = "Intruso", email = "intruso@mail.com", contrasena = "", username = "intruso").apply { id = 99L }
         val grupoId = 10L
 
         every { usuarioService.obtenerUsuarioLogueado(authMock) } returns usuarioIntruso
@@ -119,15 +119,15 @@ class GrupoServiceTest {
     fun `eliminarMiembro - camino triste - falla si un miembro intenta echar a otro y no es admin`() {
         // Arrange
         val authMock = mockk<Authentication>()
-        val usuarioMiembroNormal = Usuario(nombre = "Comun", email = "c@mail.com", contrasena = "").apply { id = 2L }
+        val usuarioMiembroNormal = Usuario(nombre = "Comun", email = "c@mail.com", contrasena = "", username = "comun").apply { id = 2L }
         val grupoId = 10L
         val usuarioAEliminarId = 3L
 
         val grupoMock = mockk<Grupo>(relaxed = true)
 
         // Simulamos la proyección que devuelve la query de tu repositorio
-        val projectionMiembroActual = MiembroProjection(id = 2L, nombre = "Comun", imagenUrl = "", esAdmin = false, esRata = false)
-        val projectionAEliminar = MiembroProjection(id = 3L, nombre = "AEliminar", imagenUrl = "", esAdmin = false, esRata = false)
+        val projectionMiembroActual = MiembroProjection(id = 2L, nombre = "Comun", username = "comun", imagenUrl = "", esAdmin = false, esRata = false)
+        val projectionAEliminar = MiembroProjection(id = 3L, nombre = "AEliminar", username = "aeliminar", imagenUrl = "", esAdmin = false, esRata = false)
 
         every { usuarioService.obtenerUsuarioLogueado(authMock) } returns usuarioMiembroNormal
         every { grupoRepository.findById(grupoId) } returns Optional.of(grupoMock)
@@ -147,11 +147,11 @@ class GrupoServiceTest {
         val usuarioLogueadoId = 1L
         val grupoId = 10L
 
-        val usuarioLogueado = Usuario(nombre = "Admin", email = "admin@mail.com", contrasena = "").apply { id = usuarioLogueadoId }
+        val usuarioLogueado = Usuario(nombre = "Admin", email = "admin@mail.com", contrasena = "", username = "admin").apply { id = usuarioLogueadoId }
         val grupoMock = mockk<Grupo>(relaxed = true)
 
         // Creamos la proyección de forma limpia, sin anidamientos raros
-        val projectionAdmin = MiembroProjection(id = usuarioLogueadoId, nombre = "Admin", imagenUrl = "", esAdmin = true, esRata = false)
+        val projectionAdmin = MiembroProjection(id = usuarioLogueadoId, nombre = "Admin", username = "admin", imagenUrl = "", esAdmin = true, esRata = false)
 
         every { usuarioService.obtenerUsuarioLogueado(authMock) } returns usuarioLogueado
         every { grupoRepository.findById(grupoId) } returns Optional.of(grupoMock)

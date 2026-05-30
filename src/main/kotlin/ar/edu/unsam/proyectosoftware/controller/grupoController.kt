@@ -8,6 +8,7 @@ import ar.edu.unsam.proyectosoftware.mapper.GastoMapper
 import ar.edu.unsam.proyectosoftware.mapper.GrupoMapper
 import ar.edu.unsam.proyectosoftware.service.GastoService
 import ar.edu.unsam.proyectosoftware.service.GrupoService
+import ar.edu.unsam.proyectosoftware.service.InvitacionGrupoService
 import ar.edu.unsam.proyectosoftware.service.UsuarioService
 import org.springframework.security.core.Authentication
 import org.springframework.http.ResponseEntity
@@ -24,7 +25,8 @@ import java.util.*
 class GrupoController(
     var grupoService: GrupoService,
     var gastoService: GastoService,
-    var usuarioService: UsuarioService
+    var usuarioService: UsuarioService,
+    private val invitacionGrupoService: InvitacionGrupoService
 ) {
 
     // Endpoints para creación de gastos
@@ -214,6 +216,19 @@ class GrupoController(
         val authentication = auth ?: throw Exception("No autorizado: Token no encontrado")
         val grupoActualizado = grupoService.agregarMiembros(grupoId, authentication, body.usuarioIds)
         return ResponseEntity.ok(GrupoMapper.toGrupoDTO(grupoActualizado))
+    }
+
+    @PostMapping("/{grupoId}/invitacion")
+    fun generarInvitacion(
+        @PathVariable grupoId: Long,
+        auth: Authentication?
+    ): ResponseEntity<TokenInvitacionResponseDTO> {
+        // 👇 Cambiamos Exception por BusinessException
+        val authentication = auth ?: throw BusinessException("No autorizado: Token no encontrado")
+
+        val token = invitacionGrupoService.crearTokenInvitacion(grupoId, authentication)
+
+        return ResponseEntity.ok(TokenInvitacionResponseDTO(token))
     }
 
     @PatchMapping("/{grupoId}/settings")

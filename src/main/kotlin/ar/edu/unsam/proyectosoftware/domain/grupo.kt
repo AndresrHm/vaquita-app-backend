@@ -3,12 +3,8 @@ package ar.edu.unsam.proyectosoftware.domain
 import ar.edu.unsam.proyectosoftware.dto.GrupoNombreIdDTO
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Entity
-import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.JoinTable
-import jakarta.persistence.ManyToMany
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import java.time.LocalDate
@@ -69,6 +65,8 @@ class Grupo(
     fun usuarios(): List<Usuario> {
         return integrantes.map { it.usuario }
     }
+
+    fun usuarioEsMiembro(usuario: Usuario) = usuarios().contains(usuario)
 
     companion object {
         fun toGrupoNombreIdDTO(grupo: Grupo): GrupoNombreIdDTO {

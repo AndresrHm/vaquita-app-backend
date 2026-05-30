@@ -9,6 +9,9 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import java.time.LocalDate
 import kotlin.collections.mutableListOf
+import ar.edu.unsam.proyectosoftware.domain.enums.SupportedCurrency
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 
 @Entity
 @Table(name = "grupos")
@@ -24,7 +27,8 @@ class Grupo(
     var activado = true
 
     // TODO: Implementar estas features
-    var moneda: String = "ARS"
+    @Enumerated(EnumType.STRING)
+    var moneda: SupportedCurrency = SupportedCurrency.ARS
     var simplificarDeudas: Boolean = false
     var notificaciones: Boolean = false
     var modoRata: Boolean = false

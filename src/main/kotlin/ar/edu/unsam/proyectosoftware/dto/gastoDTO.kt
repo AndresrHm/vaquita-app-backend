@@ -17,7 +17,8 @@ data class CreacionGastoDTO(
     val participantesIDs: List<Long>,
     val items: List<ItemGastoDTO> = emptyList(),
     val tipoGasto: TipoGasto? = TipoGasto.PARTES_IGUALES,
-    val asignacionesExactas: Map<Long, Double>?
+    val asignacionesExactas: Map<Long, Double>?,
+    val monedaOriginal: String? = null
 )
 
 data class ItemGastoDTO(

@@ -73,17 +73,27 @@ class CurrencyService {
             }
 
             // Intentamos obtener tasa directa con Frankfurter
-            val response = restClient.get()
-                .uri("https://api.frankfurter.app/latest?from=$from&to=$to")
-                .retrieve().body(FrankfurterResponse::class.java)
-            val direct = (response?.rates?.get(to) ?: ONE).setScale(RATE_SCALE, RoundingMode.HALF_UP)
+            var direct = ONE
+            try {
+                val response = restClient.get()
+                    .uri("https://api.frankfurter.app/latest?from=$from&to=$to")
+                    .retrieve().body(FrankfurterResponse::class.java)
+                direct = (response?.rates?.get(to) ?: ONE).setScale(RATE_SCALE, RoundingMode.HALF_UP)
+            } catch (_: Exception) {
+                // ignoramos y seguimos con fallback
+            }
             if (direct != ONE) return direct
 
             // Fallback genérico: open.er-api directo desde cualquier moneda
-            val openErApiDirect = restClient.get()
-                .uri("https://open.er-api.com/v6/latest/$from")
-                .retrieve().body(OpenErApiResponse::class.java)
-            val openDirect = (openErApiDirect?.rates?.get(to) ?: ONE).setScale(RATE_SCALE, RoundingMode.HALF_UP)
+            var openDirect = ONE
+            try {
+                val openErApiDirect = restClient.get()
+                    .uri("https://open.er-api.com/v6/latest/$from")
+                    .retrieve().body(OpenErApiResponse::class.java)
+                openDirect = (openErApiDirect?.rates?.get(to) ?: ONE).setScale(RATE_SCALE, RoundingMode.HALF_UP)
+            } catch (_: Exception) {
+                // ignoramos y seguimos con conversiones vía hubs
+            }
             if (openDirect != ONE) return openDirect
 
             // Si no hay tasa directa, intentamos una conversión vía USD (hub)

@@ -13,7 +13,7 @@ import jakarta.persistence.ManyToMany
 import jakarta.persistence.OneToMany
 
 @Entity
-class Usuario(
+class Usuario @JvmOverloads constructor(
     var nombre: String = "",
     var email: String = "",
     var contrasena: String = "",

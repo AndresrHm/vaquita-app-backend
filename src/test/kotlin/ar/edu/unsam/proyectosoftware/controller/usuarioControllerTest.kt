@@ -45,12 +45,13 @@ class UsuarioControllerTest {
         // Arrange
         val peticionLogin = UsuarioLoginDTO("giuli@mail.com", "miclave123")
         val respuestaEsperada = UsuarioLogueadoDTO(
-            id = 1L,
-            nombre = "Giuliana",
-            email = "giuli@mail.com",
-            accessToken = "access_token_falso",  // Actualizado
-            refreshToken = "refresh_token_falso", // Actualizado
-            imagenUrl = null
+            1L,
+            "access_token_falso",
+            "refresh_token_falso",
+            "Giuliana",
+            "giuli@mail.com",
+            "giuli",
+            null
         )
 
         every { usuarioService.login(any()) } returns respuestaEsperada
@@ -72,12 +73,13 @@ class UsuarioControllerTest {
         // Arrange
         val peticion = mapOf("refreshToken" to "token_largo_viejo")
         val respuestaEsperada = UsuarioLogueadoDTO(
-            id = 1L,
-            nombre = "Giuliana",
-            email = "giuli@mail.com",
-            accessToken = "NUEVO_access",
-            refreshToken = "NUEVO_refresh",
-            imagenUrl = null
+            1L,
+            "NUEVO_access",
+            "NUEVO_refresh",
+            "Giuliana",
+            "giuli@mail.com",
+            "giuli",
+            null
         )
 
         every { usuarioService.refrescarToken(any()) } returns respuestaEsperada
@@ -100,12 +102,13 @@ class UsuarioControllerTest {
         val peticionEdicion = UsuarioEditarDTO("Giuli Dev", "giuli.dev@mail.com", "foto.png")
 
         val respuestaEsperada = UsuarioLogueadoDTO(
-            id = 1L,
-            nombre = "Giuli Dev",
-            email = "giuli.dev@mail.com",
-            accessToken = "access_actualizado",
-            refreshToken = "refresh_actualizado",
-            imagenUrl = "foto_teclado.png"
+            1L,
+            "access_actualizado",
+            "refresh_actualizado",
+            "Giuli Dev",
+            "giuli.dev@mail.com",
+            "giuli.dev",
+            "foto_teclado.png"
         )
 
         every { usuarioService.actualizarPerfil(any(), any()) } returns respuestaEsperada
@@ -123,8 +126,8 @@ class UsuarioControllerTest {
 
     @Test
     fun `POST register - debe devolver 200 OK y el JSON del usuario`() {
-        val peticionRegistro = UsuarioRegistradoDTO("Giuliana Nueva", "giulinueva@mail.com", "secreta123")
-        val usuarioGuardado = Usuario(nombre = "Giuliana Nueva", email = "giulinueva@mail.com", contrasena = "hash").apply { id = 2L }
+        val peticionRegistro = UsuarioRegistradoDTO("Giuliana Nueva", "giulinueva@mail.com", "secreta123", "giulianan")
+        val usuarioGuardado = Usuario(nombre = "Giuliana Nueva", email = "giulinueva@mail.com", contrasena = "hash", username = "giulianan").apply { id = 2L }
         every { usuarioService.registrarUsuario(any()) } returns usuarioGuardado
 
         mockMvc.perform(
@@ -139,7 +142,7 @@ class UsuarioControllerTest {
     @Test
     fun `GET obtenerMiPerfil - debe devolver 200 OK y mi nombre`() {
         val authFalsa = UsernamePasswordAuthenticationToken("giuli@mail.com", null, emptyList())
-        val miUsuario = Usuario(nombre = "Giuliana", email = "giuli@mail.com", contrasena = "").apply { id = 1L }
+        val miUsuario = Usuario(nombre = "Giuliana", email = "giuli@mail.com", contrasena = "", username = "giuli").apply { id = 1L }
         every { usuarioService.obtenerUsuarioLogueado(any()) } returns miUsuario
 
         mockMvc.perform(get("/usuarios/me").principal(authFalsa))

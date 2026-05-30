@@ -21,6 +21,25 @@ interface GastoRepository : CrudRepository<Gasto, Long> {
     )
     fun findByGrupoId(grupoId: Long, pageable: Pageable): Page<Gasto>
 
+    @EntityGraph(attributePaths = ["pagador", "participantes", "grupo"])
+    @Query(
+        """
+        SELECT g FROM Gasto g
+        WHERE g.pagador.id = :pagadorId
+          AND g.fecha BETWEEN :fechaInicio AND :fechaFin
+        """
+    )
+    fun findByPagadorIdAndFechaBetween(@Param("pagadorId") pagadorId: Long, @Param("fechaInicio") fechaInicio: java.time.LocalDate, @Param("fechaFin") fechaFin: java.time.LocalDate): List<Gasto>
+
+    @EntityGraph(attributePaths = ["pagador", "participantes", "grupo"])
+    @Query(
+        """
+        SELECT g FROM Gasto g
+        WHERE g.grupo.id = :grupoId
+          AND g.fecha BETWEEN :fechaInicio AND :fechaFin
+        """
+    )
+    fun findByGrupoIdAndFechaBetween(@Param("grupoId") grupoId: Long, @Param("fechaInicio") fechaInicio: java.time.LocalDate, @Param("fechaFin") fechaFin: java.time.LocalDate): List<Gasto>
     @EntityGraph(attributePaths = ["items", "grupo", "pagador"])
     @Query(
         """

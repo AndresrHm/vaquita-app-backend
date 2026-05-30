@@ -1,6 +1,7 @@
 package ar.edu.unsam.proyectosoftware.service
 
 import ar.edu.unsam.proyectosoftware.BusinessException
+import ar.edu.unsam.proyectosoftware.AnalyticsProcessingException
 import ar.edu.unsam.proyectosoftware.domain.Actividad
 import ar.edu.unsam.proyectosoftware.domain.Grupo
 import ar.edu.unsam.proyectosoftware.domain.Usuario
@@ -20,6 +21,14 @@ import org.springframework.data.domain.Sort
 import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import ar.edu.unsam.proyectosoftware.dto.ActividadAnalyticsResponse
+import ar.edu.unsam.proyectosoftware.dto.ActividadPorTipoDTO
+import ar.edu.unsam.proyectosoftware.dto.ActividadPorDiaDTO
+import ar.edu.unsam.proyectosoftware.dto.ActividadPorGrupoDTO
+import ar.edu.unsam.proyectosoftware.dto.RangoDTO
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
+import com.fasterxml.jackson.databind.JsonNode
 
 private const val MAX_PAGE_SIZE_ACTIVIDADES = 50
 
@@ -172,5 +181,68 @@ class ActividadService(
 	private fun obtenerUsuarioLogueado(auth: Authentication): Usuario {
 		return usuarioRepository.findByEmail(auth.name)
 			.orElseThrow { BusinessException(ErrorStrings.USUARIO_NO_ENCONTRADO) }
+	}
+
+	@Transactional(readOnly = true)
+	fun obtenerAnalytics(desde: LocalDate, hasta: LocalDate): ActividadAnalyticsResponse {
+		return try {
+			// Construir rangos de fecha (desde 00:00 hasta 23:59:59)
+			val desdeDateTime = desde.atStartOfDay()
+			val hastaDateTime = hasta.atTime(23,59,59)
+
+			val spec = ActividadSpecification.desdeFecha(desdeDateTime)
+				.and(ActividadSpecification.hastaFecha(hastaDateTime))
+
+			val actividades = actividadRepository.findAll(spec)
+
+			val total = actividades.size.toLong()
+			val dias = ChronoUnit.DAYS.between(desde, hasta).let { if (it <= 0) 1 else it + 1 }
+			val promedioPorDia = if (dias > 0) total.toDouble() / dias.toDouble() else 0.0
+
+			val porTipo = actividades.groupingBy { it.tipo.name }.eachCount().map { ActividadPorTipoDTO(it.key, it.value.toLong()) }
+
+			val porDia = actividades.groupBy { it.fecha.toLocalDate() }
+				.map { ActividadPorDiaDTO(it.key.toString(), it.value.size.toLong()) }
+				.sortedBy { it.fecha }
+
+			// porGrupo: extraer grupoId y grupoNombre desde metadata JSON si existe
+			val porGrupoMap = mutableMapOf<Long, Pair<String, Long>>() // id -> (nombre, count)
+			actividades.forEach { act ->
+				val meta = act.metadata
+				if (meta != null) {
+					runCatching {
+						val node: JsonNode = objectMapper.readTree(meta)
+						val gid = node.path("grupoId").takeIf { !it.isMissingNode && it.isNumber }?.asLong()
+						val gname = node.path("grupoNombre").takeIf { !it.isMissingNode && it.isTextual }?.asText()
+						if (gid != null && gname != null) {
+							val existing = porGrupoMap[gid]
+							if (existing == null) porGrupoMap[gid] = Pair(gname, 1)
+							else porGrupoMap[gid] = Pair(existing.first, existing.second + 1)
+						}
+					}
+				}
+			}
+
+			val porGrupo = porGrupoMap.map { ActividadPorGrupoDTO(it.key, it.value.first, it.value.second) }
+
+			val actividadesPorDiaRedondeado = Math.round(promedioPorDia * 100) / 100.0
+
+			val resumen = mapOf(
+				"totalActividades" to total,
+				"actividadesPorDia" to actividadesPorDiaRedondeado
+			)
+
+			ActividadAnalyticsResponse(
+				rango = RangoDTO(desde, hasta),
+				resumen = resumen,
+				porTipo = porTipo,
+				porDia = porDia,
+				porGrupo = porGrupo.sortedByDescending { it.cantidad }
+			)
+		} catch (ex: BusinessException) {
+			throw ex
+		} catch (ex: Exception) {
+			throw AnalyticsProcessingException(ErrorStrings.ERROR_ANALYTICS_PROCESAMIENTO, ex)
+		}
 	}
 }

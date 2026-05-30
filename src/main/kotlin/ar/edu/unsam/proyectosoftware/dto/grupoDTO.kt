@@ -1,5 +1,7 @@
 package ar.edu.unsam.proyectosoftware.dto
 
+import ar.edu.unsam.proyectosoftware.domain.enums.SupportedCurrency
+
 data class GrupoDTO(
     val id: Long,
     val nombre: String,
@@ -35,7 +37,7 @@ data class GrupoSettingsDTO(
     val nombre: String,
     val descripcion: String,
     val imagenUrl: String,
-    val moneda: String,
+    val moneda: SupportedCurrency,
     val simplificarDeudas: Boolean,
     val notificaciones: Boolean,
     val modoRata: Boolean,

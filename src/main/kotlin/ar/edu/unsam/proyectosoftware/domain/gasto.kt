@@ -63,6 +63,10 @@ abstract class Gasto(
     // Tickets almacenados
     @OneToMany(mappedBy = "expense")
     val attachments: MutableList<ExpenseAttachment> = mutableListOf()
+    var montoOriginal : Double = monto
+    var monedaOriginal: String = "ARS"
+
+    var tasaDeCambioAplicada: Double = 1.0
 
     fun agregarItem(nombre: String, cantidad: Double, precio: Double) {
         items.add(ItemGasto(nombre, cantidad, precio, this))

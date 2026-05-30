@@ -35,3 +35,4 @@ data class ReceiptItemDto(
     @JsonProperty("price")
     val price: Double
 )
+

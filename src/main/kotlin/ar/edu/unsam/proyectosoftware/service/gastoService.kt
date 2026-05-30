@@ -4,6 +4,7 @@ import ar.edu.unsam.proyectosoftware.BusinessException
 import ar.edu.unsam.proyectosoftware.domain.Gasto
 import ar.edu.unsam.proyectosoftware.domain.FraccionGasto
 import ar.edu.unsam.proyectosoftware.domain.Grupo
+import ar.edu.unsam.proyectosoftware.domain.PartesExactas
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.BalanceDTO
 import ar.edu.unsam.proyectosoftware.dto.BalanceConGrupoDTO
@@ -29,6 +30,8 @@ import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import ar.edu.unsam.proyectosoftware.dto.TipoRelacionVista
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 const val MAX_CARACTERES_DESCRIPCION = 200
 const val MAX_CARACTERES_NOMBRE_PRODUCTO = 50
@@ -42,6 +45,7 @@ class GastoService(
     var usuarioRepository: UsuarioRepository,
     var usuarioService: UsuarioService,
     var actividadService: ActividadService,
+    var conversion : CurrencyService
 ) {
 
     @Transactional
@@ -59,8 +63,42 @@ class GastoService(
             throw BusinessException(ErrorStrings.NINGUN_USUARIO_ENCONTRADO)
         }
 
+        // 1. Obtenemos el tipo de cambio actual
+        // Si el front no manda moneda, asumimos que se gastó en la misma moneda del grupo
+        val monedaDelGasto = gastoDTO.monedaOriginal
+            ?.trim()
+            ?.uppercase()
+            ?.takeIf { it.isNotBlank() }
+            ?: grupo.moneda.name
+        // Usamos un nombre local diferente (cambio) para evitar sombrear la propiedad `conversion` del servicio
+        val cambio = this.conversion.convertCurrency(monedaDelGasto, grupo.moneda.name, gastoDTO.monto)
+
+        // 2. Mapeamos el DTO a la Entidad como lo hacías normalmente
         val gasto = GastoMapper.fromCreacionDTO(gastoDTO, grupo, pagador, participantes)
 
+        // 3. Registramos los datos de auditoría/historial del cambio de divisa
+        gasto.montoOriginal = gastoDTO.monto
+        gasto.monedaOriginal = monedaDelGasto
+        gasto.tasaDeCambioAplicada = cambio.exchangeRate.toDouble()
+
+        // 4. ACTUALIZAMOS el monto principal al valor convertido (Moneda del Grupo)
+        gasto.monto = cambio.convertedAmount.toDouble()
+
+        // 5. Ajustamos los valores internos para que las cuentas cuadren
+        // Si el usuario asignó montos exactos (Ej: 10 USD a Juan y 15 USD a Ana), hay que convertirlos
+        if (gasto is PartesExactas) {
+            gasto.asignacionesExactas.replaceAll { _, montoAsignado ->
+                redondearBigDecimal(montoAsignado.toBigDecimal().multiply(cambio.exchangeRate)).toDouble()
+            }
+        }
+
+        // Si el gasto tiene ítems individuales (Ej: 1 Cerveza a 3 USD), pasamos su precio unitario
+        gasto.items.forEach { item ->
+            item.precioUnitario = redondearBigDecimal(item.precioUnitario.toBigDecimal().multiply(cambio.exchangeRate)).toDouble()
+        }
+
+        // 6. Ahora validamos y repartimos.
+        // Como 'monto' ya está en la moneda del grupo, repartirGasto() calculará las deudas perfectamente.
         validarDatosBasicos(gasto)
 
         if (!existeIntegranteYGrupo(grupo.id, gasto)) {
@@ -307,7 +345,9 @@ class GastoService(
         if (gasto.monto <= 0) {
             throw BusinessException(ErrorStrings.MONTO_NEGATIVO)
         }
-        if (gasto.monto != gasto.totalItems()) {
+        // Si hay items, el monto debe coincidir con el total de items
+        // Si no hay items, el monto es válido por sí solo
+        if (gasto.items.isNotEmpty() && Math.abs(gasto.monto - gasto.totalItems()) > 0.01) {
             throw BusinessException(ErrorStrings.MONTO_TOTAL_NO_COINCIDE_CON_TOTAL_ITEMS)
         }
         if (gasto.descripcion.isBlank()) {
@@ -445,6 +485,9 @@ class GastoService(
             )
         }
     }
+
+    private fun redondearBigDecimal(valor: BigDecimal): BigDecimal =
+        valor.setScale(2, RoundingMode.HALF_UP)
 
     private fun existeIntegranteYGrupo(id: Long?, gasto: Gasto): Boolean =
         integranteGrupoRepository.existsByGrupoIdAndUsuarioId(id!!, gasto.pagador.id!!)

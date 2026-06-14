@@ -29,7 +29,7 @@ class SecurityConfig(
             }
             .authorizeHttpRequests { auth ->
                 // 1. EXCEPCIONES: Estas rutas NO piden token
-                auth.requestMatchers("/usuarios/login", "/usuarios/register", "/usuarios").permitAll()
+                auth.requestMatchers("/usuarios/login", "/usuarios/register", "/usuarios/refresh", "/usuarios").permitAll()
                 auth.requestMatchers("/api/**").permitAll()
                 // 👉 LÍNEA CORREGIDA: Va ANTES del anyRequest()
                 auth.requestMatchers("/error").permitAll()

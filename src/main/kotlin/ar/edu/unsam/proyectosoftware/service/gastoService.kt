@@ -55,7 +55,7 @@ class GastoService(
     var usuarioRepository: UsuarioRepository,
     var usuarioService: UsuarioService,
     var actividadService: ActividadService,
-    var conversion : CurrencyService
+    var conversion: CurrencyService
 ) {
 
     @Transactional
@@ -104,7 +104,8 @@ class GastoService(
 
         // Si el gasto tiene ítems individuales (Ej: 1 Cerveza a 3 USD), pasamos su precio unitario
         gasto.items.forEach { item ->
-            item.precioUnitario = redondearBigDecimal(item.precioUnitario.toBigDecimal().multiply(cambio.exchangeRate)).toDouble()
+            item.precioUnitario =
+                redondearBigDecimal(item.precioUnitario.toBigDecimal().multiply(cambio.exchangeRate)).toDouble()
         }
 
         // 6. Ahora validamos y repartimos.
@@ -236,9 +237,9 @@ class GastoService(
     @Transactional(readOnly = true)
     fun obtenerBalancesEntreUsuarios(usuarioId: Long, otroUsuarioId: Long): List<BalanceConGrupoDTO> {
         val fracciones = (
-            fraccionGastoRepository.findGastosPendientesBetween(usuarioId, otroUsuarioId) +
-            fraccionGastoRepository.findGastosPendientesBetween(otroUsuarioId, usuarioId)
-        ).filter { it.saldoPendiente() > 0.01 }
+                fraccionGastoRepository.findGastosPendientesBetween(usuarioId, otroUsuarioId) +
+                        fraccionGastoRepository.findGastosPendientesBetween(otroUsuarioId, usuarioId)
+                ).filter { it.saldoPendiente() > 0.01 }
 
         val resultados = mutableListOf<BalanceConGrupoDTO>()
 
@@ -263,9 +264,29 @@ class GastoService(
                 val deuda2a1 = balancesCruzados.getOrDefault(u2 to u1, 0.0)
 
                 if (deuda1a2 > deuda2a1) {
-                    resultados.add(BalanceConGrupoDTO(u1, nombres[u1]!!, u2, nombres[u2]!!, Math.round((deuda1a2 - deuda2a1) * 100) / 100.0, grupoId, grupoNombre))
+                    resultados.add(
+                        BalanceConGrupoDTO(
+                            u1,
+                            nombres[u1]!!,
+                            u2,
+                            nombres[u2]!!,
+                            Math.round((deuda1a2 - deuda2a1) * 100) / 100.0,
+                            grupoId,
+                            grupoNombre
+                        )
+                    )
                 } else if (deuda2a1 > deuda1a2) {
-                    resultados.add(BalanceConGrupoDTO(u2, nombres[u2]!!, u1, nombres[u1]!!, Math.round((deuda2a1 - deuda1a2) * 100) / 100.0, grupoId, grupoNombre))
+                    resultados.add(
+                        BalanceConGrupoDTO(
+                            u2,
+                            nombres[u2]!!,
+                            u1,
+                            nombres[u1]!!,
+                            Math.round((deuda2a1 - deuda1a2) * 100) / 100.0,
+                            grupoId,
+                            grupoNombre
+                        )
+                    )
                 }
 
                 procesados.add(u1 to u2)
@@ -302,9 +323,25 @@ class GastoService(
             val deuda2a1 = balancesCruzados.getOrDefault(u2 to u1, 0.0)
 
             if (deuda1a2 > deuda2a1) {
-                resultados.add(BalanceDTO(u1, nombres[u1]!!, u2, nombres[u2]!!, Math.round((deuda1a2 - deuda2a1) * 100) / 100.0))
+                resultados.add(
+                    BalanceDTO(
+                        u1,
+                        nombres[u1]!!,
+                        u2,
+                        nombres[u2]!!,
+                        Math.round((deuda1a2 - deuda2a1) * 100) / 100.0
+                    )
+                )
             } else if (deuda2a1 > deuda1a2) {
-                resultados.add(BalanceDTO(u2, nombres[u2]!!, u1, nombres[u1]!!, Math.round((deuda2a1 - deuda1a2) * 100) / 100.0))
+                resultados.add(
+                    BalanceDTO(
+                        u2,
+                        nombres[u2]!!,
+                        u1,
+                        nombres[u1]!!,
+                        Math.round((deuda2a1 - deuda1a2) * 100) / 100.0
+                    )
+                )
             }
 
             procesados.add(u1 to u2)
@@ -326,11 +363,11 @@ class GastoService(
         fraccionGastoRepository.save(fraccion)
 
         actividadService.registrarPago(
-          deudor = usuarioLogueado,
-          acreedor = fraccion.acreedor,
-          monto = pagoDTO.monto,
-          grupoId = gasto.grupo.id,
-          grupoNombre = gasto.grupo.nombre,
+            deudor = usuarioLogueado,
+            acreedor = fraccion.acreedor,
+            monto = pagoDTO.monto,
+            grupoId = gasto.grupo.id,
+            grupoNombre = gasto.grupo.nombre,
         )
     }
 
@@ -407,7 +444,13 @@ class GastoService(
 
         // 2. Compensación: Saldamos lo que él me debía (crédito contable)
         val creditoCompensacion = deudasConmigo.sumOf { it.saldoPendiente() }
-        deudasConmigo.forEach { it.pagar(it.saldoPendiente()) }
+        deudasConmigo.forEach {
+            try {
+                it.pagar(it.saldoPendiente())
+            } catch (e: BusinessException) {
+                // Se ignoran los gastos saldados
+            }
+        }
 
         // 3. Pago Real: Aplicamos (Crédito + Efectivo) a mis deudas con él
         aplicarPagoAFracciones(misDeudasConEl, creditoCompensacion + montoEnviado)
@@ -473,7 +516,8 @@ class GastoService(
 
             val totalGastado = gastos.sumOf { it.monto }
             val cantidadGastos = gastos.size
-            val promedioPorGasto = if (cantidadGastos > 0) Math.round((totalGastado / cantidadGastos) * 100) / 100.0 else 0.0
+            val promedioPorGasto =
+                if (cantidadGastos > 0) Math.round((totalGastado / cantidadGastos) * 100) / 100.0 else 0.0
 
             val meses = gastos.groupBy { YearMonth.from(it.fecha) }
                 .map { (ym, lista) -> GastoPorMesDTO(ym.toString(), lista.sumOf { it.monto }) }
@@ -509,7 +553,10 @@ class GastoService(
         }
     }
 
-    private fun registrarActividadesDeGasto(gasto: Gasto, fracciones: List<ar.edu.unsam.proyectosoftware.domain.FraccionGasto>) {
+    private fun registrarActividadesDeGasto(
+        gasto: Gasto,
+        fracciones: List<ar.edu.unsam.proyectosoftware.domain.FraccionGasto>
+    ) {
         actividadService.registrarActividad(
             usuario = gasto.pagador,
             tipo = TipoActividad.MIS_PAGOS,

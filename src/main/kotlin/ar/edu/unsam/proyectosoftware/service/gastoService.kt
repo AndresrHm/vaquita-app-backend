@@ -108,6 +108,12 @@ class GastoService(
                 redondearBigDecimal(item.precioUnitario.toBigDecimal().multiply(cambio.exchangeRate)).toDouble()
         }
 
+        // Si el gasto vino con ítems, el monto total del gasto en la moneda del grupo
+        // DEBE ser la suma de los ítems convertidos y redondeados. Así la diferencia es siempre 0.
+        if (gasto.items.isNotEmpty()) {
+            gasto.monto = gasto.totalItems()
+        }
+
         // 6. Ahora validamos y repartimos.
         // Como 'monto' ya está en la moneda del grupo, repartirGasto() calculará las deudas perfectamente.
         validarDatosBasicos(gasto)
@@ -394,8 +400,20 @@ class GastoService(
         }
         // Si hay items, el monto debe coincidir con el total de items
         // Si no hay items, el monto es válido por sí solo
-        if (gasto.items.isNotEmpty() && Math.abs(gasto.monto - gasto.totalItems()) > 0.01) {
-            throw BusinessException(ErrorStrings.MONTO_TOTAL_NO_COINCIDE_CON_TOTAL_ITEMS)
+        if (gasto.items.isNotEmpty()) {
+            // Convertimos el monto general a BigDecimal con 2 decimales
+            val montoGastoBD = gasto.monto.toBigDecimal().setScale(2, RoundingMode.HALF_UP)
+
+            // Convertimos el total sumado de los ítems a BigDecimal con 2 decimales
+            val totalItemsBD = gasto.totalItems().toBigDecimal().setScale(2, RoundingMode.HALF_UP)
+
+            // Calculamos la diferencia absoluta entre ambos
+            val diferenciaCentavos = (montoGastoBD - totalItemsBD).abs()
+
+            // Margen de tolerancia razonable (0.01) para absorber errores de arrastre de coma flotante
+            if (diferenciaCentavos > BigDecimal("0.01")) {
+                throw BusinessException(ErrorStrings.MONTO_TOTAL_NO_COINCIDE_CON_TOTAL_ITEMS)
+            }
         }
         if (gasto.descripcion.isBlank()) {
             throw BusinessException(ErrorStrings.DESCRIPCION_VACIA)

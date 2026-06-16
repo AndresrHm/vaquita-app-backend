@@ -10,6 +10,7 @@ import ar.edu.unsam.proyectosoftware.service.GastoService
 import ar.edu.unsam.proyectosoftware.service.GrupoService
 import ar.edu.unsam.proyectosoftware.service.InvitacionGrupoService
 import ar.edu.unsam.proyectosoftware.service.UsuarioService
+import org.springframework.data.domain.Page
 import org.springframework.security.core.Authentication
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -37,10 +38,10 @@ class GrupoController(
         @RequestParam size: Int = 5,
         @RequestParam search: String?,
         @RequestParam filter: String?
-    ): PageResponse<GrupoDTO> {
+    ): ResponseEntity<Page<GrupoDTO>> {
         val authentication = auth ?: throw Exception("No autorizado: Token no encontrado")
-        val resultPage = grupoService.obtenerGrupos(authentication, page, size, search, filter)
-        return resultPage.toPageResponse { GrupoMapper.toGrupoDTO(it) }
+        val gruposPage = grupoService.obtenerGrupos(authentication, page, size, search, filter)
+        return ResponseEntity.ok(gruposPage)
     }
 
     @GetMapping("/me")

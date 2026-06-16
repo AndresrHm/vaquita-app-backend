@@ -8,10 +8,12 @@ import ar.edu.unsam.proyectosoftware.domain.RolIntegrante
 import ar.edu.unsam.proyectosoftware.domain.Usuario
 import ar.edu.unsam.proyectosoftware.dto.GrupoContextoUsuarioDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoCreacionDTO
+import ar.edu.unsam.proyectosoftware.dto.GrupoDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoNombreIdDTO
 import ar.edu.unsam.proyectosoftware.dto.GrupoSettingsDTO
 import ar.edu.unsam.proyectosoftware.dto.TipoActividad
 import ar.edu.unsam.proyectosoftware.errors.ErrorStrings
+import ar.edu.unsam.proyectosoftware.mapper.GrupoMapper
 import ar.edu.unsam.proyectosoftware.repository.FraccionGastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GastoRepository
 import ar.edu.unsam.proyectosoftware.repository.GrupoRepository
@@ -58,7 +60,7 @@ class GrupoService(
     private val actividadService: ActividadService,
     private val gastoService: GastoService,
 ) {
-    fun obtenerGrupos(auth: Authentication, page: Int, size: Int, search: String? = null, filter: String? = null): Page<Grupo> {
+    fun obtenerGrupos(auth: Authentication, page: Int, size: Int, search: String? = null, filter: String? = null): Page<GrupoDTO> {
         val usuarioLogueado = usuarioService.obtenerUsuarioLogueado(auth)
         val tipoFiltro = filter.asTipoFiltroGrupo()
 
@@ -98,8 +100,13 @@ class GrupoService(
         val end = minOf(start + safeSize, gruposFiltrados.size)
         val content = if (start < gruposFiltrados.size) gruposFiltrados.subList(start, end) else emptyList()
 
+        val dtoContent = content.map { grupo ->
+            val estado = determinarEstadoGrupo(grupo.id!!, usuarioLogueado.id!!)
+            GrupoMapper.toGrupoHomeDTO(grupo, estado)
+        }
+
             return PageImpl(
-            content,
+            dtoContent,
             pageable,
             gruposFiltrados.size.toLong()
         )
@@ -408,5 +415,17 @@ class GrupoService(
 
     private fun tieneDeudas(grupoId: Long, usuarioId: Long): Boolean {
         return gastoRepository.existeDeudaPendienteEnGrupo(grupoId, usuarioId)
+    }
+
+    private fun determinarEstadoGrupo(grupoId: Long, usuarioId: Long): String {
+        val yoDebo = gastoRepository.existeDeudaPendienteEnGrupo(grupoId, usuarioId)
+        val meDeben = gastoRepository.existeDeudaPendienteHaciaUsuario(grupoId, usuarioId)
+
+        return when {
+            yoDebo && meDeben  -> "Cuentas pendientes"
+            yoDebo             -> "Debés dinero"
+            meDeben            -> "Te deben"
+            else               -> "Todo saldado"
+        }
     }
 }

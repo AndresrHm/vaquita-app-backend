@@ -11,7 +11,16 @@ object GrupoMapper {
             id = grupo.id!!,
             nombre = grupo.nombre,
             imagenUrl = grupo.imagenUrl,
-            estadoGrupo = "Pendiente de pago" // TODO: Implementar
+            estadoGrupo = "Creado exitosamente"
+        )
+    }
+
+    fun toGrupoHomeDTO(grupo: Grupo, estadoGrupo: String): GrupoDTO {
+        return GrupoDTO(
+            id = grupo.id!!,
+            nombre = grupo.nombre,
+            imagenUrl = grupo.imagenUrl,
+            estadoGrupo = estadoGrupo
         )
     }
 
